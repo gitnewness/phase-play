@@ -6,7 +6,7 @@
     <meta name="color-scheme" content="light" />
     <link rel="icon" href="data:," />
     <title>Michael Nunes presents Phase Play — Two-Day Camp $150 · Nov 23–24 at Athletic Club of Bend</title>
-    <meta name="description" content="Michael Nunes presents Phase Play. A full phase basketball program created for coaches and athletes of all levels. No gatekeeping, no elite groups. Just actions that lead to true behaviors. Coached by Michael Nunes and located at the best court in Central Oregon. Two-day camp, $150 for both days: Prephase plus Phases 1, 2, 3 on Day 1, Mon Nov 23 at Athletic Club of Bend — 7th/8th graders 10:00 AM to 12:00 PM and 5th/6th graders 1:00 PM to 3:00 PM — and Phase 4 gameplay on Day 2, Tue Nov 24, officiated by actual hired refs. Both days are mandatory; campers commit to the camp and the gameplay, and the $150 covers the Day 2 gym expenses. Camp is limited to 12 boys and 12 girls in each camp — 24 total per session. Training to Test standalone $35 has unlimited entries, no cap. Film breakdown is a $50 add-on on the $150 camp only, $200 all-in." />
+    <meta name="description" content="Michael Nunes presents Phase Play. A full phase basketball program created for coaches and athletes of all levels. No gatekeeping, no elite groups. Just actions that lead to true behaviors. Coached by Michael Nunes and located at the best court in Central Oregon. Two-day camp, $150 for both days: Prephase reps and testing start the day you register, then Phases 1, 2, 3 on Day 1, Mon Nov 23 at Athletic Club of Bend — 7th/8th graders 10:00 AM to 12:00 PM and 5th/6th graders 1:00 PM to 3:00 PM — and Phase 4 gameplay on Day 2, Tue Nov 24, officiated by actual hired refs. Both days are mandatory; campers commit to the camp and the gameplay, and the $150 covers the Day 2 gym expenses. Camp is limited to 12 boys and 12 girls in each camp — 24 total per session. Training to Test standalone $35 has unlimited entries, no cap. Film breakdown is a $50 add-on on the $150 camp only, $200 all-in." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
@@ -162,6 +162,7 @@
       .day-head .day-k { color: var(--orange-deep); }
       .day-head .day-note { font-family: "Barlow", sans-serif; font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 15.5px; color: var(--ink-faint); }
       .hp-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 14px; }
+      .hp-list.hp-list-3 { grid-template-columns: repeat(3, 1fr); }
       .hp .hp-k { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13.5px; color: var(--orange-deep); }
       .hp h4 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 20px; line-height: 1.05; margin: 4px 0 5px; color: var(--ink); }
       .hp p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.4; }
@@ -319,7 +320,7 @@
         .day2 { padding: 22px 20px; }
         .camp-day { padding-left: 12px; }
         .day-head .day-note { flex-basis: 100%; }
-        .hp-list { grid-template-columns: 1fr; gap: 9px; }
+        .hp-list, .hp-list.hp-list-3 { grid-template-columns: 1fr; gap: 9px; }
         .hp { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
         .hp h4 { margin: 0; font-size: 19px; }
         .hp p { flex-basis: 100%; }
@@ -361,18 +362,20 @@
             <h2 class="camp-title" id="camp-h">The Camp — <span class="camp-price">$150</span></h2>
           </div>
           <div class="day-times" style="margin-top:10px;">
-            <div><strong>7th / 8th</strong>Mon, Nov 23 - 10:00 AM-12:00 PM</div>
-            <div><strong>5th / 6th</strong>Mon, Nov 23 - 1:00 PM-3:00 PM</div>
+            <div><strong>7th / 8th (Boys &amp; Girls)</strong>Mon, Nov 23 - 10:00 AM-12:00 PM</div>
+            <div><strong>5th / 6th (Boys &amp; Girls)</strong>Mon, Nov 23 - 1:00 PM-3:00 PM</div>
+          </div>
+
+          <div class="camp-day" aria-labelledby="prephase-h">
+            <h3 class="day-head" id="prephase-h"><span class="day-k">Prephase</span> Repping &amp; Testing <span class="day-note">Before Day 1 — starts the day you register</span></h3>
+            <div class="hp hp-wide">
+              <p>Prephase is reps and testing. Build habits that build skill with a structured workout, tracking, and accountability. Repetitions are the framework of a player's ability to perform in gameplay. Use the testing app to track your progress and find your strengths and weaknesses.</p>
+            </div>
           </div>
 
           <div class="camp-day" aria-labelledby="day1-h">
-            <h3 class="day-head" id="day1-h"><span class="day-k">Day 1</span> Mon, Nov 23 <span class="day-note">Prephase + Phases 1–3, by cohort</span></h3>
-            <div class="hp-list">
-              <div class="hp">
-                <div class="hp-k">Prephase</div>
-                <h4>Testing &amp; Reps</h4>
-                <p>Prephase is reps and testing. Build habits that build skill with a structured workout, tracking, and accountability. Repetitions are the framework of a player's ability to perform in gameplay. Use the testing app to track your progress and find your strengths and weaknesses.</p>
-              </div>
+            <h3 class="day-head" id="day1-h"><span class="day-k">Day 1</span> Mon, Nov 23 <span class="day-note">Phases 1–3, by cohort</span></h3>
+            <div class="hp-list hp-list-3">
               <div class="hp">
                 <div class="hp-k">Phase 1</div>
                 <h4>Wiring to Win</h4>
@@ -389,10 +392,6 @@
                 <p>Chatter that matters. Communication with teammates on and off the floor is a critical piece of player development. Learn cues navigating the floor and being a great teammate in this foundational phase of the game.</p>
               </div>
             </div>
-            <div class="day-times">
-              <div><strong>7th / 8th</strong>Mon, Nov 23 — 10:00 AM–12:00 PM</div>
-              <div><strong>5th / 6th</strong>Mon, Nov 23 — 1:00 PM–3:00 PM</div>
-            </div>
           </div>
 
           <div class="camp-day" aria-labelledby="day2-sub-h">
@@ -403,7 +402,7 @@
               <div class="p-label">The Challenge</div>
               <p>The gap between skill building and gameplay can be patched with accountability and live coaching. Some players can hold themselves accountable as soon as they learn about the change or improvement while others need a separate pair of eyes, such as a coach or a parent to help.</p>
               <div class="p-label">The Solution</div>
-              <p>A recorded live an hour game can help a player view their movement their decision-making and presence on the court in a live game with real refs. Some players have never seen themselves play on video and one thing about video is it does not lie. The recorded video will be available to all campers through media download while video breakdown is available in specific packages and also add-ons up to a week after the camp.</p>
+              <p>A recorded live hour game can help a player view their movement their decision-making and presence on the court in a live game with real refs. Some players have never seen themselves play on video and one thing about video is it does not lie. The recorded video will be available to all campers through media download while video breakdown is available in specific packages and also add-ons up to a week after the camp.</p>
             </div>
           </div>
         </div>
@@ -484,7 +483,7 @@
           <div class="d-k">Day 2 · Phase 4 · Tuesday, November 24 · Athletic Club of Bend · Included in the $150 camp</div>
           <h2 id="day2-h">Phase 4: Just play. We film it.</h2>
           <p class="d-lede">Strictly gameplay. No teaching, no drills — this is Phase 4 of the camp, officiated by actual refs.<span>Come back Tuesday and put Monday's work into live play: four separate 60-minute games with 15 minutes between each, five hours of court time in total, with actual hired refs calling the games. Every game is filmed — that film is where the breakdown comes from. Because the camp is mandatory two days, campers are committing to the camp and the gameplay, so we know we have the numbers to hire real officials. Day 2 is included in the camp — it is not sold separately, and there is no Day 2-only option — and the $150 camp price is set to cover the Day 2 gym expenses.</span></p>
-          <p class="d-lede"><span>Day 1 is Prephase plus Phases 1–3, Day 2 is Phase 4 gameplay with actual refs, all of it filmed. Because campers commit to both days, we can hire real officials for Tuesday's games. The $150 covers the Day 2 gym expenses.</span></p>
+          <p class="d-lede"><span>Prephase starts the day you register, Day 1 is Phases 1–3, Day 2 is Phase 4 gameplay with actual refs, all of it filmed. Because campers commit to both days, we can hire real officials for Tuesday's games. The $150 covers the Day 2 gym expenses.</span></p>
           <div class="day2-grid">
             <div class="day2-card">
               <h3>Gameplay only — Phase 4, with refs</h3>
@@ -516,7 +515,7 @@
         <p class="sec-note" style="margin-bottom:14px;">The camp is the $150 two-day package — that is the only camp offer, both days mandatory. Each camp is limited to 12 boys and 12 girls, 24 total per session. Testing on its own is different: unlimited entries, no cap.</p>
         <div class="price-box">
           <div class="price-row">
-            <div class="what">Full Two-Day Camp — All Phases <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Prephase + Phases 1, 2, 3 on Day 1, Mon Nov 23 · Phase 4 gameplay on Day 2, Tue Nov 24, officiated by actual refs · <strong>Both days mandatory</strong> — campers commit to the camp and the gameplay · Price set to cover the Day 2 gym expenses · <strong>Limited to 12 boys &amp; 12 girls per session — 24 total</strong> · This is the camp</span></div>
+            <div class="what">Full Two-Day Camp — All Phases <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Prephase starts the day you register · Phases 1, 2, 3 on Day 1, Mon Nov 23 · Phase 4 gameplay on Day 2, Tue Nov 24, officiated by actual refs · <strong>Both days mandatory</strong> — campers commit to the camp and the gameplay · Price set to cover the Day 2 gym expenses · <strong>Limited to 12 boys &amp; 12 girls per session — 24 total</strong> · This is the camp</span></div>
             <div class="amt">$150</div>
           </div>
           <div class="price-row">

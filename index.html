@@ -237,7 +237,7 @@
       /* Day 2 — gameplay only, dark panel */
       .day2 { background: var(--court); color: var(--court-ink); border-radius: 10px; padding: 28px; }
       .day2 .d-k { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; font-size: 15px; color: #ffa25e; }
-      .day2 h2 { color: #fff; margin-top: 6px; }
+      .day2 h2 { color: #fff; margin-top: 0; }
       .day2 .d-lede { font-size: 19px; font-weight: 600; max-width: 640px; margin: 0 0 6px; }
       .day2 .d-lede span { display: block; font-weight: 500; color: var(--court-soft); font-size: 16.5px; margin-top: 4px; }
       .day2-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
@@ -265,6 +265,15 @@
       .caps-card .big { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 28px; color: var(--orange-deep); text-transform: uppercase; letter-spacing: .04em; }
       @media (max-width: 760px) { .caps-box { grid-template-columns: 1fr; } }
       .qualify { margin: 16px 0 0; font-size: 17px; font-weight: 600; }
+      .gallery { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: clamp(180px, 20vw, 240px); gap: 14px; margin-top: 4px; }
+      .gallery figure { margin: 0; border-radius: 8px; overflow: hidden; background: #e8e8e8; }
+      .gallery figure.tall { grid-row: span 2; }
+      .gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      @media (max-width: 760px) {
+        .gallery { grid-template-columns: 1fr; grid-auto-rows: auto; }
+        .gallery figure.tall { grid-row: auto; }
+        .gallery img { height: auto; }
+      }
       .qualify span { color: var(--orange-deep); }
 
       /* Reserve */
@@ -489,7 +498,6 @@
       <!-- ================= DAY 2 / PHASE 4 ================= -->
       <section id="day2" aria-labelledby="day2-h">
         <div class="day2">
-          <div class="d-k">Day 2 · Phase 4 · Tuesday, November 24 · Athletic Club of Bend · Included in the $150 camp</div>
           <h2 id="day2-h">Phase 4: Just Play &amp; Watch Later</h2>
           <p class="d-lede">Strictly gameplay with licensed referees &amp; full stats with value point breakdown.</p>
           <p class="d-lede"><span>Tuesday is when the players put it all together in gameplay. Teams will be split up into even teams and peer coached as they navigate the game with their new communication skills to integrate the skills they learned from Day 1.</span></p>
@@ -597,6 +605,16 @@
             <h3>Thanks for joining!</h3>
             <p id="form-thanks-text">Thanks for joining — your spot has been received and Coach Michael will follow up to confirm.</p>
           </div>
+        </div>
+      </section>
+      <section id="gallery" aria-labelledby="gallery-h">
+        <h2 id="gallery-h">Gallery</h2>
+        <div class="gallery">
+          <figure><img src="images/gallery-1.jpg" alt="Coach Michael Nunes with his team after the Memorial Day Championships, players holding up number-one fingers and a basketball" width="1200" height="899" loading="lazy" decoding="async" /></figure>
+          <figure class="tall"><img src="images/gallery-2.jpg" alt="Coach Michael Nunes with a championship team holding their trophy plaque" width="900" height="1200" loading="lazy" decoding="async" /></figure>
+          <figure><img src="images/gallery-3.jpg" alt="Coach Michael Nunes with a large group of girls basketball players at center court" width="1200" height="900" loading="lazy" decoding="async" /></figure>
+          <figure><img src="images/gallery-4.jpg" alt="Coach Michael Nunes with a big group of youth campers in a gym" width="1200" height="900" loading="lazy" decoding="async" /></figure>
+          <figure><img src="images/gallery-5.jpg" alt="2004 NAIA Division II Men's Basketball National Champions celebrating on the court with their banner" width="1200" height="733" loading="lazy" decoding="async" /></figure>
         </div>
       </section>
     </main>

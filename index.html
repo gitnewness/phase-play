@@ -241,7 +241,19 @@
       .enroll-counter.is-critical .vpill.is-filled { background: #dc2626; border-color: #dc2626; }
       .enroll-counter.is-full .vpill.is-filled { background: var(--ink); border-color: var(--ink); }
       @media (max-width: 760px) { .vpill { height: 38px; } .vpills { gap: 5px; } }
-      .vpill { transition: background-color .35s ease, border-color .35s ease; transform-origin: bottom center; }
+      .vpill { transition: background-color .35s ease, border-color .35s ease; transform-origin: bottom center; position: relative; }
+      .vpill.is-recent::after {
+        content: ""; position: absolute; inset: -3px; border-radius: 999px;
+        border: 2px solid var(--orange); pointer-events: none;
+        animation: ppRecent 1.8s ease-out infinite;
+      }
+      @keyframes ppRecent { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35, 1.18); } }
+      .c-recent { min-height: 1.4em; font-weight: 600 !important; font-size: 15px !important; color: var(--ink); }
+      .c-recent .recent-pill {
+        display: inline-block; width: 9px; height: 15px; border-radius: 999px; background: var(--orange);
+        vertical-align: -2px; margin-right: 8px; animation: ppDot 1.8s ease-in-out infinite;
+      }
+      @keyframes ppDot { 0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 4, .55); } 50% { box-shadow: 0 0 0 5px rgba(232, 93, 4, 0); } }
       .vpills.pp-pending .vpill.is-filled { background: #f1f1f1; border-color: #dedede; }
       .vpills.pp-anim .vpill.is-filled { animation: ppPillFill .55s cubic-bezier(.2,.9,.3,1.35) both; animation-delay: calc(var(--i, 0) * 110ms); }
       .vpill.is-new { animation: ppPillPop .9s cubic-bezier(.2,.9,.3,1.4) both; animation-delay: .35s; }
@@ -260,6 +272,8 @@
       .thanks-spot .enroll-head { margin-bottom: 8px; }
       @media (prefers-reduced-motion: reduce) {
         .vpills.pp-anim .vpill.is-filled, .vpill.is-new { animation: none; }
+        .vpill.is-recent::after { animation: none; opacity: .8; transform: none; }
+        .c-recent .recent-pill { animation: none; }
         .vpills.pp-pending .vpill.is-filled { background: var(--orange); border-color: var(--orange); }
       }
       .btn-cohort {
@@ -513,7 +527,7 @@
               <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
-            <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
+            <p class="c-meta c-recent" aria-live="polite"></p>
             <a class="btn-cohort" href="#reserve" data-cohort="5th/6th Girls">Reserve — 5th / 6th Girls</a>
           </article>
           <article class="cohort">
@@ -524,7 +538,7 @@
               <div class="enroll-head"><span class="enroll-count">5 of 12 enrolled</span><span class="enroll-left">7 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
-            <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
+            <p class="c-meta c-recent" aria-live="polite"></p>
             <a class="btn-cohort" href="#reserve" data-cohort="5th/6th Boys">Reserve — 5th / 6th Boys</a>
           </article>
           <article class="cohort">
@@ -535,7 +549,7 @@
               <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
-            <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
+            <p class="c-meta c-recent" aria-live="polite"></p>
             <a class="btn-cohort" href="#reserve" data-cohort="7th/8th Girls">Reserve — 7th / 8th Girls</a>
           </article>
           <article class="cohort">
@@ -546,7 +560,7 @@
               <div class="enroll-head"><span class="enroll-count">6 of 12 enrolled</span><span class="enroll-left">6 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
-            <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
+            <p class="c-meta c-recent" aria-live="polite"></p>
             <a class="btn-cohort" href="#reserve" data-cohort="7th/8th Boys">Reserve — 7th / 8th Boys</a>
           </article>
         </div>
@@ -647,10 +661,10 @@
             "totalEnrolled": 17,
             "totalCapacity": 48,
             "cohorts": [
-              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 3, "capacity": 12 },
-              { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 5, "capacity": 12 },
-              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 3, "capacity": 12 },
-              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 6, "capacity": 12 }
+              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 3, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z"] },
+              { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 5, "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z"] },
+              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 3, "capacity": 12, "recent": [] },
+              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 6, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z"] }
             ]
           }
           </script>
@@ -799,6 +813,42 @@
           }, { threshold: 0.4 });
           walls.forEach(function (w) { io.observe(w); });
         })();
+        // Pulse the pills registered in the last 24 hours (from each cohort's "recent" times).
+        var DAY_MS = 24 * 60 * 60 * 1000;
+        function recentCountFor(cohort) {
+          var now = Date.now();
+          return (cohort.recent || []).filter(function (t) {
+            var ts = Date.parse(t);
+            return !isNaN(ts) && now - ts >= -3600000 && now - ts < DAY_MS;
+          }).length;
+        }
+        function showRecent(counter, recentCount) {
+          var pills = counter.querySelectorAll('.vpill');
+          var enrolled = counter.querySelectorAll('.vpill.is-filled').length;
+          recentCount = Math.min(recentCount, enrolled);
+          pills.forEach(function (pill, i) { pill.classList.toggle('is-recent', i >= enrolled - recentCount && i < enrolled); });
+          var card = counter.closest('.cohort');
+          var line = card && card.querySelector('.c-recent');
+          if (!line) return;
+          line.innerHTML = '';
+          if (recentCount > 0) {
+            var dot = document.createElement('span');
+            dot.className = 'recent-pill';
+            dot.setAttribute('aria-hidden', 'true');
+            line.appendChild(dot);
+            line.appendChild(document.createTextNode(recentCount + (recentCount === 1 ? ' registration' : ' registrations') + ' in the last 24 hours'));
+          }
+        }
+        (function () {
+          var data = [];
+          try { data = JSON.parse(document.getElementById('phase-play-enrollments').textContent).cohorts || []; } catch (e) {}
+          document.querySelectorAll('.enroll-counter').forEach(function (counter, idx) {
+            if (data[idx]) {
+              counter.setAttribute('data-recent', String(recentCountFor(data[idx])));
+              showRecent(counter, recentCountFor(data[idx]));
+            }
+          });
+        })();
         window.PhasePlayEnrollments = {
           renderAll: function () { document.querySelectorAll('.enroll-counter').forEach(renderEnrollCounter); },
           setByIndex: function (idx, enrolled) {
@@ -937,6 +987,9 @@
             renderEnrollCounter(counters[idx]);
             var wallEl = counters[idx].querySelector('.vpills');
             if (wallEl) { wallEl.classList.remove('pp-pending'); wallEl.classList.add('pp-anim'); }
+            var recentNow = (parseInt(counters[idx].getAttribute('data-recent') || '0', 10) || 0) + 1;
+            counters[idx].setAttribute('data-recent', String(recentNow));
+            showRecent(counters[idx], recentNow);
             var newPill = counters[idx].querySelectorAll('.vpill')[spot - 1];
             if (newPill) newPill.classList.add('is-new');
           }

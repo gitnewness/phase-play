@@ -7,7 +7,7 @@ Michael Nunes presents Phase Play — a mandatory two-day basketball camp, $150,
 - `index.html` is the whole site (single file, exported from Muse).
 - The reserve form is a Netlify Form named `phase-play-reserve`. It submits via POST to `/` and shows "Thanks for joining!" on submit.
 - Enrollment counts live in the JSON block with `id="phase-play-enrollments"` inside `index.html`. Update those numbers there, and the page counters, cohort buttons, and waitlist logic follow.
-  - Current counts: 5th/6th Girls 1/12, 5th/6th Boys 5/12, 7th/8th Girls 3/12, 7th/8th Boys 4/12 — 13 of 48 total.
+  - Current counts: 5th/6th Girls 3/12, 5th/6th Boys 5/12, 7th/8th Girls 3/12, 7th/8th Boys 6/12 — 17 of 48 total.
   - A cohort at 12/12 automatically switches to a waitlist signup.
 
 ## Editing with Claude Code

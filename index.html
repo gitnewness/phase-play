@@ -509,9 +509,9 @@
             <div class="c-k">5th / 6th Session · Girls</div>
             <h3>5th / 6th Grade Girls</h3>
             <p class="c-time"><strong>Mon, Nov 23</strong> <b>1:00 PM – 3:00 PM</b></p>
-            <div class="enroll-counter is-open" data-enrolled="1" data-capacity="12" role="status" aria-label="1 of 12 enrolled, 11 spots left">
-              <div class="enroll-head"><span class="enroll-count">1 of 12 enrolled</span><span class="enroll-left">11 spots left</span></div>
-              <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
+            <div class="enroll-counter is-open" data-enrolled="3" data-capacity="12" role="status" aria-label="3 of 12 enrolled, 9 spots left">
+              <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
+              <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
             <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
             <a class="btn-cohort" href="#reserve" data-cohort="5th/6th Girls">Reserve — 5th / 6th Girls</a>
@@ -542,9 +542,9 @@
             <div class="c-k">7th / 8th Session · Boys</div>
             <h3>7th / 8th Grade Boys</h3>
             <p class="c-time"><strong>Mon, Nov 23</strong> <b>10:00 AM – 12:00 PM</b></p>
-            <div class="enroll-counter is-open" data-enrolled="4" data-capacity="12" role="status" aria-label="4 of 12 enrolled, 8 spots left">
-              <div class="enroll-head"><span class="enroll-count">4 of 12 enrolled</span><span class="enroll-left">8 spots left</span></div>
-              <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
+            <div class="enroll-counter is-open" data-enrolled="6" data-capacity="12" role="status" aria-label="6 of 12 enrolled, 6 spots left">
+              <div class="enroll-head"><span class="enroll-count">6 of 12 enrolled</span><span class="enroll-left">6 spots left</span></div>
+              <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
             <p class="c-meta">Limit: 12 <span>· 12 girls + 12 boys = 24 total per session</span></p>
             <a class="btn-cohort" href="#reserve" data-cohort="7th/8th Boys">Reserve — 7th / 8th Boys</a>
@@ -644,13 +644,13 @@
           <h2 id="reserve-h">Reserve a spot</h2>
           <script type="application/json" id="phase-play-enrollments">
           {
-            "totalEnrolled": 13,
+            "totalEnrolled": 17,
             "totalCapacity": 48,
             "cohorts": [
-              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 1, "capacity": 12 },
+              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 3, "capacity": 12 },
               { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 5, "capacity": 12 },
               { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 3, "capacity": 12 },
-              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 4, "capacity": 12 }
+              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 6, "capacity": 12 }
             ]
           }
           </script>
@@ -819,7 +819,7 @@
 
         // Enrollment data in JSON — drives the waitlist logic.
         // A cohort at capacity (12/12) offers Join Waitlist instead of Reserve.
-        var enrollmentData = { totalEnrolled: 13, totalCapacity: 48, cohorts: [] };
+        var enrollmentData = { totalEnrolled: 17, totalCapacity: 48, cohorts: [] };
         try {
           var enrollmentJsonEl = document.getElementById('phase-play-enrollments');
           if (enrollmentJsonEl) enrollmentData = JSON.parse(enrollmentJsonEl.textContent);

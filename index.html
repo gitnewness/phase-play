@@ -741,10 +741,10 @@
             "totalEnrolled": 26,
             "totalCapacity": 48,
             "cohorts": [
-              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 4, "extra": 3, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
-              { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 8, "extra": 3, "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
-              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 5, "extra": 3, "capacity": 12, "recent": ["2026-11-15T17:25:44Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
-              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 9, "extra": 3, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] }
+              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 4, "extra": 3, "pulse": 3, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
+              { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 8, "extra": 3, "pulse": 4, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
+              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 5, "extra": 3, "pulse": 3, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T17:25:44Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
+              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 9, "extra": 3, "pulse": 6, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] }
             ]
           }
           </script>
@@ -895,14 +895,18 @@
           }, { threshold: 0.15 });
           walls.forEach(function (w) { io.observe(w); });
         })();
-        // Pulse the pills registered in the last 24 hours (from each cohort's "recent" times).
-        var DAY_MS = 24 * 60 * 60 * 1000;
-        function recentCountFor(cohort) {
+        // Pulse the pills registered in the last 48 hours (from each cohort's "recent" times).
+        var DAY_MS = 48 * 60 * 60 * 1000; // recent window: 48 hours
+        // How many pills pulse. A cohort's "pulse" (set by hand at "pulseSet")
+        // wins for 48 hours, plus any live sign-ups that come in after it.
+        function recentCountFor(cohort, liveRecent) {
           var now = Date.now();
-          return (cohort.recent || []).filter(function (t) {
-            var ts = Date.parse(t);
-            return !isNaN(ts) && now - ts >= -3600000 && now - ts < DAY_MS;
-          }).length;
+          var inWindow = function (t) { var ts = Date.parse(t); return !isNaN(ts) && now - ts >= -3600000 && now - ts < DAY_MS; };
+          var set = Date.parse(cohort.pulseSet || '');
+          if (typeof cohort.pulse === 'number' && !isNaN(set) && now - set < DAY_MS) {
+            return cohort.pulse + (liveRecent || []).filter(function (t) { return Date.parse(t) > set; }).length;
+          }
+          return Math.max((cohort.recent || []).filter(inWindow).length, (liveRecent || []).filter(inWindow).length);
         }
         function showRecent(counter, recentCount) {
           var pills = counter.querySelectorAll('.vpill');
@@ -918,7 +922,7 @@
             dot.className = 'recent-pill';
             dot.setAttribute('aria-hidden', 'true');
             line.appendChild(dot);
-            line.appendChild(document.createTextNode(recentCount + (recentCount === 1 ? ' registration' : ' registrations') + ' in the last 24 hours'));
+            line.appendChild(document.createTextNode(recentCount + (recentCount === 1 ? ' registration' : ' registrations') + ' in the last 48 hours'));
           }
         }
         (function () {
@@ -1025,7 +1029,7 @@
             var base = parseInt(counter.getAttribute('data-enrolled') || '0', 10) || 0;
             // "extra" = spots added by hand on top of the live sign-ups.
             var enrolled = Math.max(base, (l.enrolled || 0) + (c.extra || 0));
-            var recent = Math.max(recentCountFor(c), (l.recent || []).length);
+            var recent = recentCountFor(c, l.recent);
             counter.setAttribute('data-enrolled', String(enrolled));
             renderEnrollCounter(counter);
             counter.setAttribute('data-recent', String(recent));

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light" />
+    <title>Interphase — Phase Play</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #161616; --ink-soft: #404040; --ink-faint: #6f6f6f; --line: #e3e3e3;
+        --orange: #e85d04; --orange-deep: #c24e02; --orange-soft: #fbe3cf; --bg: #ffffff; --panel: #fafafa;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Barlow", system-ui, sans-serif; font-size: 16px; line-height: 1.45; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+      header.top { padding: 22px 0 8px; }
+      .kicker { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: 14px; color: var(--orange-deep); }
+      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: clamp(36px, 9vw, 52px); line-height: .95; margin: 6px 0 4px; }
+      h1 span { color: var(--orange); }
+      .sub { color: var(--ink-soft); margin: 0; }
+      .overall { margin: 16px 0 6px; }
+      .bar { height: 10px; border-radius: 999px; background: #eee; overflow: hidden; }
+      .bar i { display: block; height: 100%; width: 0; background: var(--orange); border-radius: 999px; transition: width .5s ease; }
+      .overall-txt { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-faint); margin-top: 6px; }
+      .group { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 22px; margin: 30px 0 8px; padding-top: 14px; border-top: 2px solid var(--ink); }
+      .block { border: 1px solid var(--line); border-top: 4px solid var(--orange); border-radius: 0 0 10px 10px; background: #fff; margin: 0 0 16px; }
+      .block-head { width: 100%; text-align: left; border: 0; background: none; padding: 14px 16px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font: inherit; color: inherit; }
+      .block-title { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 21px; line-height: 1.05; }
+      .block-focus { grid-column: 1 / -1; font-size: 14.5px; color: var(--ink-soft); }
+      .block-count { font-weight: 700; font-size: 14px; color: var(--orange-deep); white-space: nowrap; }
+      .sessions { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; padding: 0 16px 14px; }
+      .s { height: 34px; border-radius: 999px; border: 1.5px solid #dedede; background: #f1f1f1; font: 700 13px "Barlow", sans-serif; color: var(--ink-faint); cursor: pointer; padding: 0; }
+      .s.done { background: var(--orange); border-color: var(--orange); color: #fff; }
+      .s.sel { outline: 3px solid var(--ink); outline-offset: 1px; }
+      .body { padding: 0 16px 16px; border-top: 1px solid var(--line); }
+      .body[hidden] { display: none; }
+      .sess-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; margin: 12px 0 6px; }
+      .sess-head b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 18px; }
+      .sess-head span { font-size: 14px; color: var(--ink-faint); }
+      .sets { font-size: 14px; font-weight: 600; color: var(--orange-deep); margin: 0 0 6px; }
+      .col-label { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 14px; color: var(--ink-faint); margin: 12px 0 2px; }
+      ul.drills { list-style: none; margin: 0; padding: 0; }
+      ul.drills li { border-bottom: 1px solid #f0f0f0; }
+      ul.drills label { display: flex; align-items: flex-start; gap: 12px; padding: 10px 2px; cursor: pointer; }
+      ul.drills input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--orange); flex-shrink: 0; }
+      ul.drills .reps { font-weight: 700; min-width: 3.2em; display: inline-block; }
+      ul.drills input:checked + span { color: var(--ink-faint); text-decoration: line-through; }
+      .test { margin: 14px 0 0; padding: 12px; background: var(--orange-soft); border-radius: 8px; }
+      .test label { font-weight: 600; display: block; margin-bottom: 6px; }
+      .test input { width: 90px; font: inherit; font-size: 18px; padding: 8px 10px; border: 1px solid #e0b58f; border-radius: 8px; }
+      textarea { width: 100%; min-height: 70px; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-top: 4px; resize: vertical; }
+      .row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
+      .btn { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: 18px; border: 0; border-radius: 8px; padding: 12px 18px; cursor: pointer; background: var(--orange); color: #fff; }
+      .btn.alt { background: #f1f1f1; color: var(--ink); }
+      .btn:disabled { opacity: .5; cursor: default; }
+      .saved { font-size: 14px; color: var(--ink-faint); }
+      .msg { margin: 40px 0; padding: 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+      .msg h2 { font-family: "Barlow Condensed", sans-serif; text-transform: uppercase; margin: 0 0 6px; }
+      footer { text-align: center; color: var(--ink-faint); font-size: 13px; margin-top: 30px; }
+      @media (max-width: 420px) { .s { height: 30px; font-size: 12px; } .sessions { gap: 4px; } }
+    </style>
+  </head>
+  <body>
+    <main class="wrap" id="app" aria-live="polite">
+      <header class="top">
+        <div class="kicker">Phase Play · Interphase</div>
+        <h1>Foundational <span>Skill Building</span></h1>
+        <p class="sub" id="hello">Loading your workout…</p>
+      </header>
+    </main>
+
+    <script>
+      (function () {
+        var API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
+        // Workout content, from Coach Michael's "Basketball Daily Workout Program".
+        var PROGRAM = [
+          { group: 'Daily Ball Handling — Focus on Offhand Positioning', blocks: [
+            { key: 'stationary', title: 'Stationary 2-Ball — Square Stance', focus: 'Focus on broad base and body rhythm', sets: '1–3 sets of:', cols: [
+              { drills: ['25x|Pound Sync', '25x|Pound Alternate', '25x|V-Sync', '25x|V-Alternate', '25x|Swing the Purse Sync', '25x|Swing the Purse Alternate'] },
+              { drills: ['10x|Cross Clockwise', '10x|Cross Alternate', '10x|Tween Alternate', '4x|Figure 8 Forward', '4x|Figure 8 Reverse', '1x|Piano Dribble Set'] } ] },
+            { key: 'motion', title: 'Motion Combos', focus: 'Focus on wide moving stance and tight dribble path (use a passing partner between combos, if available)', cols: [
+              { drills: ['6x|Tween Cross Combo (R/L)', '6x|Tween Tween Combo (R/L)', '6x|Tween Behind Combo (R/L)', '6x|Cross Pound Behind Pound Combo (R/L)'] },
+              { drills: ['6x|V Tween Cross Combo (R/L)', '6x|V Tween Behind Combo (R/L)', '6x|InOut Tween Cross Combo (R/L)', '6x|InOut Tween Behind Combo (R/L)'] } ] }
+          ] },
+          { group: 'Daily Shooting Drills', blocks: [
+            { key: 'form', title: 'Form Shooting', focus: 'Focus on efficient ball to shot path and follow through', cols: [
+              { drills: ['10x|1-Hand Form Shot (3-Ft)', '10x|1-Hand Form Shot (6-Ft)', '10x|2-Hand Form Shot (12-Ft)', '10x|2-Hand Form Shot (15-Ft)'] },
+              { drills: ['5x|Right Dribble Step Approach (1-2 Step)', '5x|Left Dribble Step Approach (1-2 Step)', '5x|Right Dribble Step Approach (Step Hop)', '5x|Left Dribble Step Approach (Step Hop)'] } ] },
+            { key: 'pickup', title: 'Pickup Series', focus: 'Focus on dribble outside foot and pickup at hip level', cols: [
+              { drills: ['5 makes|Right Pound Pickup', '5 makes|Left Pound Pickup', '5 makes|Right Split Pound Pickup', '5 makes|Left Split Pound Pickup'] },
+              { drills: ['5 makes|Left to Right Split Tween', '5 makes|Right to Left Split Tween', '5 makes|Left to Right Pound Tween', '5 makes|Right to Left Pound Tween'] } ] },
+            { key: 'pullup', title: 'Pullup Series', focus: 'Focus on off hand lift into protection & pickup', test: 'Accuracy test — 10x alternating 1-dribble pull-up elbow jumpers (from center 3-pt line). Makes out of 10:', cols: [
+              { label: 'Sweep Series (Center 3-Point Line)', drills: ['5 makes|Left Elbow — 1-Dribble Pivot to Square (Inside Out)', '5 makes|Left Elbow — 1-Dribble Jump Stop to Square (Hop Foot Replacement)', '5 makes|Left Elbow — 1-Dribble Step Back', '5 makes|Right Elbow — 1-Dribble Pivot to Square (Inside Out)', '5 makes|Right Elbow — 1-Dribble Jump Stop to Square (Hop Foot Replacement)', '5 makes|Right Elbow — 1-Dribble Step Back'] },
+              { label: 'Jab Series (Center 3-Point Line)', drills: ['5 makes|Left Elbow — 1-Dribble Pivot to Square (Inside Out)', '5 makes|Left Elbow — 1-Dribble Jump Stop to Square (Hop Foot Replacement)', '5 makes|Left Elbow — 1-Dribble Step Back', '5 makes|Right Elbow — 1-Dribble Pivot to Square (Inside Out)', '5 makes|Right Elbow — 1-Dribble Jump Stop to Square (Hop Foot Replacement)', '5 makes|Right Elbow — 1-Dribble Step Back'] } ] }
+          ] },
+          { group: 'Combo Finishing Drills', blocks: [
+            { key: 'finishing', title: 'Rollup Reverse Pivot Finishing', focus: 'Focus on accelerated footwork and high glass finishes', cols: [
+              { label: 'Sweep Series (Center 17-Ft)', drills: ['5x|Reverse Pivot + Pickup + Extend Lay', '5x|Reverse Pivot + Pickup + Classic Lay', '5x|Reverse Pivot + Tuck Hop + Classic Lay', '5x|Reverse Pivot + Tuck Hop + Cross Step', '5x|Reverse Pivot Stretch Spin + Pickup Lay', '5x|Reverse Pivot Stretch Spin + Cross Step'] },
+              { label: 'Jab Series (Center 17-Ft)', drills: ['5x|Reverse Pivot + Pickup + Extend Lay', '5x|Reverse Pivot + Pickup + Classic Lay', '5x|Reverse Pivot + Tuck Hop + Classic Lay', '5x|Reverse Pivot + Tuck Hop + Cross Step', '5x|Reverse Pivot Stretch Spin + Pickup Lay', '5x|Reverse Pivot Stretch Spin + Cross Step'] } ] }
+          ] },
+          { group: 'Daily Passing Drills', blocks: [
+            { key: 'passing', title: 'Dribble Catch Passing', focus: 'Focus on offhand position and driving pass with elbow below hand', cols: [
+              { drills: ['15x|Left Hand — Pound & Pass', '15x|Right Hand — Pound & Pass', '15x|Cross Front Clockwise — Pound Cross & Pass', '15x|Cross Front Counter Clockwise — Pound Cross & Pass'] },
+              { drills: ['15x|Cross Between Legs Clockwise — Pound Cross & Pass', '15x|Cross Between Legs Counter Clockwise — Pound Cross & Pass', '15x|Cross Behind Back Clockwise — Pound Cross & Pass', '15x|Cross Behind Back Counter Clockwise — Pound Cross & Pass'] } ] }
+          ] }
+        ];
+        var SESSIONS = 10;
+        var app = document.getElementById('app');
+        var hello = document.getElementById('hello');
+        var token = (location.hash.match(/k=([A-Za-z0-9]+)/) || [])[1] || '';
+        var state = {}; // key -> { n: {completed_on, drills:[], test_score, notes} }
+        var selected = {}; // key -> session no
+        var open = {};
+
+        function el(tag, attrs, kids) {
+          var n = document.createElement(tag);
+          Object.keys(attrs || {}).forEach(function (k) {
+            if (k === 'text') n.textContent = attrs[k];
+            else if (k === 'on') Object.keys(attrs.on).forEach(function (ev) { n.addEventListener(ev, attrs.on[ev]); });
+            else if (attrs[k] !== false && attrs[k] != null) n.setAttribute(k, attrs[k] === true ? '' : attrs[k]);
+          });
+          (kids || []).forEach(function (c) { if (c != null) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+          return n;
+        }
+        function call(body) {
+          return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token: token }, body)) })
+            .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
+        }
+        function today() {
+          var d = new Date();
+          return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function fmt(iso) {
+          if (!iso) return '';
+          var p = iso.split('-');
+          return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+        function blocks() { var a = []; PROGRAM.forEach(function (g) { g.blocks.forEach(function (b) { a.push(b); }); }); return a; }
+        function sess(key, n) { state[key] = state[key] || {}; return state[key][n] || (state[key][n] = { completed_on: null, drills: [], test_score: null, notes: '' }); }
+        function doneCount(key) { var s = state[key] || {}, c = 0; for (var i = 1; i <= SESSIONS; i++) if (s[i] && s[i].completed_on) c++; return c; }
+        function nextOpen(key) { for (var i = 1; i <= SESSIONS; i++) if (!sess(key, i).completed_on) return i; return SESSIONS; }
+
+        function fail(title, text) {
+          hello.textContent = '';
+          app.appendChild(el('div', { class: 'msg' }, [el('h2', { text: title }), el('p', { text: text })]));
+        }
+        if (!token) { fail('Use your personal link', 'Open this page from the private Interphase link Coach Michael sent you. Questions? Text 541-531-0150.'); return; }
+
+        call({ action: 'ip_load' }).then(function (r) {
+          if (r.status !== 200) { fail('This link isn’t active', 'Ask Coach Michael for a new Interphase link. Text 541-531-0150.'); return; }
+          (r.body.sessions || []).forEach(function (s) {
+            var x = sess(s.block_key, s.session_no);
+            x.completed_on = s.completed_on; x.drills = s.drills || []; x.test_score = s.test_score; x.notes = s.notes || '';
+          });
+          hello.textContent = 'Welcome, ' + r.body.player + ' (' + r.body.cohort.replace('/', ' / ') + '). Work through each section and check off your drills. Your progress saves automatically.';
+          blocks().forEach(function (b) { selected[b.key] = nextOpen(b.key); });
+          render();
+        }).catch(function () { fail('Can’t connect', 'Check your internet connection and reload the page.'); });
+
+        var overallBar, overallTxt;
+        function updateOverall() {
+          var total = blocks().length * SESSIONS, done = 0;
+          blocks().forEach(function (b) { done += doneCount(b.key); });
+          overallBar.style.width = Math.round(100 * done / total) + '%';
+          overallTxt.firstChild.textContent = done + ' of ' + total + ' sessions complete';
+        }
+
+        function render() {
+          Array.prototype.slice.call(app.children, 1).forEach(function (n) { n.remove(); });
+          overallBar = el('i');
+          overallTxt = el('div', { class: 'overall-txt' }, [el('span'), el('span', { text: '10 sessions per section' })]);
+          app.appendChild(el('div', { class: 'overall' }, [el('div', { class: 'bar' }, [overallBar]), overallTxt]));
+          PROGRAM.forEach(function (g) {
+            app.appendChild(el('h2', { class: 'group', text: g.group }));
+            g.blocks.forEach(function (b) { app.appendChild(blockEl(b)); });
+          });
+          app.appendChild(el('footer', { text: 'Phase Play Hoops · Questions? Text Coach Michael at 541-531-0150' }));
+          updateOverall();
+        }
+
+        function blockEl(b) {
+          var card = el('section', { class: 'block', id: 'b-' + b.key });
+          var count = el('span', { class: 'block-count' });
+          function setCount() { count.textContent = doneCount(b.key) + ' / ' + SESSIONS; }
+          setCount();
+          var head = el('button', { class: 'block-head', type: 'button', 'aria-expanded': open[b.key] ? 'true' : 'false', on: { click: function () { open[b.key] = !open[b.key]; card.replaceWith(blockEl(b)); } } },
+            [el('span', { class: 'block-title', text: b.title }), count, el('span', { class: 'block-focus', text: b.focus })]);
+          var pills = el('div', { class: 'sessions', role: 'group', 'aria-label': b.title + ' sessions' });
+          for (var i = 1; i <= SESSIONS; i++) (function (n) {
+            var s = sess(b.key, n);
+            pills.appendChild(el('button', {
+              type: 'button', class: 's' + (s.completed_on ? ' done' : '') + (open[b.key] && selected[b.key] === n ? ' sel' : ''),
+              title: s.completed_on ? 'Session ' + n + ' — done ' + fmt(s.completed_on) : 'Session ' + n,
+              'aria-label': 'Session ' + n + (s.completed_on ? ', completed ' + fmt(s.completed_on) : ''),
+              text: String(n),
+              on: { click: function () { selected[b.key] = n; open[b.key] = true; card.replaceWith(blockEl(b)); } }
+            }));
+          })(i);
+          card.appendChild(head);
+          card.appendChild(pills);
+          if (open[b.key]) card.appendChild(bodyEl(b, setCount));
+          return card;
+        }
+
+        var saveTimers = {};
+        function save(b, n, statusEl) {
+          var s = sess(b.key, n);
+          statusEl.textContent = 'Saving…';
+          var tk = b.key + ':' + n;
+          clearTimeout(saveTimers[tk]);
+          saveTimers[tk] = setTimeout(function () {
+            call({ action: 'ip_save', block: b.key, session_no: n, completed_on: s.completed_on, drills: s.drills, test_score: s.test_score, notes: s.notes })
+              .then(function (r) { statusEl.textContent = r.status === 200 ? 'Saved' : 'Couldn’t save — try again'; })
+              .catch(function () { statusEl.textContent = 'Couldn’t save — check your connection'; });
+          }, 500);
+        }
+
+        function bodyEl(b, setCount) {
+          var n = selected[b.key] || 1, s = sess(b.key, n);
+          var status = el('span', { class: 'saved' });
+          var body = el('div', { class: 'body' });
+          body.appendChild(el('div', { class: 'sess-head' }, [el('b', { text: 'Session ' + n + ' of ' + SESSIONS }), el('span', { text: s.completed_on ? 'Completed ' + fmt(s.completed_on) : 'Not done yet' })]));
+          if (b.sets) body.appendChild(el('p', { class: 'sets', text: b.sets }));
+          var idx = 0;
+          b.cols.forEach(function (c) {
+            if (c.label) body.appendChild(el('div', { class: 'col-label', text: c.label }));
+            var ul = el('ul', { class: 'drills' });
+            c.drills.forEach(function (d) {
+              var i = idx++, parts = d.split('|');
+              var box = el('input', { type: 'checkbox', checked: s.drills.indexOf(i) !== -1, on: { change: function () {
+                var at = s.drills.indexOf(i);
+                if (box.checked && at === -1) s.drills.push(i); else if (!box.checked && at !== -1) s.drills.splice(at, 1);
+                save(b, n, status);
+              } } });
+              ul.appendChild(el('li', {}, [el('label', {}, [box, el('span', {}, [el('span', { class: 'reps', text: parts[0] }), ' ' + parts[1]])])]));
+            });
+            body.appendChild(ul);
+          });
+          if (b.test) {
+            var score = el('input', { type: 'number', min: '0', max: '10', inputmode: 'numeric', value: s.test_score == null ? '' : String(s.test_score), on: { change: function () {
+              var v = score.value === '' ? null : Math.max(0, Math.min(10, parseInt(score.value, 10) || 0));
+              s.test_score = v; if (v != null) score.value = v;
+              save(b, n, status);
+            } } });
+            body.appendChild(el('div', { class: 'test' }, [el('label', { text: b.test }), score, ' / 10']));
+          }
+          var notes = el('textarea', { placeholder: 'Workout notes (optional)', 'aria-label': 'Workout notes' });
+          notes.value = s.notes || '';
+          notes.addEventListener('input', function () { s.notes = notes.value; save(b, n, status); });
+          body.appendChild(el('div', { class: 'col-label', text: 'Workout notes' }));
+          body.appendChild(notes);
+          var done = el('button', { class: 'btn' + (s.completed_on ? ' alt' : ''), type: 'button', text: s.completed_on ? 'Mark not done' : 'Complete session ' + n, on: { click: function () {
+            s.completed_on = s.completed_on ? null : today();
+            save(b, n, status);
+            if (s.completed_on && n < SESSIONS) selected[b.key] = n + 1;
+            setCount(); updateOverall();
+            var card = document.getElementById('b-' + b.key);
+            card.replaceWith(blockEl(b));
+          } } });
+          body.appendChild(el('div', { class: 'row' }, [done, status]));
+          return body;
+        }
+      })();
+    </script>
+  </body>
+</html>

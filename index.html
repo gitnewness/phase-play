@@ -1163,7 +1163,7 @@
         var root = document.getElementById('pp-admin');
         var banner = document.querySelector('.hero-banner img');
         if (!root || !banner) return;
-        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false;
+        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false, ipData = null;
 
         function el(tag, attrs, kids) {
           var n = document.createElement(tag);
@@ -1271,11 +1271,12 @@
             el('div', { class: 'pp-admin-top' }, [el('h2', { text: 'Coach backend' }), el('button', { class: 'pp-x', type: 'button', 'aria-label': 'Close', text: '×', on: { click: close } })]),
             el('div', { class: 'pp-tabs', role: 'tablist' }, [
               el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
-              el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } })
+              el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
+              el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } })
             ]),
             el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' }),
             msg,
-            tab === 'rosters' ? rosters(msg) : teamsView(msg)
+            tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : interphaseView(msg)
           ]);
           root.appendChild(box);
         }
@@ -1343,6 +1344,56 @@
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
             });
           } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, parent, email, cohort, pkg, btn])]);
+        }
+
+        function interphaseView(msg) {
+          var wrap = el('div');
+          if (!ipData) {
+            wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading Interphase links…' }));
+            call({ action: 'ip_admin' }).then(function (r) {
+              if (r.status === 200) { ipData = r.body; if (tab === 'interphase') render(); }
+              else { msg.className = 'pp-msg'; msg.textContent = 'Could not load Interphase.'; }
+            });
+            return wrap;
+          }
+          var access = {}, done = {};
+          ipData.access.forEach(function (a) { access[a.registration_id] = a; });
+          ipData.sessions.forEach(function (x) { if (x.completed_on) done[x.registration_id] = (done[x.registration_id] || 0) + 1; });
+          wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:12px', text: 'Each player has a private link to their Interphase workout (7 sections × 10 sessions = 70). Copy or text it to the family. Turning a link off blocks it right away.' }));
+          COHORTS.forEach(function (c) {
+            var players = regs().filter(function (r) { return r.cohort === c && r.signup_type === 'reserve' && active(r); });
+            wrap.appendChild(el('h3', { text: c.replace('/', ' / ') }));
+            if (!players.length) { wrap.appendChild(el('p', { class: 'pp-summary', text: 'No players yet.' })); return; }
+            var tbody = el('tbody');
+            players.forEach(function (r) {
+              var a = access[r.id];
+              if (!a) { tbody.appendChild(el('tr', {}, [el('td', {}, [el('b', { text: r.player })]), el('td', { class: 'muted', text: 'Link not ready — reopen this tab' })])); return; }
+              var url = location.origin + '/interphase/#k=' + a.token;
+              var copy = el('button', { class: 'pp-paid', type: 'button', text: 'Copy link', on: { click: function () {
+                var ok = function () { copy.textContent = 'Copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1500); };
+                if (navigator.clipboard) navigator.clipboard.writeText(url).then(ok, function () { prompt('Copy this link:', url); });
+                else prompt('Copy this link:', url);
+              } } });
+              var smsBody = 'Hi! Here is ' + r.player.split(' ')[0] + "'s Phase Play Interphase workout: " + url;
+              var text = el('a', { class: 'pp-paid', href: 'sms:?&body=' + encodeURIComponent(smsBody), text: 'Text' });
+              var mail = r.email ? el('a', { class: 'pp-paid', href: 'mailto:' + r.email + '?subject=' + encodeURIComponent('Phase Play — Interphase workout') + '&body=' + encodeURIComponent(smsBody), text: 'Email' }) : null;
+              var toggle = el('button', { class: 'pp-paid' + (a.active ? ' yes' : ''), type: 'button', text: a.active ? 'Link on' : 'Link off', on: { click: function () {
+                toggle.disabled = true;
+                call({ action: 'ip_toggle', id: r.id, active: !a.active }).then(function (x) { if (x.status === 200) { a.active = !a.active; render('Saved.'); } else { toggle.disabled = false; } });
+              } } });
+              var n = done[r.id] || 0;
+              tbody.appendChild(el('tr', { class: a.active ? '' : 'is-cancelled' }, [
+                el('td', {}, [el('b', { text: r.player })]),
+                el('td', {}, [el('span', { text: n + ' / 70 sessions' }), el('br'), el('span', { class: 'muted', text: a.last_opened_at ? 'Opened ' + fmtDate(a.last_opened_at) : 'Not opened yet' })]),
+                el('td', {}, [copy, ' ', text, ' ', mail, ' ', toggle])
+              ]));
+            });
+            wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [
+              el('thead', {}, [el('tr', {}, ['Player', 'Progress', ''].map(function (h) { return el('th', { text: h }); }))]),
+              tbody
+            ])]));
+          });
+          return wrap;
         }
 
         function teamsView(msg) {

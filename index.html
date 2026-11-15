@@ -242,12 +242,18 @@
       .enroll-counter.is-full .vpill.is-filled { background: var(--ink); border-color: var(--ink); }
       @media (max-width: 760px) { .vpill { height: 38px; } .vpills { gap: 5px; } }
       .vpill { transition: background-color .35s ease, border-color .35s ease; transform-origin: bottom center; position: relative; }
-      .vpill.is-recent::after {
-        content: ""; position: absolute; inset: -3px; border-radius: 999px;
-        border: 2px solid var(--orange); pointer-events: none;
-        animation: ppRecent 1.8s ease-out infinite;
+      .vpill.is-recent::before {
+        content: ""; position: absolute; inset: 0; border-radius: 999px; background: #fff;
+        pointer-events: none; animation: ppRecentGlow 1.4s ease-in-out infinite;
       }
-      @keyframes ppRecent { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.35, 1.18); } }
+      .vpill.is-recent::after {
+        content: ""; position: absolute; inset: -4px; border-radius: 999px;
+        border: 2px solid var(--orange); pointer-events: none;
+        animation: ppRecent 1.4s ease-out infinite;
+      }
+      @keyframes ppRecentGlow { 0%, 100% { opacity: 0; } 50% { opacity: .5; } }
+      @keyframes ppRecent { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.4, 1.2); } }
+      @keyframes ppFade { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
       .c-recent { min-height: 1.4em; font-weight: 600 !important; font-size: 15px !important; color: var(--ink); }
       .c-recent .recent-pill {
         display: inline-block; width: 9px; height: 15px; border-radius: 999px; background: var(--orange);
@@ -273,7 +279,7 @@
       @media (prefers-reduced-motion: reduce) {
         .vpills.pp-anim .vpill.is-filled, .vpill.is-new { animation: none; }
         .vpill.is-recent::after { animation: none; opacity: .8; transform: none; }
-        .c-recent .recent-pill { animation: none; }
+        .c-recent .recent-pill { animation: ppFade 1.6s ease-in-out infinite; }
         .vpills.pp-pending .vpill.is-filled { background: var(--orange); border-color: var(--orange); }
       }
       .btn-cohort {
@@ -810,7 +816,7 @@
               e.target.classList.add('pp-anim');
               io.unobserve(e.target);
             });
-          }, { threshold: 0.4 });
+          }, { threshold: 0.15 });
           walls.forEach(function (w) { io.observe(w); });
         })();
         // Pulse the pills registered in the last 24 hours (from each cohort's "recent" times).

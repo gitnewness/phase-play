@@ -336,6 +336,14 @@
         font-size: 32px; line-height: 1; margin: 0 0 8px; color: var(--ink);
       }
       .form-thanks p { margin: 0; color: var(--ink-soft); font-size: 16.5px; }
+      .venmo-pay[hidden] { display: none; }
+      .venmo-pay { margin-top: 18px; }
+      .btn-venmo { background: #008cff; color: #fff; width: 100%; }
+      .btn-venmo:hover { background: #0074d4; }
+      .venmo-qr { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+      .venmo-qr img { flex-shrink: 0; width: 132px; height: 132px; background: #fff; padding: 6px; border: 1px solid var(--line); border-radius: 8px; }
+      .venmo-qr p { font-size: 15px; }
+      @media (max-width: 760px) { .venmo-qr { flex-direction: column; align-items: center; } }
       .form-status { margin: 14px 0 0; text-align: center; font-size: 15px; font-weight: 600; color: var(--ink-soft); }
       .form-status[hidden] { display: none; }
 
@@ -666,6 +674,13 @@
           <div class="form-thanks" id="form-thanks" role="status" aria-live="polite" hidden>
             <h3>Thanks for joining!</h3>
             <p id="form-thanks-text">Thanks for joining — your spot has been received and Coach Michael will follow up to confirm.</p>
+            <div class="venmo-pay" id="venmo-pay" hidden>
+              <a class="btn btn-venmo" id="venmo-btn" href="https://venmo.com/u/michael-nunes-3" target="_blank" rel="noopener">Pay <span id="venmo-btn-amt">$150</span> with Venmo</a>
+              <div class="venmo-qr">
+                <img src="images/venmo-qr.svg" alt="QR code that opens Venmo for @Michael-Nunes-3" width="132" height="132" />
+                <p>On a computer? Scan with your phone's camera to open Venmo, then send <b id="venmo-amt">$150</b> to <b>@Michael-Nunes-3</b> with the note <b id="venmo-note">Phase Play</b>.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -842,14 +857,31 @@
             return encodeURIComponent(key) + '=' + encodeURIComponent(formData[key] == null ? '' : String(formData[key]));
           }).join('&');
         }
-        function showThanks(signupType, cohortId) {
+        var VENMO_USER = 'michael-nunes-3';
+        function setupVenmo(signupType, data) {
+          var box = document.getElementById('venmo-pay');
+          if (!box) return;
+          var m = /\$(\d+)/.exec(data.package || '');
+          if (signupType === 'waitlist' || !m) { box.hidden = true; return; }
+          var amount = m[1];
+          var pkgName = (data.package || '').split(' — ')[0];
+          var note = 'Phase Play — ' + data.player + ' — ' + data.cohort + ' — ' + pkgName;
+          document.getElementById('venmo-btn').href = 'https://venmo.com/' + VENMO_USER +
+            '?txn=pay&amount=' + amount + '&note=' + encodeURIComponent(note);
+          document.getElementById('venmo-btn-amt').textContent = '$' + amount;
+          document.getElementById('venmo-amt').textContent = '$' + amount;
+          document.getElementById('venmo-note').textContent = note;
+          box.hidden = false;
+        }
+        function showThanks(signupType, cohortId, data) {
           if (statusEl) statusEl.hidden = true;
           if (formEl) formEl.hidden = true;
           if (thanksTextEl) {
             thanksTextEl.textContent = signupType === 'waitlist'
               ? 'Thanks for joining — you have been added to the waitlist for ' + displayCohortLabel(cohortId) + ' and Coach Michael will follow up if a spot opens.'
-              : 'Thanks for joining — your spot has been received and Coach Michael will follow up to confirm.';
+              : 'Thanks for joining — your spot has been received. Pay with Venmo below to lock it in, and Coach Michael will follow up to confirm.';
           }
+          setupVenmo(signupType, data || {});
           if (thanksEl) {
             thanksEl.hidden = false;
             thanksEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -877,11 +909,11 @@
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: encodeFormData(formData)
           }).then(function () {
-            showThanks(formData.signup_type, formData.cohort);
+            showThanks(formData.signup_type, formData.cohort, formData);
           }).catch(function () {
             // Off-Netlify (local preview) the POST has nowhere to go;
             // on Netlify it is captured above. Show the thanks either way.
-            showThanks(formData.signup_type, formData.cohort);
+            showThanks(formData.signup_type, formData.cohort, formData);
           });
         });
       })();

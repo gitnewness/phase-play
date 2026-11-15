@@ -428,6 +428,51 @@
       @media (max-width: 760px) {
         .hero-photo-frame { height: clamp(220px, 62vw, 300px); }
       }
+
+      /* ===== Hidden coach backend (long-press the header) ===== */
+      .hero-banner img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+      .pp-admin[hidden] { display: none; }
+      .pp-admin { position: fixed; inset: 0; z-index: 1000; background: rgba(17,17,17,.6); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 12px; }
+      .pp-admin-box { background: #fff; color: var(--ink); width: 100%; max-width: 1000px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); padding: 20px 20px 28px; }
+      .pp-admin-box.is-code { max-width: 380px; margin-top: 18vh; }
+      .pp-admin-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+      .pp-admin h2 { margin: 0; font-size: 28px; }
+      .pp-admin h3 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 20px; margin: 22px 0 8px; }
+      .pp-x { border: 0; background: #f1f1f1; border-radius: 8px; font-size: 22px; line-height: 1; width: 38px; height: 38px; cursor: pointer; }
+      .pp-admin input, .pp-admin select { font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; }
+      .pp-code-row { display: flex; gap: 8px; }
+      .pp-code-row input { flex: 1; letter-spacing: .2em; }
+      .pp-btn { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: 16px; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--ink); color: #fff; }
+      .pp-btn.alt { background: #f1f1f1; color: var(--ink); }
+      .pp-btn.orange { background: var(--orange); }
+      .pp-btn:disabled { opacity: .5; cursor: default; }
+      .pp-msg { min-height: 1.3em; font-size: 14px; color: #b91c1c; margin: 8px 0 0; }
+      .pp-msg.ok { color: #15803d; }
+      .pp-tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--line); margin-bottom: 6px; }
+      .pp-tab { border: 0; background: none; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 17px; padding: 8px 12px; cursor: pointer; color: var(--ink-faint); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+      .pp-tab.on { color: var(--ink); border-bottom-color: var(--orange); }
+      .pp-summary { font-size: 14px; color: var(--ink-faint); margin: 10px 0 0; }
+      .pp-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+      .pp-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+      .pp-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+      .pp-table tr.is-cancelled td { opacity: .45; text-decoration: line-through; }
+      .pp-table .muted { color: var(--ink-faint); font-size: 13px; }
+      .pp-paid { cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: #fff; }
+      .pp-paid.yes { background: #dcfce7; border-color: #86efac; color: #166534; }
+      .pp-scroll { overflow-x: auto; }
+      .pp-add { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+      .pp-game { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-top: 14px; }
+      .pp-game-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+      .pp-game-head b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 19px; }
+      .pp-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+      .pp-team { border-radius: 8px; padding: 10px; min-height: 60px; }
+      .pp-team.orange { background: #fff4ec; border: 2px solid var(--orange); }
+      .pp-team.black { background: #f4f4f4; border: 2px solid var(--ink); }
+      .pp-team h4 { margin: 0 0 6px; font-family: "Barlow Condensed", sans-serif; text-transform: uppercase; font-size: 16px; }
+      .pp-chip { display: inline-block; margin: 3px; padding: 6px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 14px; cursor: pointer; }
+      .pp-chip:hover { border-color: var(--ink); }
+      .pp-unassigned { margin-top: 8px; font-size: 14px; }
+      @media (max-width: 760px) { .pp-teams { grid-template-columns: 1fr; } .pp-admin { padding: 0; } .pp-admin-box { border-radius: 0; min-height: 100%; } .pp-admin-box.is-code { margin-top: 0; } }
     </style>
   </head>
   <body>
@@ -863,6 +908,7 @@
           }
         };
 
+        var PP_API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
         var cohortSelect = document.getElementById('f-cohort');
         var pkgSelect = document.getElementById('f-pkg');
         var signupTypeInput = document.getElementById('f-signup-type');
@@ -906,24 +952,27 @@
         }
 
         // Cohort cards + select options: full cohorts switch to waitlist.
-        document.querySelectorAll('[data-cohort]').forEach(function (link) {
-          var cohortId = link.getAttribute('data-cohort');
-          if (isCohortFull(cohortId)) {
-            link.textContent = 'Join waitlist — ' + displayCohortLabel(cohortId);
-            link.classList.add('is-waitlist');
-            link.setAttribute('data-signup-type', 'waitlist');
-          }
-        });
-        if (cohortSelect) {
-          Array.prototype.forEach.call(cohortSelect.options, function (option) {
-            if (isCohortFull(option.value)) {
-              option.setAttribute('data-full', 'true');
-              if (option.textContent.indexOf('Waitlist') === -1) {
-                option.textContent = option.textContent + ' — Full (Waitlist)';
-              }
+        function applyWaitlistLabels() {
+          document.querySelectorAll('[data-cohort]').forEach(function (link) {
+            var cohortId = link.getAttribute('data-cohort');
+            if (isCohortFull(cohortId)) {
+              link.textContent = 'Join waitlist — ' + displayCohortLabel(cohortId);
+              link.classList.add('is-waitlist');
+              link.setAttribute('data-signup-type', 'waitlist');
             }
           });
+          if (cohortSelect) {
+            Array.prototype.forEach.call(cohortSelect.options, function (option) {
+              if (isCohortFull(option.value)) {
+                option.setAttribute('data-full', 'true');
+                if (option.textContent.indexOf('Waitlist') === -1) {
+                  option.textContent = option.textContent + ' — Full (Waitlist)';
+                }
+              }
+            });
+          }
         }
+        applyWaitlistLabels();
         function updateSignupType() {
           if (!cohortSelect) return;
           var full = isCohortFull(cohortSelect.value);
@@ -934,6 +983,35 @@
           if (formEl) formEl.setAttribute('data-signup-type', type);
         }
         if (cohortSelect) cohortSelect.addEventListener('change', updateSignupType);
+
+        // Live counts from the backend: never lower than the numbers stored in the page.
+        function applyLiveCounts(live) {
+          var list = enrollmentData.cohorts || [];
+          var counters = document.querySelectorAll('.enroll-counter');
+          list.forEach(function (c, idx) {
+            var l = live[c.id], counter = counters[idx];
+            if (!l || !counter) return;
+            var base = parseInt(counter.getAttribute('data-enrolled') || '0', 10) || 0;
+            var enrolled = Math.max(base, l.enrolled || 0);
+            var recent = Math.max(recentCountFor(c), (l.recent || []).length);
+            counter.setAttribute('data-enrolled', String(enrolled));
+            renderEnrollCounter(counter);
+            counter.setAttribute('data-recent', String(recent));
+            showRecent(counter, recent);
+            if (cohortStatus[c.id]) {
+              cohortStatus[c.id].enrolled = enrolled;
+              cohortStatus[c.id].isFull = enrolled >= cohortStatus[c.id].capacity;
+            }
+          });
+          applyWaitlistLabels();
+          updateSignupType();
+        }
+        try {
+          fetch(PP_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'counts' }) })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) { if (d && d.cohorts) applyLiveCounts(d.cohorts); })
+            .catch(function () {});
+        } catch (err) {}
 
         document.querySelectorAll('[data-cohort]').forEach(function (link) {
           link.addEventListener('click', function () {
@@ -1047,6 +1125,13 @@
             statusEl.textContent = formData.signup_type === 'waitlist' ? 'Joining the waitlist…' : 'Sending your reservation…';
           }
           if (submitBtn) submitBtn.disabled = true;
+          try {
+            fetch(PP_API, {
+              method: 'POST', keepalive: true,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(Object.assign({ action: 'register' }, formData, { bot: '' }))
+            }).catch(function () {});
+          } catch (err) {}
           fetch('/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1059,6 +1144,249 @@
             showThanks(formData.signup_type, formData.cohort, formData);
           });
         });
+      })();
+    </script>
+
+    <div class="pp-admin" id="pp-admin" hidden aria-modal="true" role="dialog" aria-label="Coach backend"></div>
+
+    <script>
+      // Hidden coach backend: long-press the header image, enter the code.
+      (function () {
+        var API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
+        var COHORTS = ['5th/6th Girls', '5th/6th Boys', '7th/8th Girls', '7th/8th Boys'];
+        var GAMES = [
+          { time: '10:00-11:00', cohort: '7th/8th Boys' },
+          { time: '11:15-12:15', cohort: '7th/8th Girls' },
+          { time: '12:30-1:30', cohort: '5th/6th Girls' },
+          { time: '1:45-2:45', cohort: '5th/6th Boys' }
+        ];
+        var root = document.getElementById('pp-admin');
+        var banner = document.querySelector('.hero-banner img');
+        if (!root || !banner) return;
+        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false;
+
+        function el(tag, attrs, kids) {
+          var n = document.createElement(tag);
+          Object.keys(attrs || {}).forEach(function (k) {
+            if (k === 'text') n.textContent = attrs[k];
+            else if (k === 'on') Object.keys(attrs.on).forEach(function (ev) { n.addEventListener(ev, attrs.on[ev]); });
+            else n.setAttribute(k, attrs[k]);
+          });
+          (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+          return n;
+        }
+        function call(body) {
+          return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ code: code }, body)) })
+            .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
+        }
+        function close() {
+          if (dirty && !confirm('You have unsaved team changes. Close anyway?')) return;
+          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false;
+          document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !root.hidden) close(); });
+
+        // ---- long press ----
+        var timer = null, sx = 0, sy = 0;
+        function start(e) {
+          var p = e.touches ? e.touches[0] : e;
+          sx = p.clientX; sy = p.clientY;
+          clearTimeout(timer);
+          timer = setTimeout(function () { timer = null; openCode(); }, 1500);
+        }
+        function move(e) {
+          if (!timer) return;
+          var p = e.touches ? e.touches[0] : e;
+          if (Math.abs(p.clientX - sx) > 12 || Math.abs(p.clientY - sy) > 12) { clearTimeout(timer); timer = null; }
+        }
+        function stop() { clearTimeout(timer); timer = null; }
+        banner.addEventListener('touchstart', start, { passive: true });
+        banner.addEventListener('touchmove', move, { passive: true });
+        banner.addEventListener('touchend', stop);
+        banner.addEventListener('touchcancel', stop);
+        banner.addEventListener('mousedown', start);
+        banner.addEventListener('mousemove', move);
+        banner.addEventListener('mouseup', stop);
+        banner.addEventListener('mouseleave', stop);
+        banner.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+        // ---- code screen ----
+        function openCode() {
+          if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+          document.body.style.overflow = 'hidden';
+          root.innerHTML = '';
+          var input = el('input', { type: 'password', inputmode: 'text', autocomplete: 'off', placeholder: 'Code', 'aria-label': 'Backend code' });
+          var msg = el('p', { class: 'pp-msg', role: 'status' });
+          var go = el('button', { class: 'pp-btn orange', type: 'submit', text: 'Open' });
+          var form = el('form', { on: { submit: function (e) {
+            e.preventDefault();
+            code = input.value.trim();
+            if (!code) return;
+            go.disabled = true; msg.className = 'pp-msg'; msg.textContent = 'Checking…';
+            call({ action: 'admin' }).then(function (r) {
+              go.disabled = false;
+              if (r.status === 200) { data = r.body; loadTeams(); render(); return; }
+              code = '';
+              msg.textContent = r.body.error === 'locked' ? r.body.message
+                : r.body.error === 'admin_code_not_set' ? 'The backend code has not been set up yet.'
+                : 'That code is not right.';
+              input.select();
+            }).catch(function () { go.disabled = false; msg.textContent = 'Could not reach the backend.'; });
+          } } }, [el('div', { class: 'pp-code-row' }, [input, go]), msg]);
+          var box = el('div', { class: 'pp-admin-box is-code' }, [
+            el('div', { class: 'pp-admin-top' }, [el('h2', { text: 'Coach backend' }), el('button', { class: 'pp-x', type: 'button', 'aria-label': 'Close', text: '×', on: { click: close } })]),
+            form
+          ]);
+          root.appendChild(box);
+          root.hidden = false;
+          setTimeout(function () { input.focus(); }, 50);
+        }
+
+        function regs() { return (data && data.registrations) || []; }
+        function active(r) { return r.status !== 'cancelled'; }
+        function loadTeams() {
+          teams = {};
+          ((data && data.teams) || []).forEach(function (t) { teams[t.registration_id] = t.team; });
+          dirty = false;
+        }
+        function fmtDate(iso) {
+          var d = new Date(iso);
+          return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+        function refresh(msgEl, text) {
+          return call({ action: 'admin' }).then(function (r) {
+            if (r.status === 200) { var keep = teams, wasDirty = dirty; data = r.body; loadTeams(); if (wasDirty) { teams = keep; dirty = true; } render(text); }
+          });
+        }
+
+        // ---- main screen ----
+        function render(flash) {
+          root.innerHTML = '';
+          var all = regs();
+          var reserved = all.filter(function (r) { return active(r) && r.signup_type === 'reserve'; });
+          var waitlist = all.filter(function (r) { return active(r) && r.signup_type === 'waitlist'; });
+          var paid = reserved.filter(function (r) { return r.paid; }).length;
+          var msg = el('p', { class: 'pp-msg ok', role: 'status', text: flash || '' });
+          var box = el('div', { class: 'pp-admin-box' }, [
+            el('div', { class: 'pp-admin-top' }, [el('h2', { text: 'Coach backend' }), el('button', { class: 'pp-x', type: 'button', 'aria-label': 'Close', text: '×', on: { click: close } })]),
+            el('div', { class: 'pp-tabs', role: 'tablist' }, [
+              el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
+              el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } })
+            ]),
+            el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' }),
+            msg,
+            tab === 'rosters' ? rosters(msg) : teamsView(msg)
+          ]);
+          root.appendChild(box);
+        }
+
+        function rosters(msg) {
+          var wrap = el('div');
+          COHORTS.forEach(function (c) {
+            var list = regs().filter(function (r) { return r.cohort === c; });
+            var res = list.filter(function (r) { return r.signup_type === 'reserve'; });
+            var wl = list.filter(function (r) { return r.signup_type === 'waitlist'; });
+            wrap.appendChild(el('h3', { text: c.replace('/', ' / ') + ' — ' + res.filter(active).length + ' of 12' }));
+            wrap.appendChild(table(res, msg));
+            if (wl.length) {
+              wrap.appendChild(el('p', { class: 'pp-summary', text: 'Waitlist' }));
+              wrap.appendChild(table(wl, msg));
+            }
+          });
+          wrap.appendChild(addForm(msg));
+          return wrap;
+        }
+        function table(list, msg) {
+          if (!list.length) return el('p', { class: 'pp-summary', text: 'No players yet.' });
+          var tbody = el('tbody');
+          list.forEach(function (r, i) {
+            var paidBtn = el('button', { class: 'pp-paid' + (r.paid ? ' yes' : ''), type: 'button', text: r.paid ? 'Paid' : 'Not paid', on: { click: function () {
+              paidBtn.disabled = true;
+              call({ action: 'update_player', id: r.id, paid: !r.paid }).then(function (x) {
+                if (x.status === 200) { r.paid = !r.paid; render('Saved.'); } else { paidBtn.disabled = false; msg.className = 'pp-msg'; msg.textContent = 'Could not save.'; }
+              });
+            } } });
+            var cancel = el('button', { class: 'pp-paid', type: 'button', text: r.status === 'cancelled' ? 'Restore' : 'Remove', on: { click: function () {
+              var next = r.status === 'cancelled' ? 'active' : 'cancelled';
+              if (next === 'cancelled' && !confirm('Remove ' + r.player + ' from the roster?')) return;
+              call({ action: 'update_player', id: r.id, status: next }).then(function (x) { if (x.status === 200) { r.status = next; render('Saved.'); } });
+            } } });
+            var email = r.email ? el('a', { href: 'mailto:' + r.email, text: r.email }) : el('span', { class: 'muted', text: '—' });
+            tbody.appendChild(el('tr', { class: r.status === 'cancelled' ? 'is-cancelled' : '' }, [
+              el('td', { text: String(i + 1) }),
+              el('td', {}, [el('b', { text: r.player })]),
+              el('td', {}, [document.createTextNode(r.parent || '—'), el('br'), email]),
+              el('td', {}, [el('span', { class: 'muted', text: (r.package || '').split(' — ')[0] || '—' })]),
+              el('td', {}, [el('span', { class: 'muted', text: fmtDate(r.created_at) + (r.source === 'admin' ? ' · added by you' : '') })]),
+              el('td', {}, [paidBtn, ' ', cancel])
+            ]));
+          });
+          return el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [
+            el('thead', {}, [el('tr', {}, ['#', 'Player', 'Parent', 'Package', 'Signed up', ''].map(function (h) { return el('th', { text: h }); }))]),
+            tbody
+          ])]);
+        }
+        function addForm(msg) {
+          var player = el('input', { placeholder: 'Player name' });
+          var parent = el('input', { placeholder: 'Parent name' });
+          var email = el('input', { type: 'email', placeholder: 'Parent email' });
+          var cohort = el('select', {}, COHORTS.map(function (c) { return el('option', { value: c, text: c }); }));
+          var pkg = el('select', {}, ['Full Two-Day Camp — $150', 'Full Two-Day Camp + Film Breakdown — $200', 'Repping & Testing — Standalone — $35'].map(function (p) { return el('option', { value: p, text: p }); }));
+          var btn = el('button', { class: 'pp-btn', type: 'submit', text: 'Add player' });
+          return el('form', { on: { submit: function (e) {
+            e.preventDefault();
+            if (!player.value.trim()) { player.focus(); return; }
+            btn.disabled = true;
+            call({ action: 'add_player', player: player.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value }).then(function (x) {
+              btn.disabled = false;
+              if (x.status === 200) refresh(msg, 'Added ' + player.value.trim() + '.');
+              else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
+            });
+          } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, parent, email, cohort, pkg, btn])]);
+        }
+
+        function teamsView(msg) {
+          var wrap = el('div');
+          var save = el('button', { class: 'pp-btn orange', type: 'button', text: dirty ? 'Save teams' : 'Saved', on: { click: saveTeams } });
+          if (!dirty) save.disabled = true;
+          wrap.appendChild(el('div', { class: 'pp-admin-top', style: 'margin-top:12px' }, [el('span', { class: 'pp-summary', text: 'Tap a player to move them to the other team.' }), save]));
+          GAMES.forEach(function (g) {
+            var players = regs().filter(function (r) { return r.cohort === g.cohort && r.signup_type === 'reserve' && active(r); });
+            var orange = players.filter(function (r) { return teams[r.id] === 'orange'; });
+            var black = players.filter(function (r) { return teams[r.id] === 'black'; });
+            var none = players.filter(function (r) { return !teams[r.id]; });
+            function chip(r) {
+              return el('button', { class: 'pp-chip', type: 'button', text: r.player, on: { click: function () {
+                teams[r.id] = teams[r.id] === 'orange' ? 'black' : 'orange'; dirty = true; render();
+              } } });
+            }
+            var split = el('button', { class: 'pp-btn alt', type: 'button', text: players.length ? 'Auto-split' : 'No players yet', on: { click: function () {
+              if ((orange.length || black.length) && !confirm('Re-split ' + g.cohort + ' into new even teams?')) return;
+              var order = players.slice().sort(function () { return Math.random() - 0.5; });
+              order.forEach(function (r, i) { teams[r.id] = i % 2 === 0 ? 'orange' : 'black'; });
+              dirty = true; render();
+            } } });
+            if (!players.length) split.disabled = true;
+            var game = el('div', { class: 'pp-game' }, [
+              el('div', { class: 'pp-game-head' }, [el('b', { text: g.time + ' · ' + g.cohort.replace('/', ' / ') + ' game' }), el('span', { class: 'pp-summary', text: orange.length + ' vs ' + black.length }), split]),
+              el('div', { class: 'pp-teams' }, [
+                el('div', { class: 'pp-team orange' }, [el('h4', { text: 'Team Orange (' + orange.length + ')' })].concat(orange.map(chip))),
+                el('div', { class: 'pp-team black' }, [el('h4', { text: 'Team Black (' + black.length + ')' })].concat(black.map(chip)))
+              ]),
+              none.length ? el('div', { class: 'pp-unassigned' }, [el('span', { class: 'pp-summary', text: 'Not on a team yet: ' })].concat(none.map(chip))) : null
+            ]);
+            wrap.appendChild(game);
+          });
+          function saveTeams() {
+            var assignments = Object.keys(teams).map(function (id) { return { id: id, team: teams[id] }; });
+            save.disabled = true; save.textContent = 'Saving…';
+            call({ action: 'save_teams', assignments: assignments }).then(function (x) {
+              if (x.status === 200) { dirty = false; render('Teams saved.'); }
+              else { save.disabled = false; save.textContent = 'Save teams'; msg.className = 'pp-msg'; msg.textContent = 'Could not save teams.'; }
+            });
+          }
+          return wrap;
+        }
       })();
     </script>
   </body>

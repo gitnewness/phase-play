@@ -244,22 +244,22 @@
       .vpill { transition: background-color .35s ease, border-color .35s ease; transform-origin: bottom center; position: relative; }
       .vpill.is-recent::before {
         content: ""; position: absolute; inset: 0; border-radius: 999px; background: #fff;
-        pointer-events: none; animation: ppRecentGlow 1.4s ease-in-out infinite;
+        pointer-events: none; animation: ppRecentGlow 3s ease-in-out infinite;
       }
       .vpill.is-recent::after {
         content: ""; position: absolute; inset: -4px; border-radius: 999px;
-        border: 2px solid var(--orange); pointer-events: none;
-        animation: ppRecent 1.4s ease-out infinite;
+        border: 1.5px solid var(--orange); pointer-events: none;
+        animation: ppRecent 3s ease-out infinite;
       }
-      @keyframes ppRecentGlow { 0%, 100% { opacity: 0; } 50% { opacity: .5; } }
-      @keyframes ppRecent { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.4, 1.2); } }
-      @keyframes ppFade { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+      @keyframes ppRecentGlow { 0%, 100% { opacity: 0; } 50% { opacity: .22; } }
+      @keyframes ppRecent { 0% { opacity: .55; transform: scale(1); } 60%, 100% { opacity: 0; transform: scale(1.22, 1.1); } }
+      @keyframes ppFade { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
       .c-recent { min-height: 1.4em; font-weight: 600 !important; font-size: 15px !important; color: var(--ink); }
       .c-recent .recent-pill {
         display: inline-block; width: 9px; height: 15px; border-radius: 999px; background: var(--orange);
-        vertical-align: -2px; margin-right: 8px; animation: ppDot 1.8s ease-in-out infinite;
+        vertical-align: -2px; margin-right: 8px; animation: ppDot 3s ease-in-out infinite;
       }
-      @keyframes ppDot { 0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 4, .55); } 50% { box-shadow: 0 0 0 5px rgba(232, 93, 4, 0); } }
+      @keyframes ppDot { 0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 4, .35); } 50% { box-shadow: 0 0 0 4px rgba(232, 93, 4, 0); } }
       .vpills.pp-pending .vpill.is-filled { background: #f1f1f1; border-color: #dedede; }
       .vpills.pp-anim .vpill.is-filled { animation: ppPillFill .55s cubic-bezier(.2,.9,.3,1.35) both; animation-delay: calc(var(--i, 0) * 110ms); }
       .vpill.is-new { animation: ppPillPop .9s cubic-bezier(.2,.9,.3,1.4) both; animation-delay: .35s; }
@@ -279,7 +279,7 @@
       @media (prefers-reduced-motion: reduce) {
         .vpills.pp-anim .vpill.is-filled, .vpill.is-new { animation: none; }
         .vpill.is-recent::after { animation: none; opacity: .8; transform: none; }
-        .c-recent .recent-pill { animation: ppFade 1.6s ease-in-out infinite; }
+        .c-recent .recent-pill { animation: ppFade 3s ease-in-out infinite; }
         .vpills.pp-pending .vpill.is-filled { background: var(--orange); border-color: var(--orange); }
       }
       .btn-cohort {

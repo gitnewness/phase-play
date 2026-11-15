@@ -7,6 +7,24 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
 const COHORTS = ["5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
 const IP_BLOCKS = ["stationary", "motion", "form", "pickup", "pullup", "finishing", "passing"];
+// THE 100 shooting test: 10 stations x 10 shots; each shot 0 (miss) or 1-3 points.
+const TEST_STATIONS = ["classic_r", "classic_l", "ext_r", "ext_l", "rev_r", "rev_l", "ft10", "ft15", "ft20", "ft_free"];
+function scoreTest(raw: unknown) {
+  if (!raw || typeof raw !== "object") return null;
+  const shots: Record<string, number[]> = {};
+  let makes = 0, points = 0, taken = 0;
+  for (const id of TEST_STATIONS) {
+    const arr = (raw as any)[id];
+    if (!Array.isArray(arr) || arr.length !== 10) return null;
+    const clean = arr.map((v: unknown) => (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 3 ? (v as number) : -1));
+    if (clean.some((v) => v < 0)) return null;
+    shots[id] = clean;
+    for (const v of clean) { taken++; if (v > 0) { makes++; points += v; } }
+  }
+  const pct = taken ? (makes / taken) * 100 : 0;
+  const ovr = Math.min(100, Math.round((points * (pct / 100)) / 2));
+  return { shots, makes, points, ovr };
+}
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -129,6 +147,19 @@ Deno.serve(async (req) => {
     }
 
     // ---- Interphase player app (private link) ----
+    if (action === "ip_test_save") {
+      const who = await playerForToken(body.token);
+      if (!who) { await sleep(400); return json({ error: "bad_link" }, 404); }
+      const scored = scoreTest(body.shots);
+      if (!scored) return json({ error: "invalid" }, 400);
+      const { data, error } = await db.from("test_results").insert({
+        registration_id: who.id, shots: scored.shots, makes: scored.makes, points: scored.points, ovr: scored.ovr,
+        scored_by: body.scored_by === "coach" ? "coach" : "player",
+      }).select("id, created_at, makes, points, ovr").single();
+      if (error) throw error;
+      return json({ ok: true, result: data });
+    }
+
     if (action === "ip_load" || action === "ip_save") {
       const who = await playerForToken(body.token);
       if (!who) { await sleep(400); return json({ error: "bad_link" }, 404); }
@@ -138,7 +169,9 @@ Deno.serve(async (req) => {
           .select("block_key, session_no, completed_on, drills, test_score, notes")
           .eq("registration_id", who.id);
         if (error) throw error;
-        return json({ player: who.player.split(/\s+/)[0], cohort: who.cohort, sessions: data ?? [] });
+        const { data: tests } = await db.from("test_results").select("id, created_at, makes, points, ovr, shots, scored_by")
+          .eq("registration_id", who.id).order("created_at", { ascending: true });
+        return json({ player: who.player.split(/\s+/)[0], cohort: who.cohort, sessions: data ?? [], tests: tests ?? [] });
       }
       const block = clean(body.block, 40);
       const n = Number(body.session_no);
@@ -180,7 +213,9 @@ Deno.serve(async (req) => {
       if (error) throw error;
       const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, completed_on, test_score");
       if (sErr) throw sErr;
-      return json({ access: access ?? [], sessions: sess ?? [] });
+      const { data: tests, error: tErr } = await db.from("test_results").select("registration_id, created_at, makes, points, ovr, scored_by").order("created_at", { ascending: true });
+      if (tErr) throw tErr;
+      return json({ access: access ?? [], sessions: sess ?? [], tests: tests ?? [] });
     }
 
     if (action === "ip_toggle") {

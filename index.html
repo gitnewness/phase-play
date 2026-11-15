@@ -1356,8 +1356,9 @@
             });
             return wrap;
           }
-          var access = {}, done = {};
+          var access = {}, done = {}, tests = {};
           ipData.access.forEach(function (a) { access[a.registration_id] = a; });
+          (ipData.tests || []).forEach(function (t) { (tests[t.registration_id] = tests[t.registration_id] || []).push(t); });
           ipData.sessions.forEach(function (x) { if (x.completed_on) done[x.registration_id] = (done[x.registration_id] || 0) + 1; });
           wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:12px', text: 'Each player has a private link to their Interphase workout (7 sections × 10 sessions = 70). Copy or text it to the family. Turning a link off blocks it right away.' }));
           COHORTS.forEach(function (c) {
@@ -1382,14 +1383,18 @@
                 call({ action: 'ip_toggle', id: r.id, active: !a.active }).then(function (x) { if (x.status === 200) { a.active = !a.active; render('Saved.'); } else { toggle.disabled = false; } });
               } } });
               var n = done[r.id] || 0;
+              var tl = tests[r.id] || [], tLast = tl[tl.length - 1];
+              var tBest = tl.reduce(function (b, t) { return !b || t.makes > b.makes ? t : b; }, null);
+              var runTest = el('a', { class: 'pp-paid', href: url + '&coach=1', target: '_blank', rel: 'noopener', text: 'Run 100 test' });
               tbody.appendChild(el('tr', { class: a.active ? '' : 'is-cancelled' }, [
                 el('td', {}, [el('b', { text: r.player })]),
                 el('td', {}, [el('span', { text: n + ' / 70 sessions' }), el('br'), el('span', { class: 'muted', text: a.last_opened_at ? 'Opened ' + fmtDate(a.last_opened_at) : 'Not opened yet' })]),
-                el('td', {}, [copy, ' ', text, ' ', mail, ' ', toggle])
+                el('td', {}, tLast ? [el('b', { text: tLast.makes + ' / 100' }), el('br'), el('span', { class: 'muted', text: 'OVR ' + tLast.ovr + ' · best ' + tBest.makes + ' · ' + tl.length + (tl.length === 1 ? ' test' : ' tests') })] : [el('span', { class: 'muted', text: 'No test yet' })]),
+                el('td', {}, [copy, ' ', text, ' ', mail, ' ', toggle, ' ', runTest])
               ]));
             });
             wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [
-              el('thead', {}, [el('tr', {}, ['Player', 'Progress', ''].map(function (h) { return el('th', { text: h }); }))]),
+              el('thead', {}, [el('tr', {}, ['Player', 'Workouts', 'The 100', ''].map(function (h) { return el('th', { text: h }); }))]),
               tbody
             ])]));
           });

@@ -62,6 +62,50 @@
       .saved { font-size: 14px; color: var(--ink-faint); }
       .msg { margin: 40px 0; padding: 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
       .msg h2 { font-family: "Barlow Condensed", sans-serif; text-transform: uppercase; margin: 0 0 6px; }
+
+      /* ===== THE 100 shooting test ===== */
+      .t100 { border: 2px solid var(--ink); border-radius: 12px; padding: 16px; margin: 20px 0 6px; background: #111; color: #fff; }
+      .t100 .kicker { color: #ffa25e; }
+      .t100 h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 30px; margin: 2px 0 4px; line-height: 1; }
+      .t100 p { margin: 0 0 10px; color: #c8c8c8; font-size: 15px; }
+      .t100-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 12px; }
+      .t100-stat { background: #1c1c1c; border-radius: 8px; padding: 10px; text-align: center; }
+      .t100-stat b { display: block; font-family: "Barlow Condensed", sans-serif; font-size: 30px; line-height: 1; color: #fff; }
+      .t100-stat span { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #9a9a9a; }
+      .t100-hist { margin-top: 12px; font-size: 14px; color: #c8c8c8; }
+      .t100-hist div { display: flex; justify-content: space-between; border-top: 1px solid #2a2a2a; padding: 6px 0; }
+      .scorer[hidden] { display: none; }
+      .scorer { position: fixed; inset: 0; z-index: 50; background: #111; color: #fff; display: flex; flex-direction: column; padding: 16px max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); overflow-y: auto; }
+      .sc-top { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #9a9a9a; }
+      .sc-x { background: #2a2a2a; color: #fff; border: 0; border-radius: 8px; padding: 8px 12px; font: 700 14px "Barlow", sans-serif; cursor: pointer; }
+      .sc-name { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: clamp(38px, 11vw, 60px); line-height: .95; margin: 14px 0 2px; }
+      .sc-sub { font-family: "Barlow Condensed", sans-serif; font-weight: 700; letter-spacing: .12em; color: #ffa25e; text-transform: uppercase; }
+      .sc-prog { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; margin: 12px 0; }
+      .sc-prog i { height: 6px; border-radius: 3px; background: #333; }
+      .sc-prog i.done { background: var(--orange); }
+      .sc-prog i.cur { background: #fff; }
+      .sc-dots { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin: 8px 0 4px; }
+      .sc-dots i { aspect-ratio: 1; border-radius: 50%; border: 2px solid #444; display: grid; place-items: center; font: 800 13px "Barlow", sans-serif; font-style: normal; }
+      .sc-dots i.p0 { background: #3a1212; border-color: #7a2a2a; color: #e08080; }
+      .sc-dots i.p1 { background: #2a3550; border-color: #4a6aa8; }
+      .sc-dots i.p2 { background: #5a3d10; border-color: #e09a1a; }
+      .sc-dots i.p3 { background: #0f4a2a; border-color: #00d26a; }
+      .sc-live { display: flex; justify-content: space-between; font-size: 15px; color: #c8c8c8; margin: 6px 0 14px; }
+      .sc-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: auto; }
+      .sc-btn { border: 0; border-radius: 12px; padding: 18px 6px; color: #fff; cursor: pointer; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 22px; line-height: 1; touch-action: manipulation; }
+      .sc-btn small { display: block; font-family: "Barlow", sans-serif; font-weight: 600; font-size: 12px; text-transform: none; opacity: .85; margin-top: 6px; letter-spacing: 0; }
+      .sc-btn.z1 { background: #3a5fa8; } .sc-btn.z2 { background: #c98a12; } .sc-btn.z3 { background: #0e9f55; }
+      .sc-btn.miss { grid-column: 1 / -1; background: #b3261e; padding: 22px; font-size: 26px; }
+      .sc-row { display: flex; gap: 10px; margin-top: 10px; }
+      .sc-row button { flex: 1; }
+      .sc-ghost { background: #2a2a2a; color: #fff; border: 0; border-radius: 10px; padding: 14px; font: 800 16px "Barlow Condensed", sans-serif; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+      .sc-ghost:disabled { opacity: .4; }
+      .rc-big { text-align: center; margin: 18px 0 8px; }
+      .rc-big b { font-family: "Barlow Condensed", sans-serif; font-size: 96px; line-height: .9; color: #ffa25e; }
+      .rc-big span { display: block; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; color: #9a9a9a; }
+      .rc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+      .rc-st { display: flex; justify-content: space-between; border-top: 1px solid #2a2a2a; padding: 8px 0; font-size: 15px; }
+      .rc-st em { font-style: normal; color: #9a9a9a; }
       footer { text-align: center; color: var(--ink-faint); font-size: 13px; margin-top: 30px; }
       @media (max-width: 420px) { .s { height: 30px; font-size: 12px; } .sessions { gap: 4px; } }
     </style>
@@ -158,10 +202,141 @@
             var x = sess(s.block_key, s.session_no);
             x.completed_on = s.completed_on; x.drills = s.drills || []; x.test_score = s.test_score; x.notes = s.notes || '';
           });
+          tests = r.body.tests || [];
           hello.textContent = 'Welcome, ' + r.body.player + ' (' + r.body.cohort.replace('/', ' / ') + '). Work through each section and check off your drills. Your progress saves automatically.';
           blocks().forEach(function (b) { selected[b.key] = nextOpen(b.key); });
           render();
         }).catch(function () { fail('Can’t connect', 'Check your internet connection and reload the page.'); });
+
+
+        // ===== THE 100 shooting test (from HOOPWORK) =====
+        var STATIONS = [
+          { id: 'classic_r', name: 'Classic Layup', sub: 'Right Hand', type: 'layup' },
+          { id: 'classic_l', name: 'Classic Layup', sub: 'Left Hand', type: 'layup' },
+          { id: 'ext_r', name: 'Extension', sub: 'Right Hand', type: 'layup' },
+          { id: 'ext_l', name: 'Extension', sub: 'Left Hand', type: 'layup' },
+          { id: 'rev_r', name: 'Reverse Layup', sub: 'Right Hand', type: 'layup' },
+          { id: 'rev_l', name: 'Reverse Layup', sub: 'Left Hand', type: 'layup' },
+          { id: 'ft10', name: '10 Feet', sub: 'Jumper', type: 'jumper' },
+          { id: 'ft15', name: '15 Feet', sub: 'Jumper', type: 'jumper' },
+          { id: 'ft20', name: '20 Feet', sub: 'Jumper', type: 'jumper' },
+          { id: 'ft_free', name: 'Free Throw', sub: 'The Line', type: 'jumper' }
+        ];
+        var ZONES = {
+          layup: [['Low', 'Low glass'], ['Mid', 'Clean or mid glass'], ['Crown', 'Top of the square']],
+          jumper: [['Make', 'Goes in, any way'], ['Swish', 'Nothing but net'], ['BRD', 'Dead center']]
+        };
+        var tests = [];
+        function summarize(shots) {
+          var makes = 0, pts = 0;
+          STATIONS.forEach(function (st) { (shots[st.id] || []).forEach(function (v) { if (v > 0) { makes++; pts += v; } }); });
+          var taken = 0; STATIONS.forEach(function (st) { taken += (shots[st.id] || []).length; });
+          var pct = taken ? makes / taken * 100 : 0;
+          return { makes: makes, points: pts, ovr: Math.min(100, Math.round(pts * pct / 100 / 2)), taken: taken };
+        }
+        function testCard() {
+          var last = tests[tests.length - 1];
+          var best = tests.reduce(function (b, t) { return !b || t.makes > b.makes ? t : b; }, null);
+          var card = el('section', { class: 't100' }, [
+            el('div', { class: 'kicker', text: 'Testing' }),
+            el('h2', { text: 'The 100' }),
+            el('p', { text: '10 stations × 10 shots. Tap a make by how clean it was (1–3 points) or a miss. Score out of 100.' })
+          ]);
+          if (last) {
+            card.appendChild(el('div', { class: 't100-stats' }, [
+              el('div', { class: 't100-stat' }, [el('b', { text: String(last.makes) }), el('span', { text: 'Last / 100' })]),
+              el('div', { class: 't100-stat' }, [el('b', { text: String(best.makes) }), el('span', { text: 'Best / 100' })]),
+              el('div', { class: 't100-stat' }, [el('b', { text: String(last.ovr) }), el('span', { text: 'Last OVR' })])
+            ]));
+          }
+          card.appendChild(el('button', { class: 'btn', type: 'button', text: tests.length ? 'Start a new test' : 'Start your first test', on: { click: startTest } }));
+          if (tests.length) {
+            var hist = el('div', { class: 't100-hist' });
+            tests.slice().reverse().slice(0, 6).forEach(function (t) {
+              hist.appendChild(el('div', {}, [el('span', { text: new Date(t.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + (t.scored_by === 'coach' ? ' · scored by coach' : '') }), el('span', { text: t.makes + ' / 100 · ' + t.points + ' pts · OVR ' + t.ovr })]));
+            });
+            card.appendChild(hist);
+          }
+          return card;
+        }
+
+        var scorer = null, run = null;
+        function startTest() {
+          run = { idx: 0, shots: {}, history: [] };
+          STATIONS.forEach(function (st) { run.shots[st.id] = []; });
+          if (!scorer) { scorer = el('div', { class: 'scorer', role: 'dialog', 'aria-label': 'The 100 test' }); document.body.appendChild(scorer); }
+          scorer.hidden = false; document.body.style.overflow = 'hidden';
+          drawStation();
+        }
+        function closeScorer(force) {
+          if (!force && run && run.history.length && !confirm('End this test? Shots so far won’t be saved.')) return;
+          scorer.hidden = true; document.body.style.overflow = ''; run = null;
+        }
+        function record(v) {
+          var st = STATIONS[run.idx], arr = run.shots[st.id];
+          if (arr.length >= 10) return;
+          arr.push(v); run.history.push(run.idx);
+          if (navigator.vibrate) { try { navigator.vibrate(v ? 15 : 30); } catch (e) {} }
+          drawStation();
+        }
+        function undo() {
+          if (!run.history.length) return;
+          var i = run.history.pop(); run.idx = i; run.shots[STATIONS[i].id].pop(); drawStation();
+        }
+        function drawStation() {
+          var st = STATIONS[run.idx], arr = run.shots[st.id], z = ZONES[st.type];
+          var sum = summarize(run.shots);
+          scorer.innerHTML = '';
+          var prog = el('div', { class: 'sc-prog' });
+          STATIONS.forEach(function (s, i) { prog.appendChild(el('i', { class: run.shots[s.id].length === 10 ? 'done' : i === run.idx ? 'cur' : '' })); });
+          var dots = el('div', { class: 'sc-dots' });
+          for (var i = 0; i < 10; i++) { var v = arr[i]; dots.appendChild(el('i', { class: v === undefined ? '' : 'p' + v, text: v === undefined ? '' : v === 0 ? '✕' : String(v) })); }
+          var full = arr.length === 10, last = run.idx === STATIONS.length - 1;
+          var btns = el('div', { class: 'sc-btns' });
+          z.forEach(function (zone, k) { btns.appendChild(el('button', { class: 'sc-btn z' + (k + 1), type: 'button', disabled: full, on: { click: function () { record(k + 1); } } }, [zone[0] + ' · ' + (k + 1), el('small', { text: zone[1] })])); });
+          btns.appendChild(el('button', { class: 'sc-btn miss', type: 'button', disabled: full, text: 'Miss', on: { click: function () { record(0); } } }));
+          var stMakes = arr.filter(function (x) { return x > 0; }).length, stPts = arr.reduce(function (a, b) { return a + b; }, 0);
+          scorer.appendChild(el('div', { class: 'sc-top' }, [el('span', { text: 'Station ' + (run.idx + 1) + ' of 10 · ' + sum.makes + ' / ' + sum.taken + ' made' }), el('button', { class: 'sc-x', type: 'button', text: 'End', on: { click: function () { closeScorer(false); } } })]));
+          scorer.appendChild(prog);
+          scorer.appendChild(el('div', { class: 'sc-name', text: st.name }));
+          scorer.appendChild(el('div', { class: 'sc-sub', text: st.sub }));
+          scorer.appendChild(dots);
+          scorer.appendChild(el('div', { class: 'sc-live' }, [el('span', { text: 'Shot ' + Math.min(arr.length + 1, 10) + ' of 10' }), el('span', { text: stMakes + ' made · ' + stPts + ' pts' })]));
+          scorer.appendChild(btns);
+          scorer.appendChild(el('div', { class: 'sc-row' }, [
+            el('button', { class: 'sc-ghost', type: 'button', text: 'Undo', disabled: !run.history.length, on: { click: undo } }),
+            el('button', { class: 'sc-ghost', type: 'button', text: last ? 'Finish test' : 'Next station', disabled: !full, on: { click: function () {
+              if (last) finish(); else { run.idx++; drawStation(); }
+            } } })
+          ]));
+        }
+        function finish() {
+          var sum = summarize(run.shots), shots = run.shots;
+          scorer.innerHTML = '';
+          var status = el('p', { class: 'saved', text: 'Saving…', style: 'text-align:center;color:#9a9a9a' });
+          scorer.appendChild(el('div', { class: 'sc-top' }, [el('span', { text: 'Test complete' }), el('span')]));
+          scorer.appendChild(el('div', { class: 'rc-big' }, [el('b', { text: String(sum.makes) }), el('span', { text: 'out of 100 made' })]));
+          scorer.appendChild(el('div', { class: 'rc-grid' }, [
+            el('div', { class: 't100-stat' }, [el('b', { text: sum.makes + '%' }), el('span', { text: 'Made' })]),
+            el('div', { class: 't100-stat' }, [el('b', { text: String(sum.points) }), el('span', { text: 'Pts / 300' })]),
+            el('div', { class: 't100-stat' }, [el('b', { text: String(sum.ovr) }), el('span', { text: 'OVR' })])
+          ]));
+          STATIONS.forEach(function (st) {
+            var a = shots[st.id], m = a.filter(function (x) { return x > 0; }).length, p = a.reduce(function (x, y) { return x + y; }, 0);
+            scorer.appendChild(el('div', { class: 'rc-st' }, [el('span', { text: st.name + ' · ' + st.sub }), el('em', { text: m + '/10 · ' + p + ' pts' })]));
+          });
+          scorer.appendChild(status);
+          var done = el('button', { class: 'btn', type: 'button', text: 'Done', style: 'width:100%;margin-top:10px', on: { click: function () { closeScorer(true); render(); } } });
+          scorer.appendChild(done);
+          var save = function () {
+            status.textContent = 'Saving…';
+            call({ action: 'ip_test_save', shots: shots, scored_by: /[?&#]coach=1/.test(location.href) ? 'coach' : 'player' }).then(function (r) {
+              if (r.status === 200) { tests.push(Object.assign({ scored_by: /[?&#]coach=1/.test(location.href) ? 'coach' : 'player' }, r.body.result)); status.textContent = 'Saved to your record.'; }
+              else { status.textContent = 'Couldn’t save. '; status.appendChild(el('button', { class: 'sc-ghost', type: 'button', text: 'Try again', on: { click: save } })); }
+            }).catch(function () { status.textContent = 'No connection. '; status.appendChild(el('button', { class: 'sc-ghost', type: 'button', text: 'Try again', on: { click: save } })); });
+          };
+          save();
+        }
 
         var overallBar, overallTxt;
         function updateOverall() {
@@ -175,6 +350,7 @@
           Array.prototype.slice.call(app.children, 1).forEach(function (n) { n.remove(); });
           overallBar = el('i');
           overallTxt = el('div', { class: 'overall-txt' }, [el('span'), el('span', { text: '10 sessions per section' })]);
+          app.appendChild(testCard());
           app.appendChild(el('div', { class: 'overall' }, [el('div', { class: 'bar' }, [overallBar]), overallTxt]));
           PROGRAM.forEach(function (g) {
             app.appendChild(el('h2', { class: 'group', text: g.group }));

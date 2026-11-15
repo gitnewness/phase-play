@@ -372,6 +372,8 @@
         background: #fafafa; text-align: center;
       }
       .form-thanks[hidden] { display: none; }
+      .reserve .another-btn { width: auto; margin-top: 22px; font-size: 18px; }
+      .form-thanks .another-note { margin-top: 8px; font-size: 14px; }
       .form-thanks h3 {
         font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase;
         font-size: 32px; line-height: 1; margin: 0 0 8px; color: var(--ink);
@@ -574,8 +576,8 @@
             <div class="c-k">5th / 6th Session · Girls</div>
             <h3>5th / 6th Grade Girls</h3>
             <p class="c-time"><strong>Mon, Nov 23</strong> <b>1:00 PM – 3:00 PM</b></p>
-            <div class="enroll-counter is-open" data-enrolled="3" data-capacity="12" role="status" aria-label="3 of 12 enrolled, 9 spots left">
-              <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
+            <div class="enroll-counter is-open" data-enrolled="1" data-capacity="12" role="status" aria-label="1 of 12 enrolled, 11 spots left">
+              <div class="enroll-head"><span class="enroll-count">1 of 12 enrolled</span><span class="enroll-left">11 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
             <p class="c-meta c-recent" aria-live="polite"></p>
@@ -596,8 +598,8 @@
             <div class="c-k">7th / 8th Session · Girls</div>
             <h3>7th / 8th Grade Girls</h3>
             <p class="c-time"><strong>Mon, Nov 23</strong> <b>10:00 AM – 12:00 PM</b></p>
-            <div class="enroll-counter is-open" data-enrolled="3" data-capacity="12" role="status" aria-label="3 of 12 enrolled, 9 spots left">
-              <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
+            <div class="enroll-counter is-open" data-enrolled="2" data-capacity="12" role="status" aria-label="2 of 12 enrolled, 10 spots left">
+              <div class="enroll-head"><span class="enroll-count">2 of 12 enrolled</span><span class="enroll-left">10 spots left</span></div>
               <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
             <p class="c-meta c-recent" aria-live="polite"></p>
@@ -709,12 +711,12 @@
           <h2 id="reserve-h">Reserve a spot</h2>
           <script type="application/json" id="phase-play-enrollments">
           {
-            "totalEnrolled": 17,
+            "totalEnrolled": 14,
             "totalCapacity": 48,
             "cohorts": [
-              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 3, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z"] },
+              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 1, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z"] },
               { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 5, "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z"] },
-              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 3, "capacity": 12, "recent": [] },
+              { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 2, "capacity": 12, "recent": ["2026-11-15T17:25:44Z"] },
               { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 6, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z"] }
             ]
           }
@@ -775,6 +777,8 @@
                 <p>On a computer? Scan with your phone's camera to open Venmo, then send <b id="venmo-amt">$150</b> to <b>@Michael-Nunes-3</b> with the note <b id="venmo-note">Phase Play</b>.</p>
               </div>
             </div>
+            <button class="btn btn-ghost another-btn" id="another-btn" type="button">Register another player</button>
+            <p class="another-note">Same parent name and email are kept — just add the next player.</p>
           </div>
         </div>
       </section>
@@ -921,7 +925,7 @@
 
         // Enrollment data in JSON — drives the waitlist logic.
         // A cohort at capacity (12/12) offers Join Waitlist instead of Reserve.
-        var enrollmentData = { totalEnrolled: 17, totalCapacity: 48, cohorts: [] };
+        var enrollmentData = { totalEnrolled: 14, totalCapacity: 48, cohorts: [] };
         try {
           var enrollmentJsonEl = document.getElementById('phase-play-enrollments');
           if (enrollmentJsonEl) enrollmentData = JSON.parse(enrollmentJsonEl.textContent);
@@ -1107,6 +1111,24 @@
             thanksEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
           }
         }
+        // Siblings: bring the form back with the parent's name/email kept.
+        var anotherBtn = document.getElementById('another-btn');
+        if (anotherBtn) anotherBtn.addEventListener('click', function () {
+          if (thanksEl) thanksEl.hidden = true;
+          ['thanks-spot', 'venmo-pay'].forEach(function (id) {
+            var n = document.getElementById(id); if (n) n.hidden = true;
+          });
+          if (statusEl) statusEl.hidden = true;
+          if (submitBtn) submitBtn.disabled = false;
+          var playerEl = document.getElementById('f-player');
+          if (playerEl) playerEl.value = '';
+          updateSignupType();
+          if (formEl) {
+            formEl.hidden = false;
+            formEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+          if (playerEl) setTimeout(function () { playerEl.focus({ preventScroll: true }); }, 300);
+        });
         if (formEl) formEl.addEventListener('submit', function (e) {
           e.preventDefault();
           var formData = {

@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Phase Play backend (Supabase project "phase-play").
-// Public:        register, counts
+// Public:        register, counts, activity (totals + anonymous feed for the main page)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
 const COHORTS = ["5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
@@ -123,6 +123,40 @@ async function ensureTokens() {
   }
 }
 
+// Public Interphase activity for the main page: totals and an anonymous
+// feed only. No names, tokens or scores. Cohorts with fewer than 3 players
+// are shown as "a Phase Play player" so nobody can be singled out.
+async function activity() {
+  const { data: regs, error: rErr } = await db.from("registrations")
+    .select("id, cohort").eq("status", "active").eq("is_test", false);
+  if (rErr) throw rErr;
+  const cohortOf = new Map<string, string>();
+  const size: Record<string, number> = {};
+  for (const r of regs ?? []) { cohortOf.set(r.id, r.cohort); size[r.cohort] = (size[r.cohort] ?? 0) + 1; }
+  const ids = [...cohortOf.keys()];
+  if (!ids.length) return { sessions: 0, players: 0, tests: 0, feed: [] };
+  const [{ data: sess, error: sErr }, { data: tests, error: tErr }] = await Promise.all([
+    db.from("interphase_sessions").select("registration_id, block_key, session_no, updated_at")
+      .not("completed_on", "is", null).in("registration_id", ids),
+    db.from("test_results").select("registration_id, created_at").in("registration_id", ids),
+  ]);
+  if (sErr) throw sErr;
+  if (tErr) throw tErr;
+  const who = (id: string) => { const c = cohortOf.get(id) ?? ""; return (size[c] ?? 0) >= 3 ? c : ""; };
+  const players = new Set<string>();
+  const feed: { kind: string; cohort: string; block?: string; session?: number; at: string }[] = [];
+  for (const s of sess ?? []) {
+    players.add(s.registration_id);
+    feed.push({ kind: "session", cohort: who(s.registration_id), block: s.block_key, session: s.session_no, at: s.updated_at });
+  }
+  for (const t of tests ?? []) {
+    players.add(t.registration_id);
+    feed.push({ kind: "test", cohort: who(t.registration_id), at: t.created_at });
+  }
+  feed.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  return { sessions: sess?.length ?? 0, players: players.size, tests: tests?.length ?? 0, feed: feed.slice(0, 6) };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -131,6 +165,7 @@ Deno.serve(async (req) => {
   const action = clean(body.action, 40);
   try {
     if (action === "counts") return json({ cohorts: await counts() });
+    if (action === "activity") return json(await activity());
 
     if (action === "register") {
       if (clean(body.bot, 10)) return json({ ok: true });

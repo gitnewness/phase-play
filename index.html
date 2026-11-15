@@ -183,6 +183,24 @@
       .hp h4 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 20px; line-height: 1.05; margin: 4px 0 5px; color: var(--ink); }
       .hp p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.4; }
       .hp-wide { max-width: 640px; margin-top: 14px; }
+      .ip-live { max-width: 640px; margin-top: 18px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg-raise); box-shadow: var(--shadow); }
+      .ip-live[hidden], .ip-feed[hidden], .ip-sample[hidden] { display: none; }
+      .ip-live-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13.5px; color: var(--orange-deep); }
+      .ip-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.5); animation: ipPing 3s ease-out infinite; }
+      @keyframes ipPing { 0% { box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.45); } 70%, 100% { box-shadow: 0 0 0 9px rgba(232, 93, 4, 0); } }
+      .ip-sample { margin-left: auto; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-faint); text-transform: none; font-family: inherit; font-size: 12.5px; }
+      .ip-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+      .ip-stats div { display: flex; flex-direction: column; }
+      .ip-stats b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 40px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+      .ip-stats span { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; }
+      .ip-feed { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); }
+      .ip-feed li { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; font-size: 14.5px; color: var(--ink-soft); }
+      .ip-feed li.is-in { animation: ipIn 0.5s ease both; }
+      @keyframes ipIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .ip-feed .ip-ico { flex: none; width: 18px; text-align: center; }
+      .ip-feed .ip-ago { margin-left: auto; flex: none; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
+      @media (max-width: 520px) { .ip-stats b { font-size: 32px; } .ip-stats span { font-size: 12.5px; } }
+      @media (prefers-reduced-motion: reduce) { .ip-dot, .ip-feed li.is-in { animation: none; } }
       .hp .p-label { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13.5px; color: var(--orange-deep); margin: 12px 0 4px; flex-basis: 100%; }
       .hp .p-label:first-of-type { margin-top: 6px; }
       .day-times { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 16px; font-size: 16.5px; }
@@ -503,6 +521,15 @@
             <h3 class="day-head" id="interphase-h"><span class="day-k">Interphase</span> Foundational Skill Building <span class="day-note">Before Day 1 — starts the day you register</span></h3>
             <div class="hp hp-wide">
               <p>Interphase is reps and testing. Build habits that build skill with a structured workout, tracking, and accountability. Repetitions are the framework of a player's ability to perform in gameplay. Use the testing app to track your progress and find your strengths and weaknesses.</p>
+            </div>
+            <div class="ip-live" id="ip-live" hidden aria-live="polite">
+              <div class="ip-live-head"><span class="ip-dot" aria-hidden="true"></span>Interphase is underway<span class="ip-sample" id="ip-sample" hidden>Preview · sample data</span></div>
+              <div class="ip-stats">
+                <div><b data-ip="sessions">0</b><span>sessions completed</span></div>
+                <div><b data-ip="players">0</b><span>players training</span></div>
+                <div><b data-ip="tests">0</b><span>THE 100 tests taken</span></div>
+              </div>
+              <ul class="ip-feed" id="ip-feed" hidden></ul>
             </div>
           </div>
 
@@ -1051,9 +1078,20 @@
           if (signupType === 'waitlist' || !m) { box.hidden = true; return; }
           var amount = m[1];
           var pkgName = (data.package || '').split(' — ')[0];
-          var note = 'Phase Play — ' + data.player + ' — ' + data.cohort + ' — ' + pkgName;
-          document.getElementById('venmo-btn').href = 'https://venmo.com/' + VENMO_USER +
-            '?txn=pay&amount=' + amount + '&note=' + encodeURIComponent(note);
+          var note = ['Phase Play', data.player, data.cohort, pkgName].join(' - ');
+          var q = 'txn=pay&amount=' + amount + '&note=' + encodeURIComponent(note);
+          var webUrl = 'https://venmo.com/' + VENMO_USER + '?' + q;
+          var btn = document.getElementById('venmo-btn');
+          btn.href = webUrl;
+          // On phones, open the Venmo app directly: going through venmo.com
+          // can turn the note's spaces into "+" signs. Fall back to the web
+          // link if the app doesn't open.
+          btn.onclick = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? function (e) {
+            e.preventDefault();
+            var t = setTimeout(function () { if (!document.hidden) window.location.href = webUrl; }, 1500);
+            document.addEventListener('visibilitychange', function () { if (document.hidden) clearTimeout(t); }, { once: true });
+            window.location.href = 'venmo://paycharge?recipients=' + VENMO_USER + '&' + q;
+          } : null;
           document.getElementById('venmo-btn-amt').textContent = '$' + amount;
           document.getElementById('venmo-amt').textContent = '$' + amount;
           document.getElementById('venmo-note').textContent = note;
@@ -1166,6 +1204,81 @@
             showThanks(formData.signup_type, formData.cohort, formData);
           });
         });
+      })();
+    </script>
+
+    <script>
+      // Interphase activity: anonymous totals + recent feed from Supabase.
+      // Stays hidden until there is enough real activity to show.
+      // Add ?activity=preview to the URL to see it with sample data.
+      (function () {
+        var MIN_SESSIONS = 10, MIN_FEED = 3;
+        var box = document.getElementById('ip-live');
+        if (!box) return;
+        var preview = /[?&]activity=preview\b/.test(location.search);
+        var BLOCKS = { stationary: 'Stationary 2-Ball', motion: 'Motion Combos', form: 'Form Shooting', pickup: 'Pickup Series', pullup: 'Pullup Series', finishing: 'Reverse Pivot Finishing', passing: 'Dribble Catch Passing' };
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function ago(iso) {
+          var m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
+          if (m < 2) return 'just now';
+          if (m < 60) return Math.round(m) + 'm ago';
+          if (m < 24 * 60) return Math.round(m / 60) + 'h ago';
+          var d = Math.round(m / 1440);
+          return d === 1 ? 'yesterday' : d + 'd ago';
+        }
+        function who(c) { return c ? 'A ' + c + ' player' : 'A Phase Play player'; }
+        function countUp(el, to) {
+          if (reduce || to < 2) { el.textContent = to; return; }
+          var t0 = null;
+          requestAnimationFrame(function step(t) {
+            if (t0 === null) t0 = t;
+            var p = Math.min(1, (t - t0) / 900);
+            el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(step);
+          });
+        }
+        function render(d, sample) {
+          box.hidden = false;
+          document.getElementById('ip-sample').hidden = !sample;
+          var nums = box.querySelectorAll('[data-ip]');
+          nums.forEach(function (n) { n.textContent = d[n.getAttribute('data-ip')] || 0; });
+          var run = function () { nums.forEach(function (n) { countUp(n, d[n.getAttribute('data-ip')] || 0); }); };
+          if ('IntersectionObserver' in window && !reduce) {
+            var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); run(); } }, { threshold: 0.4 });
+            io.observe(box);
+          } else run();
+          var feed = document.getElementById('ip-feed');
+          feed.innerHTML = '';
+          if ((d.feed || []).length >= MIN_FEED) {
+            d.feed.slice(0, 5).forEach(function (e, i) {
+              var li = document.createElement('li');
+              li.className = 'is-in';
+              li.style.animationDelay = (i * 90) + 'ms';
+              var ico = document.createElement('span'); ico.className = 'ip-ico'; ico.setAttribute('aria-hidden', 'true');
+              var txt = document.createElement('span');
+              var when = document.createElement('span'); when.className = 'ip-ago'; when.textContent = ago(e.at);
+              if (e.kind === 'test') { ico.textContent = '🎯'; txt.textContent = who(e.cohort) + ' took THE 100 shooting test'; }
+              else { ico.textContent = '🔥'; txt.textContent = who(e.cohort) + ' finished ' + (BLOCKS[e.block] || 'a workout') + ' · session ' + e.session; }
+              li.appendChild(ico); li.appendChild(txt); li.appendChild(when);
+              feed.appendChild(li);
+            });
+            feed.hidden = false;
+          } else feed.hidden = true;
+        }
+        var SAMPLE = { sessions: 38, players: 11, tests: 9, feed: [
+          { kind: 'session', cohort: '7th/8th Boys', block: 'form', session: 4, at: new Date(Date.now() - 2 * 3600e3).toISOString() },
+          { kind: 'test', cohort: '5th/6th Boys', at: new Date(Date.now() - 5 * 3600e3).toISOString() },
+          { kind: 'session', cohort: '', block: 'stationary', session: 2, at: new Date(Date.now() - 20 * 3600e3).toISOString() },
+          { kind: 'session', cohort: '5th/6th Boys', block: 'pickup', session: 6, at: new Date(Date.now() - 30 * 3600e3).toISOString() }
+        ] };
+        try {
+          fetch('https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'activity' })
+          }).then(function (r) { return r.json(); }).then(function (d) {
+            if (d && d.sessions >= MIN_SESSIONS) render(d, false);
+            else if (preview) render(SAMPLE, true);
+          }).catch(function () { if (preview) render(SAMPLE, true); });
+        } catch (err) {}
       })();
     </script>
 

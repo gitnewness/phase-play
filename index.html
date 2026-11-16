@@ -201,6 +201,20 @@
       .ip-feed .ip-ago { margin-left: auto; flex: none; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
       @media (max-width: 520px) { .ip-stats b { font-size: 32px; } .ip-stats span { font-size: 12.5px; } }
       @media (prefers-reduced-motion: reduce) { .ip-dot, .ip-feed li.is-in { animation: none; } }
+      /* Top ticker: scrolling Interphase workouts */
+      .ip-ticker { display: flex; align-items: stretch; background: #161616; color: #fff; font-size: 14px; line-height: 1; overflow: hidden; text-decoration: none; }
+      .ip-ticker[hidden] { display: none; }
+      .ip-ticker-label { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 12px 10px 14px; background: var(--orange); font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13px; }
+      .ip-ticker-label .tk-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: tkBlink 1.6s ease-in-out infinite; }
+      @keyframes tkBlink { 50% { opacity: 0.25; } }
+      .ip-ticker-view { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+      .ip-ticker-track { display: flex; flex: none; white-space: nowrap; animation: tkScroll var(--tk-dur, 40s) linear infinite; }
+      .ip-ticker:hover .ip-ticker-track { animation-play-state: paused; }
+      .ip-ticker-track span { padding: 0 22px; }
+      .ip-ticker-track b { color: #ffb37a; font-weight: 700; }
+      .ip-ticker-track i { font-style: normal; color: rgba(255,255,255,.55); margin-left: 6px; font-size: 12.5px; }
+      @keyframes tkScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+      @media (prefers-reduced-motion: reduce) { .ip-ticker-track { animation: none; } .ip-ticker-view { overflow-x: auto; } .ip-ticker-label .tk-dot { animation: none; } }
       .hp .p-label { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13.5px; color: var(--orange-deep); margin: 12px 0 4px; flex-basis: 100%; }
       .hp .p-label:first-of-type { margin-top: 6px; }
       .day-times { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 16px; font-size: 16.5px; }
@@ -496,6 +510,10 @@
     </style>
   </head>
   <body>
+    <a class="ip-ticker" id="ip-ticker" href="#interphase-h" hidden aria-label="Interphase workouts happening now">
+      <span class="ip-ticker-label"><span class="tk-dot" aria-hidden="true"></span>Interphase live</span>
+      <span class="ip-ticker-view"><span class="ip-ticker-track" id="ip-ticker-track"></span></span>
+    </a>
     <!-- ================= HERO ================= -->
     <header class="hero">
       <div class="wrap hero-inner">
@@ -1251,7 +1269,24 @@
             if (p < 1) requestAnimationFrame(step);
           });
         }
+        function ticker(d) {
+          var bar = document.getElementById('ip-ticker'), track = document.getElementById('ip-ticker-track');
+          if (!bar || !track || (d.feed || []).length < MIN_FEED) return;
+          var items = [];
+          d.feed.forEach(function (e) {
+            var what = e.kind === 'test' ? 'took THE 100 shooting test' : 'finished <b>' + (BLOCKS[e.block] || 'a workout') + '</b>';
+            var ico = e.kind === 'test' ? '🎯' : (ICONS[e.block] || '🏀');
+            items.push(ico + ' ' + who(e.cohort) + ' ' + what + '<i>' + ago(e.at) + '</i>');
+          });
+          items.push('🏀 <b>' + d.sessions + '</b> workout segments done by <b>' + d.players + '</b> player' + (d.players === 1 ? '' : 's') + ' so far');
+          var html = items.map(function (t) { return '<span>' + t + '</span>'; }).join('');
+          track.innerHTML = html + html.replace(/<span>/g, '<span aria-hidden="true">');
+          bar.hidden = false;
+          var w = track.scrollWidth / 2;
+          track.style.setProperty('--tk-dur', Math.max(20, Math.round(w / 45)) + 's');
+        }
         function render(d, sample) {
+          ticker(d);
           box.hidden = false;
           document.getElementById('ip-sample').hidden = !sample;
           var nums = box.querySelectorAll('[data-ip]');

@@ -1229,6 +1229,8 @@
         if (!box) return;
         var preview = /[?&]activity=preview\b/.test(location.search);
         var BLOCKS = { stationary: 'Stationary 2-Ball', motion: 'Motion Combos', form: 'Form Shooting', pickup: 'Pickup Series', pullup: 'Pullup Series', finishing: 'Reverse Pivot Finishing', passing: 'Dribble Catch Passing' };
+        // Feed icons: ball handling = hand, shooting = target, finishing = fire, passing = handshake (the assist).
+        var ICONS = { stationary: '✋', motion: '✋', form: '🎯', pickup: '🎯', pullup: '🎯', finishing: '🔥', passing: '🤝' };
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         function ago(iso) {
           var m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
@@ -1270,7 +1272,7 @@
               var txt = document.createElement('span');
               var when = document.createElement('span'); when.className = 'ip-ago'; when.textContent = ago(e.at);
               if (e.kind === 'test') { ico.textContent = '🎯'; txt.textContent = who(e.cohort) + ' took THE 100 shooting test'; }
-              else { ico.textContent = '🔥'; txt.textContent = who(e.cohort) + ' finished ' + (BLOCKS[e.block] || 'a workout') + ' · session ' + e.session; }
+              else { ico.textContent = ICONS[e.block] || '🏀'; txt.textContent = who(e.cohort) + ' finished ' + (BLOCKS[e.block] || 'a workout') + ' · session ' + e.session; }
               li.appendChild(ico); li.appendChild(txt); li.appendChild(when);
               feed.appendChild(li);
             });

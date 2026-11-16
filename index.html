@@ -207,14 +207,13 @@
       .ip-ticker-label { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 12px 10px 14px; background: var(--orange); font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13px; }
       .ip-ticker-label .tk-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: tkBlink 1.6s ease-in-out infinite; }
       @keyframes tkBlink { 50% { opacity: 0.25; } }
-      .ip-ticker-view { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-      .ip-ticker-track { display: flex; flex: none; white-space: nowrap; animation: tkScroll var(--tk-dur, 40s) linear infinite; }
-      .ip-ticker:hover .ip-ticker-track { animation-play-state: paused; }
+      .ip-ticker-view { position: relative; flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; }
+      .ip-ticker-view::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(90deg, rgba(22,22,22,0), #161616); pointer-events: none; }
+      .ip-ticker-track { display: flex; flex: none; white-space: nowrap; will-change: transform; }
       .ip-ticker-track span { padding: 0 22px; }
       .ip-ticker-track b { color: #ffb37a; font-weight: 700; }
       .ip-ticker-track i { font-style: normal; color: rgba(255,255,255,.55); margin-left: 6px; font-size: 12.5px; }
-      @keyframes tkScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-      @media (prefers-reduced-motion: reduce) { .ip-ticker-track { animation: none; } .ip-ticker-view { overflow-x: auto; } .ip-ticker-label .tk-dot { animation: none; } }
+      @media (prefers-reduced-motion: reduce) { .ip-ticker-view { overflow-x: auto; } .ip-ticker-label .tk-dot { animation: none; } }
       .hp .p-label { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13.5px; color: var(--orange-deep); margin: 12px 0 4px; flex-basis: 100%; }
       .hp .p-label:first-of-type { margin-top: 6px; }
       .day-times { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 16px; font-size: 16.5px; }
@@ -1282,8 +1281,23 @@
           var html = items.map(function (t) { return '<span>' + t + '</span>'; }).join('');
           track.innerHTML = html + html.replace(/<span>/g, '<span aria-hidden="true">');
           bar.hidden = false;
-          var w = track.scrollWidth / 2;
-          track.style.setProperty('--tk-dur', Math.max(20, Math.round(w / 45)) + 's');
+          if (reduce) return;
+          // Scrolled by script (not CSS animation) so it moves the same on iPhone Safari.
+          var x = 0, last = null, paused = false, SPEED = 45; // px per second
+          if (window.matchMedia && window.matchMedia('(hover: hover)').matches) {
+            bar.addEventListener('mouseenter', function () { paused = true; });
+            bar.addEventListener('mouseleave', function () { paused = false; });
+          }
+          requestAnimationFrame(function step(t) {
+            var half = track.scrollWidth / 2;
+            if (last !== null && !paused && half > 0) {
+              x -= SPEED * Math.min(0.1, (t - last) / 1000);
+              if (-x >= half) x += half;
+              track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
+            }
+            last = t;
+            requestAnimationFrame(step);
+          });
         }
         function render(d, sample) {
           ticker(d);

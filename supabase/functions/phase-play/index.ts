@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
       const signup_type = clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
       const { error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
+        school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type, source: "site",
       });
       if (error) throw error;
@@ -234,7 +235,7 @@ Deno.serve(async (req) => {
 
     if (action === "admin") {
       const { data: regs, error } = await db.from("registrations")
-        .select("id, created_at, parent, email, player, cohort, package, signup_type, status, paid, notes, source")
+        .select("id, created_at, parent, email, player, school, cohort, package, signup_type, status, paid, notes, source")
         .eq("is_test", false)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -285,6 +286,7 @@ Deno.serve(async (req) => {
       if (!player || !COHORTS.includes(cohort)) return json({ error: "invalid" }, 400);
       const { data, error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
+        school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type: clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve",
         source: "admin", notes: clean(body.notes, 500) || null,
       }).select("id").single();
@@ -302,6 +304,7 @@ Deno.serve(async (req) => {
       if (typeof body.cohort === "string" && COHORTS.includes(body.cohort)) patch.cohort = body.cohort;
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);
+      if (typeof body.school === "string") patch.school = clean(body.school, 120) || null;
       if (typeof body.parent === "string") patch.parent = clean(body.parent, 120);
       if (typeof body.email === "string") patch.email = clean(body.email, 200).toLowerCase();
       if (!Object.keys(patch).length) return json({ error: "nothing_to_update" }, 400);

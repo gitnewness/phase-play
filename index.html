@@ -768,6 +768,10 @@
                 <input id="f-player" name="player" type="text" placeholder="Player's name" required />
               </div>
               <div class="field">
+                <label for="f-school">Player's school</label>
+                <input id="f-school" name="school" type="text" placeholder="School name" />
+              </div>
+              <div class="field">
                 <label for="f-cohort">Cohort</label>
                 <select id="f-cohort" name="cohort">
                   <option value="5th/6th Girls">5th/6th Girls</option>
@@ -1165,6 +1169,8 @@
           if (submitBtn) submitBtn.disabled = false;
           var playerEl = document.getElementById('f-player');
           if (playerEl) playerEl.value = '';
+          var schoolEl = document.getElementById('f-school');
+          if (schoolEl) schoolEl.value = '';
           updateSignupType();
           if (formEl) {
             formEl.hidden = false;
@@ -1180,6 +1186,7 @@
             parent: document.getElementById('f-parent').value.trim(),
             email: document.getElementById('f-email').value.trim(),
             player: document.getElementById('f-player').value.trim(),
+            school: document.getElementById('f-school').value.trim(),
             cohort: cohortSelect.value,
             package: pkgSelect.value,
             signup_type: isCohortFull(cohortSelect.value) ? 'waitlist' : 'reserve'
@@ -1455,7 +1462,7 @@
             var email = r.email ? el('a', { href: 'mailto:' + r.email, text: r.email }) : el('span', { class: 'muted', text: '—' });
             tbody.appendChild(el('tr', { class: r.status === 'cancelled' ? 'is-cancelled' : '' }, [
               el('td', { text: String(i + 1) }),
-              el('td', {}, [el('b', { text: r.player })]),
+              el('td', {}, [el('b', { text: r.player })].concat(r.school ? [el('br'), el('span', { class: 'muted', text: r.school })] : [])),
               el('td', {}, [document.createTextNode(r.parent || '—'), el('br'), email]),
               el('td', {}, [el('span', { class: 'muted', text: (r.package || '').split(' — ')[0] || '—' })]),
               el('td', {}, [el('span', { class: 'muted', text: fmtDate(r.created_at) + (r.source === 'admin' ? ' · added by you' : '') })]),
@@ -1469,6 +1476,7 @@
         }
         function addForm(msg) {
           var player = el('input', { placeholder: 'Player name' });
+          var school = el('input', { placeholder: 'School' });
           var parent = el('input', { placeholder: 'Parent name' });
           var email = el('input', { type: 'email', placeholder: 'Parent email' });
           var cohort = el('select', {}, COHORTS.map(function (c) { return el('option', { value: c, text: c }); }));
@@ -1478,12 +1486,12 @@
             e.preventDefault();
             if (!player.value.trim()) { player.focus(); return; }
             btn.disabled = true;
-            call({ action: 'add_player', player: player.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value }).then(function (x) {
+            call({ action: 'add_player', player: player.value, school: school.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value }).then(function (x) {
               btn.disabled = false;
               if (x.status === 200) refresh(msg, 'Added ' + player.value.trim() + '.');
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
             });
-          } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, parent, email, cohort, pkg, btn])]);
+          } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, school, parent, email, cohort, pkg, btn])]);
         }
 
         function interphaseView(msg) {

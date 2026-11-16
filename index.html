@@ -744,7 +744,7 @@
               { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 4, "extra": 3, "pulse": 3, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
               { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 8, "extra": 3, "pulse": 4, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
               { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 5, "extra": 3, "pulse": 3, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T17:25:44Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
-              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 9, "extra": 3, "pulse": 6, "pulseSet": "2026-11-15T23:49:41Z", "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] }
+              { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 9, "extra": 0, "pulse": 6, "pulseSet": "2026-11-16T00:57:12Z", "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] }
             ]
           }
           </script>
@@ -1511,7 +1511,7 @@
               if (!a) { tbody.appendChild(el('tr', {}, [el('td', {}, [el('b', { text: r.player })]), el('td', { class: 'muted', text: 'Link not ready — reopen this tab' })])); return; }
               // Named link: the name is a label; the #k= code opens the record.
               var slug = r.player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-              var url = location.origin + '/interphase/' + (slug ? slug : '') + '#k=' + a.token;
+              var url = location.origin + '/interphase/' + (slug ? slug : '') + '#k=' + (a.code || a.token);
               var copy = el('button', { class: 'pp-paid', type: 'button', text: 'Copy link', on: { click: function () {
                 var ok = function () { copy.textContent = 'Copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1500); };
                 if (navigator.clipboard) navigator.clipboard.writeText(url).then(ok, function () { prompt('Copy this link:', url); });

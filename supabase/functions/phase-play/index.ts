@@ -52,9 +52,9 @@ async function sha256Hex(s: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-function newToken(): string {
+function newToken(len = 24): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  const bytes = crypto.getRandomValues(new Uint8Array(len));
   return Array.from(bytes, (b) => chars[b % chars.length]).join("");
 }
 
@@ -97,13 +97,14 @@ async function counts() {
   return out;
 }
 
-// Look up the player behind an Interphase link token.
+// Look up the player behind an Interphase link: the 8-character code, or
+// the original 24-character token (old links keep working).
 async function playerForToken(token: unknown) {
   const t = clean(token, 64);
-  if (t.length < 20) return null;
+  if (!/^[A-Za-z0-9]+$/.test(t) || (t.length !== 8 && t.length < 20)) return null;
   const { data } = await db.from("interphase_access")
     .select("registration_id, active, registrations(player, cohort, status)")
-    .eq("token", t).maybeSingle();
+    .eq(t.length === 8 ? "code" : "token", t).maybeSingle();
   if (!data || !data.active) return null;
   const reg = (data as any).registrations;
   if (!reg || reg.status === "cancelled") return null;
@@ -116,7 +117,7 @@ async function ensureTokens() {
   if (error) throw error;
   const { data: have } = await db.from("interphase_access").select("registration_id");
   const got = new Set((have ?? []).map((r) => r.registration_id));
-  const rows = (regs ?? []).filter((r) => !got.has(r.id)).map((r) => ({ registration_id: r.id, token: newToken() }));
+  const rows = (regs ?? []).filter((r) => !got.has(r.id)).map((r) => ({ registration_id: r.id, token: newToken(), code: newToken(8) }));
   if (rows.length) {
     const { error: e2 } = await db.from("interphase_access").insert(rows);
     if (e2) throw e2;
@@ -244,7 +245,7 @@ Deno.serve(async (req) => {
 
     if (action === "ip_admin") {
       await ensureTokens();
-      const { data: access, error } = await db.from("interphase_access").select("registration_id, token, active, last_opened_at");
+      const { data: access, error } = await db.from("interphase_access").select("registration_id, token, code, active, last_opened_at");
       if (error) throw error;
       const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, completed_on, test_score");
       if (sErr) throw sErr;

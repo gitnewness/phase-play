@@ -1229,8 +1229,8 @@
         if (!box) return;
         var preview = /[?&]activity=preview\b/.test(location.search);
         var BLOCKS = { stationary: 'Stationary 2-Ball', motion: 'Motion Combos', form: 'Form Shooting', pickup: 'Pickup Series', pullup: 'Pullup Series', finishing: 'Reverse Pivot Finishing', passing: 'Dribble Catch Passing' };
-        // Feed icons: ball handling = hand, shooting = target, finishing = fire, passing = handshake (the assist).
-        var ICONS = { stationary: '✋', motion: '✋', form: '🎯', pickup: '🎯', pullup: '🎯', finishing: '🔥', passing: '🤝' };
+        // Feed icons: ball handling = hand, shooting = target, finishing = fire, passing = bolt.
+        var ICONS = { stationary: '✋', motion: '✋', form: '🎯', pickup: '🎯', pullup: '🎯', finishing: '🔥', passing: '⚡' };
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         function ago(iso) {
           var m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);

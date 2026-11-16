@@ -1509,7 +1509,9 @@
             players.forEach(function (r) {
               var a = access[r.id];
               if (!a) { tbody.appendChild(el('tr', {}, [el('td', {}, [el('b', { text: r.player })]), el('td', { class: 'muted', text: 'Link not ready — reopen this tab' })])); return; }
-              var url = location.origin + '/interphase/#k=' + a.token;
+              // Named link: the name is a label; the #k= code opens the record.
+              var slug = r.player.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+              var url = location.origin + '/interphase/' + (slug ? slug : '') + '#k=' + a.token;
               var copy = el('button', { class: 'pp-paid', type: 'button', text: 'Copy link', on: { click: function () {
                 var ok = function () { copy.textContent = 'Copied'; setTimeout(function () { copy.textContent = 'Copy link'; }, 1500); };
                 if (navigator.clipboard) navigator.clipboard.writeText(url).then(ok, function () { prompt('Copy this link:', url); });

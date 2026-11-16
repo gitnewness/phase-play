@@ -5,3 +5,10 @@
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
+
+# Named Interphase links: /interphase/billy-nunes#k=TOKEN loads the app.
+# The name is only a label; the #k= code is what opens the player's record.
+[[redirects]]
+  from = "/interphase/*"
+  to = "/interphase/index.html"
+  status = 200

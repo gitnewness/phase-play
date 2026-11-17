@@ -85,7 +85,7 @@ async function checkCode(code: unknown): Promise<Response | null> {
 async function counts() {
   const { data, error } = await db.from("registrations").select("cohort, created_at").eq("signup_type", "reserve").eq("status", "active").eq("is_test", false);
   if (error) throw error;
-  const dayAgo = Date.now() - 48 * 60 * 60 * 1000; // "recent" window: 48 hours
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000; // "recent" window: 24 hours
   const out: Record<string, { enrolled: number; recent: string[] }> = {};
   for (const c of COHORTS) out[c] = { enrolled: 0, recent: [] };
   for (const r of data ?? []) {

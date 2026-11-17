@@ -60,6 +60,8 @@
       .btn.alt { background: #f1f1f1; color: var(--ink); }
       .btn:disabled { opacity: .5; cursor: default; }
       .saved { font-size: 14px; color: var(--ink-faint); }
+      .hint { font-size: 14px; color: var(--ink-faint); margin: 8px 0 0; }
+      .hint[hidden] { display: none; }
       .msg { margin: 40px 0; padding: 18px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
       .msg h2 { font-family: "Barlow Condensed", sans-serif; text-transform: uppercase; margin: 0 0 6px; }
 
@@ -187,6 +189,7 @@
         }
         function blocks() { var a = []; PROGRAM.forEach(function (g) { g.blocks.forEach(function (b) { a.push(b); }); }); return a; }
         function sess(key, n) { state[key] = state[key] || {}; return state[key][n] || (state[key][n] = { completed_on: null, drills: [], test_score: null, notes: '' }); }
+        function totalDrills(b) { var t = 0; b.cols.forEach(function (c) { t += c.drills.length; }); return t; }
         function doneCount(key) { var s = state[key] || {}, c = 0; for (var i = 1; i <= SESSIONS; i++) if (s[i] && s[i].completed_on) c++; return c; }
         function nextOpen(key) { for (var i = 1; i <= SESSIONS; i++) if (!sess(key, i).completed_on) return i; return SESSIONS; }
 
@@ -401,7 +404,7 @@
           var n = selected[b.key] || 1, s = sess(b.key, n);
           var status = el('span', { class: 'saved' });
           var body = el('div', { class: 'body' });
-          body.appendChild(el('div', { class: 'sess-head' }, [el('b', { text: 'Session ' + n + ' of ' + SESSIONS }), el('span', { text: s.completed_on ? 'Completed ' + fmt(s.completed_on) : 'Not done yet' })]));
+          body.appendChild(el('div', { class: 'sess-head' }, [el('b', { text: 'Session ' + n + ' of ' + SESSIONS }), el('span', { text: s.completed_on ? (s.drills.length < totalDrills(b) ? 'Submitted ' + fmt(s.completed_on) + ' · ' + s.drills.length + ' of ' + totalDrills(b) + ' drills' : 'Completed ' + fmt(s.completed_on)) : 'Not done yet' })]));
           if (b.sets) body.appendChild(el('p', { class: 'sets', text: b.sets }));
           var idx = 0;
           b.cols.forEach(function (c) {
@@ -412,7 +415,7 @@
               var box = el('input', { type: 'checkbox', checked: s.drills.indexOf(i) !== -1, on: { change: function () {
                 var at = s.drills.indexOf(i);
                 if (box.checked && at === -1) s.drills.push(i); else if (!box.checked && at !== -1) s.drills.splice(at, 1);
-                save(b, n, status);
+                save(b, n, status); refreshDone();
               } } });
               ul.appendChild(el('li', {}, [el('label', {}, [box, el('span', {}, [el('span', { class: 'reps', text: parts[0] }), ' ' + parts[1]])])]));
             });
@@ -431,7 +434,9 @@
           notes.addEventListener('input', function () { s.notes = notes.value; save(b, n, status); });
           body.appendChild(el('div', { class: 'col-label', text: 'Workout notes' }));
           body.appendChild(notes);
-          var done = el('button', { class: 'btn' + (s.completed_on ? ' alt' : ''), type: 'button', text: s.completed_on ? 'Mark not done' : 'Complete session ' + n, on: { click: function () {
+          var total = totalDrills(b);
+          var hint = el('p', { class: 'hint' });
+          var done = el('button', { type: 'button', on: { click: function () {
             s.completed_on = s.completed_on ? null : today();
             save(b, n, status);
             if (s.completed_on && n < SESSIONS) selected[b.key] = n + 1;
@@ -439,7 +444,17 @@
             var card = document.getElementById('b-' + b.key);
             card.replaceWith(blockEl(b));
           } } });
+          function refreshDone() {
+            var c = s.drills.length, all = c >= total;
+            done.className = 'btn' + (s.completed_on ? ' alt' : '');
+            if (s.completed_on) { done.textContent = 'Mark not done'; hint.hidden = true; return; }
+            done.textContent = all ? 'Complete session ' + n : 'Submit session ' + n + ' (' + c + ' of ' + total + ' drills)';
+            hint.hidden = all;
+            hint.textContent = 'Out of time or stuck on a drill? Submit what you got done. It still counts, and you can come back to it.';
+          }
+          refreshDone();
           body.appendChild(el('div', { class: 'row' }, [done, status]));
+          body.appendChild(hint);
           return body;
         }
       })();

@@ -481,7 +481,8 @@
       .pp-btn:disabled { opacity: .5; cursor: default; }
       .pp-msg { min-height: 1.3em; font-size: 14px; color: #b91c1c; margin: 8px 0 0; }
       .pp-msg.ok { color: #15803d; }
-      .pp-tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--line); margin-bottom: 6px; }
+      .pp-tabs { display: flex; gap: 6px; border-bottom: 2px solid var(--line); margin-bottom: 6px; overflow-x: auto; }
+      .pp-tabs .pp-tab { flex: none; white-space: nowrap; }
       .pp-tab { border: 0; background: none; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 17px; padding: 8px 12px; cursor: pointer; color: var(--ink-faint); border-bottom: 3px solid transparent; margin-bottom: -2px; }
       .pp-tab.on { color: var(--ink); border-bottom-color: var(--orange); }
       .pp-summary { font-size: 14px; color: var(--ink-faint); margin: 10px 0 0; }
@@ -493,6 +494,23 @@
       .pp-paid { cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: #fff; }
       .pp-paid.yes { background: #dcfce7; border-color: #86efac; color: #166534; }
       .pp-scroll { overflow-x: auto; }
+      .wk-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px; }
+      .wk-stats div { background: #f7f7f7; border-radius: 10px; padding: 10px 12px; }
+      .wk-stats b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 34px; line-height: 1; }
+      .wk-stats span { font-size: 12.5px; color: var(--ink-faint); }
+      .wk-feed { list-style: none; margin: 0; padding: 0; }
+      .wk-feed li { display: flex; gap: 10px; align-items: baseline; padding: 8px 2px; border-bottom: 1px solid #f0f0f0; font-size: 14.5px; }
+      .wk-feed .wk-ico { flex: none; width: 20px; text-align: center; }
+      .wk-feed .wk-when { margin-left: auto; flex: none; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
+      .wk-feed small, .wk-chip small { color: var(--ink-faint); }
+      .wk-bars { display: flex; gap: 3px; margin-top: 5px; }
+      .wk-bars i { display: block; width: 18px; height: 6px; border-radius: 3px; background: #ececec; }
+      .wk-bars i.on { background: var(--orange); }
+      .wk-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+      .wk-chip { font-size: 13.5px; padding: 4px 10px; border-radius: 999px; background: #f4f4f4; }
+      .wk-chip.opened { background: #fff4ec; }
+      .wk-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+      @media (max-width: 560px) { .wk-stats { grid-template-columns: repeat(2, 1fr); } }
       .pp-add { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
       .pp-game { border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-top: 14px; }
       .pp-game-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -1379,7 +1397,8 @@
         }
         function close() {
           if (dirty && !confirm('You have unsaved team changes. Close anyway?')) return;
-          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false;
+          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false; wantWorkouts = false;
+          if (location.hash === '#workouts' && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
           document.body.style.overflow = '';
         }
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !root.hidden) close(); });
@@ -1407,6 +1426,11 @@
         banner.addEventListener('mouseup', stop);
         banner.addEventListener('mouseleave', stop);
         banner.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        // Bookmarkable: phaseplayhoops.com/#workouts opens straight to the Workouts dashboard.
+        var wantWorkouts = false;
+        function checkHash() { if (location.hash === '#workouts' && root.hidden) { wantWorkouts = true; openCode(); } }
+        window.addEventListener('hashchange', checkHash);
+        checkHash();
 
         // ---- code screen ----
         function openCode() {
@@ -1423,7 +1447,7 @@
             go.disabled = true; msg.className = 'pp-msg'; msg.textContent = 'Checking…';
             call({ action: 'admin' }).then(function (r) {
               go.disabled = false;
-              if (r.status === 200) { data = r.body; loadTeams(); render(); return; }
+              if (r.status === 200) { data = r.body; loadTeams(); if (wantWorkouts) { tab = 'workouts'; ipData = null; } render(); return; }
               code = '';
               msg.textContent = r.body.error === 'locked' ? r.body.message
                 : r.body.error === 'admin_code_not_set' ? 'The backend code has not been set up yet.'
@@ -1468,13 +1492,14 @@
           var box = el('div', { class: 'pp-admin-box' }, [
             el('div', { class: 'pp-admin-top' }, [el('h2', { text: 'Coach backend' }), el('button', { class: 'pp-x', type: 'button', 'aria-label': 'Close', text: '×', on: { click: close } })]),
             el('div', { class: 'pp-tabs', role: 'tablist' }, [
+              el('button', { class: 'pp-tab' + (tab === 'workouts' ? ' on' : ''), type: 'button', text: 'Workouts', on: { click: function () { tab = 'workouts'; ipData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } })
             ]),
             el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' }),
             msg,
-            tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : interphaseView(msg)
+            tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : interphaseView(msg)
           ]);
           root.appendChild(box);
         }
@@ -1550,7 +1575,7 @@
           if (!ipData) {
             wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading Interphase links…' }));
             call({ action: 'ip_admin' }).then(function (r) {
-              if (r.status === 200) { ipData = r.body; if (tab === 'interphase') render(); }
+              if (r.status === 200) { ipData = r.body; if (tab === 'interphase' || tab === 'workouts') render(); }
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not load Interphase.'; }
             });
             return wrap;
@@ -1599,6 +1624,115 @@
               tbody
             ])]));
           });
+          return wrap;
+        }
+
+        // Workouts dashboard: who is doing Interphase, newest activity first.
+        var WK_BLOCKS = [['stationary', 'Stationary 2-Ball', '✋'], ['motion', 'Motion Combos', '✋'], ['form', 'Form Shooting', '🎯'], ['pickup', 'Pickup Series', '🎯'], ['pullup', 'Pullup Series', '🎯'], ['finishing', 'Reverse Pivot Finishing', '🔥'], ['passing', 'Dribble Catch Passing', '⚡']];
+        function wkAgo(iso) {
+          var m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
+          if (!isFinite(m)) return '';
+          if (m < 2) return 'just now';
+          if (m < 60) return Math.round(m) + 'm ago';
+          if (m < 1440) return Math.round(m / 60) + 'h ago';
+          var d = Math.round(m / 1440);
+          return d === 1 ? 'yesterday' : d + 'd ago';
+        }
+        function workoutsView(msg) {
+          var wrap = el('div');
+          if (!ipData) {
+            wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading workouts…' }));
+            call({ action: 'ip_admin' }).then(function (r) {
+              if (r.status === 200) { ipData = r.body; if (tab === 'workouts') render(); }
+              else { msg.className = 'pp-msg'; msg.textContent = 'Could not load workouts.'; }
+            });
+            return wrap;
+          }
+          var info = {}, players = regs().filter(function (r) { return r.signup_type === 'reserve' && active(r); });
+          players.forEach(function (r) { info[r.id] = { r: r, done: 0, blocks: {}, last: null, tests: 0 }; });
+          var access = {};
+          (ipData.access || []).forEach(function (a) { access[a.registration_id] = a; });
+          var events = [];
+          (ipData.sessions || []).forEach(function (x) {
+            var p = info[x.registration_id];
+            var started = x.completed_on || (x.drills && x.drills.length);
+            if (!p || !started) return;
+            var at = x.updated_at || (x.completed_on + 'T12:00:00');
+            if (x.completed_on) { p.done++; p.blocks[x.block_key] = (p.blocks[x.block_key] || 0) + 1; }
+            if (!p.last || at > p.last) p.last = at;
+            events.push({ p: p, kind: x.completed_on ? 'done' : 'progress', block: x.block_key, n: x.session_no, drills: (x.drills || []).length, at: at });
+          });
+          (ipData.tests || []).forEach(function (t) {
+            var p = info[t.registration_id];
+            if (!p) return;
+            p.tests++;
+            if (!p.last || t.created_at > p.last) p.last = t.created_at;
+            events.push({ p: p, kind: 'test', makes: t.makes, at: t.created_at });
+          });
+          events.sort(function (a, b) { return a.at < b.at ? 1 : -1; });
+          var list = Object.keys(info).map(function (k) { return info[k]; });
+          var working = list.filter(function (p) { return p.last; }).sort(function (a, b) { return a.last < b.last ? 1 : -1; });
+          var idle = list.filter(function (p) { return !p.last; });
+          var weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+          var opened = list.filter(function (p) { return access[p.r.id] && access[p.r.id].last_opened_at; }).length;
+          var segs = list.reduce(function (s, p) { return s + p.done; }, 0);
+          var tests = list.reduce(function (s, p) { return s + p.tests; }, 0);
+
+          var reload = el('button', { class: 'pp-btn alt', type: 'button', text: 'Refresh', on: { click: function () { ipData = null; render(); } } });
+          wrap.appendChild(el('div', { class: 'wk-top' }, [el('span', { class: 'pp-summary', style: 'margin:0', text: working.length + ' of ' + list.length + ' players have started · ' + list.filter(function (p) { return p.last && p.last > weekAgo; }).length + ' active this week' }), reload]));
+          wrap.appendChild(el('div', { class: 'wk-stats' }, [
+            el('div', {}, [el('b', { text: String(segs) }), el('span', { text: 'segments done' })]),
+            el('div', {}, [el('b', { text: String(working.length) }), el('span', { text: 'players working out' })]),
+            el('div', {}, [el('b', { text: String(opened) }), el('span', { text: 'opened their link' })]),
+            el('div', {}, [el('b', { text: String(tests) }), el('span', { text: 'THE 100 tests' })])
+          ]));
+
+          wrap.appendChild(el('h3', { text: 'Latest activity' }));
+          if (!events.length) wrap.appendChild(el('p', { class: 'pp-summary', text: 'No workouts logged yet.' }));
+          else {
+            var ul = el('ul', { class: 'wk-feed' });
+            events.slice(0, 30).forEach(function (e) {
+              var b = WK_BLOCKS.filter(function (x) { return x[0] === e.block; })[0] || [e.block, 'a workout', '🏀'];
+              var what = e.kind === 'test' ? 'took THE 100 — ' + e.makes + ' / 100'
+                : e.kind === 'done' ? 'finished ' + b[1] + ' · session ' + e.n
+                : 'is working on ' + b[1] + ' · session ' + e.n + ' (' + e.drills + (e.drills === 1 ? ' drill' : ' drills') + ')';
+              ul.appendChild(el('li', {}, [
+                el('span', { class: 'wk-ico', text: e.kind === 'test' ? '💯' : b[2] }),
+                el('span', {}, [el('b', { text: e.p.r.player }), ' ', what, ' ', el('small', { text: '· ' + e.p.r.cohort })]),
+                el('span', { class: 'wk-when', text: wkAgo(e.at) })
+              ]));
+            });
+            wrap.appendChild(ul);
+          }
+
+          wrap.appendChild(el('h3', { text: 'Players working out (' + working.length + ')' }));
+          if (working.length) {
+            var tbody = el('tbody');
+            working.forEach(function (p) {
+              var bars = el('div', { class: 'wk-bars', title: 'One bar per section, filled once a session is done' }, WK_BLOCKS.map(function (b) {
+                return el('i', { class: p.blocks[b[0]] ? 'on' : '', title: b[1] + ': ' + (p.blocks[b[0]] || 0) + ' / 10' });
+              }));
+              tbody.appendChild(el('tr', {}, [
+                el('td', {}, [el('b', { text: p.r.player }), el('br'), el('span', { class: 'muted', text: p.r.cohort })]),
+                el('td', {}, [el('span', { text: p.done + ' / 70 segments' }), bars]),
+                el('td', {}, [el('span', { text: wkAgo(p.last) }), el('br'), el('span', { class: 'muted', text: fmtDate(p.last) })]),
+                el('td', {}, [el('span', { class: 'muted', text: p.tests ? p.tests + (p.tests === 1 ? ' test' : ' tests') : 'No test yet' })])
+              ]));
+            });
+            wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [
+              el('thead', {}, [el('tr', {}, ['Player', 'Progress', 'Last active', 'The 100'].map(function (h) { return el('th', { text: h }); }))]),
+              tbody
+            ])]));
+          }
+
+          wrap.appendChild(el('h3', { text: 'Not started yet (' + idle.length + ')' }));
+          if (idle.length) {
+            wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:0', text: 'Orange = opened their link but no workout logged yet.' }));
+            wrap.appendChild(el('div', { class: 'wk-chips' }, idle.map(function (p) {
+              var o = access[p.r.id] && access[p.r.id].last_opened_at;
+              return el('span', { class: 'wk-chip' + (o ? ' opened' : ''), title: o ? 'Opened ' + fmtDate(o) : 'Link not opened yet' }, [p.r.player + ' ', el('small', { text: p.r.cohort.replace(/ (Boys|Girls)$/, function (m) { return m === ' Boys' ? ' B' : ' G'; }) })]);
+            })));
+          } else wrap.appendChild(el('p', { class: 'pp-summary', text: 'Everyone has started.' }));
           return wrap;
         }
 

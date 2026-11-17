@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
       await ensureTokens();
       const { data: access, error } = await db.from("interphase_access").select("registration_id, token, code, active, last_opened_at");
       if (error) throw error;
-      const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, completed_on, test_score");
+      const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, completed_on, test_score, drills, updated_at");
       if (sErr) throw sErr;
       const { data: tests, error: tErr } = await db.from("test_results").select("registration_id, created_at, makes, points, ovr, scored_by").order("created_at", { ascending: true });
       if (tErr) throw tErr;

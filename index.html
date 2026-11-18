@@ -1267,7 +1267,7 @@
         var box = document.getElementById('ip-live');
         if (!box) return;
         var preview = /[?&]activity=preview\b/.test(location.search);
-        var BLOCKS = { stationary: 'Stationary 2-Ball', motion: 'Motion Combos', form: 'Form Shooting', pickup: 'Pickup Series', pullup: 'Pullup Series', finishing: 'Reverse Pivot Finishing', passing: 'Dribble Catch Passing' };
+        var BLOCKS = { stationary: 'Stationary Ball Handling', motion: 'Motion Combos', form: 'Form Shooting', pickup: 'Pickup Series', pullup: 'Pullup Series', finishing: 'Reverse Pivot Finishing', passing: 'Dribble Catch Passing' };
         // Feed icons: ball handling = hand, shooting = target, finishing = fire, passing = bolt.
         var ICONS = { stationary: '✋', motion: '✋', form: '🎯', pickup: '🎯', pullup: '🎯', finishing: '🔥', passing: '⚡' };
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1280,6 +1280,8 @@
           return d === 1 ? 'yesterday' : d + 'd ago';
         }
         function who(c) { return c ? 'A ' + c + ' player' : 'A Phase Play player'; }
+        // Stationary sessions carry a level: 1 = 1-ball, 2 = 2-ball.
+        function lvlName(e) { return e.block === 'stationary' && e.level ? (e.level === 1 ? '1-ball' : '2-ball') : ''; }
         function countUp(el, to) {
           if (reduce || to < 2) { el.textContent = to; return; }
           var t0 = null;
@@ -1295,7 +1297,7 @@
           if (!bar || !track || (d.feed || []).length < MIN_FEED) return;
           var items = [];
           d.feed.forEach(function (e) {
-            var what = e.kind === 'test' ? 'took THE 100 shooting test' : 'finished <b>' + (BLOCKS[e.block] || 'a workout') + '</b>';
+            var what = e.kind === 'test' ? 'took THE 100 shooting test' : lvlName(e) ? 'finished a <b>' + lvlName(e) + '</b> workout' : 'finished <b>' + (BLOCKS[e.block] || 'a workout') + '</b>';
             var ico = e.kind === 'test' ? '🎯' : (ICONS[e.block] || '🏀');
             items.push(ico + ' ' + who(e.cohort) + ' ' + what + '<i>' + ago(e.at) + '</i>');
           });
@@ -1343,7 +1345,7 @@
               var txt = document.createElement('span');
               var when = document.createElement('span'); when.className = 'ip-ago'; when.textContent = ago(e.at);
               if (e.kind === 'test') { ico.textContent = '🎯'; txt.textContent = who(e.cohort) + ' took THE 100 shooting test'; }
-              else { ico.textContent = ICONS[e.block] || '🏀'; txt.textContent = who(e.cohort) + ' finished ' + (BLOCKS[e.block] || 'a workout') + ' · session ' + e.session; }
+              else { ico.textContent = ICONS[e.block] || '🏀'; txt.textContent = who(e.cohort) + ' finished ' + (lvlName(e) ? 'a ' + lvlName(e) + ' workout' : (BLOCKS[e.block] || 'a workout')) + ' · session ' + e.session; }
               li.appendChild(ico); li.appendChild(txt); li.appendChild(when);
               feed.appendChild(li);
             });
@@ -1639,7 +1641,7 @@
         }
 
         // Workouts dashboard: who is doing Interphase, newest activity first.
-        var WK_BLOCKS = [['stationary', 'Stationary 2-Ball', '✋'], ['motion', 'Motion Combos', '✋'], ['form', 'Form Shooting', '🎯'], ['pickup', 'Pickup Series', '🎯'], ['pullup', 'Pullup Series', '🎯'], ['finishing', 'Reverse Pivot Finishing', '🔥'], ['passing', 'Dribble Catch Passing', '⚡']];
+        var WK_BLOCKS = [['stationary', 'Stationary Ball Handling', '✋'], ['motion', 'Motion Combos', '✋'], ['form', 'Form Shooting', '🎯'], ['pickup', 'Pickup Series', '🎯'], ['pullup', 'Pullup Series', '🎯'], ['finishing', 'Reverse Pivot Finishing', '🔥'], ['passing', 'Dribble Catch Passing', '⚡']];
         function wkAgo(iso) {
           var m = Math.max(0, (Date.now() - Date.parse(iso)) / 60000);
           if (!isFinite(m)) return '';
@@ -1671,7 +1673,7 @@
             var at = x.updated_at || (x.completed_on + 'T12:00:00');
             if (x.completed_on) { p.done++; p.blocks[x.block_key] = (p.blocks[x.block_key] || 0) + 1; }
             if (!p.last || at > p.last) p.last = at;
-            events.push({ p: p, kind: x.completed_on ? 'done' : 'progress', block: x.block_key, n: x.session_no, drills: (x.drills || []).length, at: at });
+            events.push({ p: p, kind: x.completed_on ? 'done' : 'progress', block: x.block_key, level: x.level, n: x.session_no, drills: (x.drills || []).length, at: at });
           });
           (ipData.tests || []).forEach(function (t) {
             var p = info[t.registration_id];
@@ -1704,9 +1706,10 @@
             var ul = el('ul', { class: 'wk-feed' });
             events.slice(0, 30).forEach(function (e) {
               var b = WK_BLOCKS.filter(function (x) { return x[0] === e.block; })[0] || [e.block, 'a workout', '🏀'];
+              var lv = e.block === 'stationary' && e.level ? (e.level === 1 ? '1-ball' : '2-ball') : '';
               var what = e.kind === 'test' ? 'took THE 100 — ' + e.makes + ' / 100'
-                : e.kind === 'done' ? 'finished ' + b[1] + ' · session ' + e.n
-                : 'is working on ' + b[1] + ' · session ' + e.n + ' (' + e.drills + (e.drills === 1 ? ' drill' : ' drills') + ')';
+                : e.kind === 'done' ? (lv ? 'finished a ' + lv + ' workout (' + b[1] + ')' : 'finished ' + b[1]) + ' · session ' + e.n
+                : 'is working on ' + (lv ? 'a ' + lv + ' workout (' + b[1] + ')' : b[1]) + ' · session ' + e.n + ' (' + e.drills + (e.drills === 1 ? ' drill' : ' drills') + ')';
               ul.appendChild(el('li', {}, [
                 el('span', { class: 'wk-ico', text: e.kind === 'test' ? '💯' : b[2] }),
                 el('span', {}, [el('b', { text: e.p.r.player }), ' ', what, ' ', el('small', { text: '· ' + e.p.r.cohort })]),

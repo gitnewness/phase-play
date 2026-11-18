@@ -138,7 +138,7 @@ async function activity() {
   const ids = [...cohortOf.keys()];
   if (!ids.length) return { sessions: 0, players: 0, tests: 0, feed: [] };
   const [{ data: sess, error: sErr }, { data: tests, error: tErr }] = await Promise.all([
-    db.from("interphase_sessions").select("registration_id, block_key, session_no, updated_at")
+    db.from("interphase_sessions").select("registration_id, block_key, session_no, level, updated_at")
       .not("completed_on", "is", null).in("registration_id", ids),
     db.from("test_results").select("registration_id, created_at").in("registration_id", ids),
   ]);
@@ -146,10 +146,10 @@ async function activity() {
   if (tErr) throw tErr;
   const who = (id: string) => { const c = cohortOf.get(id) ?? ""; return (size[c] ?? 0) >= 3 ? c : ""; };
   const players = new Set<string>();
-  const feed: { kind: string; cohort: string; block?: string; session?: number; at: string }[] = [];
+  const feed: { kind: string; cohort: string; block?: string; session?: number; level?: number | null; at: string }[] = [];
   for (const s of sess ?? []) {
     players.add(s.registration_id);
-    feed.push({ kind: "session", cohort: who(s.registration_id), block: s.block_key, session: s.session_no, at: s.updated_at });
+    feed.push({ kind: "session", cohort: who(s.registration_id), block: s.block_key, session: s.session_no, level: s.level ?? null, at: s.updated_at });
   }
   for (const t of tests ?? []) {
     players.add(t.registration_id);
@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
       if (action === "ip_load") {
         await db.from("interphase_access").update({ last_opened_at: new Date().toISOString() }).eq("registration_id", who.id);
         const { data, error } = await db.from("interphase_sessions")
-          .select("block_key, session_no, completed_on, drills, test_score, notes")
+          .select("block_key, session_no, level, completed_on, drills, test_score, notes")
           .eq("registration_id", who.id);
         if (error) throw error;
         const { data: tests } = await db.from("test_results").select("id, created_at, makes, points, ovr, shots, scored_by")
@@ -221,6 +221,8 @@ Deno.serve(async (req) => {
       const score = body.test_score === null || body.test_score === undefined || body.test_score === "" ? null : Number(body.test_score);
       const row = {
         registration_id: who.id, block_key: block, session_no: n,
+        // Stationary has two levels: 1 = 1-ball, 2 = 2-ball. Older pages send no level and show the 2-ball list.
+        level: block === "stationary" ? (Number(body.level) === 1 ? 1 : 2) : null,
         completed_on: /^\d{4}-\d{2}-\d{2}$/.test(completed) ? completed : null,
         drills,
         test_score: score !== null && Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null,
@@ -251,7 +253,7 @@ Deno.serve(async (req) => {
       await ensureTokens();
       const { data: access, error } = await db.from("interphase_access").select("registration_id, token, code, active, last_opened_at");
       if (error) throw error;
-      const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, completed_on, test_score, drills, updated_at");
+      const { data: sess, error: sErr } = await db.from("interphase_sessions").select("registration_id, block_key, session_no, level, completed_on, test_score, drills, updated_at");
       if (sErr) throw sErr;
       const { data: tests, error: tErr } = await db.from("test_results").select("registration_id, created_at, makes, points, ovr, scored_by").order("created_at", { ascending: true });
       if (tErr) throw tErr;

@@ -43,6 +43,10 @@
       .sess-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; margin: 12px 0 6px; }
       .sess-head b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 18px; }
       .sess-head span { font-size: 14px; color: var(--ink-faint); }
+      .lvl { display: flex; gap: 8px; margin: 4px 0 10px; }
+      .lvl button { flex: 1; font: 700 15px "Barlow", sans-serif; padding: 10px 8px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+      .lvl button.on { background: var(--orange); border-color: var(--orange); color: #fff; }
+      .lvl button:disabled { opacity: .4; cursor: default; }
       .sets { font-size: 14px; font-weight: 600; color: var(--orange-deep); margin: 0 0 6px; }
       .col-label { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 14px; color: var(--ink-faint); margin: 12px 0 2px; }
       ul.drills { list-style: none; margin: 0; padding: 0; }
@@ -127,9 +131,14 @@
         // Workout content, from Coach Michael's "Basketball Daily Workout Program".
         var PROGRAM = [
           { group: 'Daily Ball Handling — Focus on Offhand Positioning', blocks: [
-            { key: 'stationary', title: 'Stationary 2-Ball — Square Stance', focus: 'Focus on broad base and body rhythm', sets: 'Use 1 ball, if needed.', cols: [
-              { drills: ['25x|Pound Sync', '25x|Pound Alternate', '25x|V-Sync', '25x|V-Alternate', '25x|Swing the Purse Sync', '25x|Swing the Purse Alternate'] },
-              { drills: ['10x|Cross Clockwise', '10x|Cross Alternate', '10x|Tween Alternate', '4x|Figure 8 Forward', '4x|Figure 8 Reverse', '1x|Piano Dribble Set'] } ] },
+            // Stationary has levels: each session is done as 1-ball (Level 1) or 2-ball (Level 2).
+            { key: 'stationary', title: 'Stationary Ball Handling — Square Stance', focus: 'Focus on broad base and body rhythm', levels: {
+              1: { name: '1 Ball', sets: 'Level 1 · 1 ball.', cols: [
+                { drills: ['25x|Pound (R/L)', '25x|V-Dribble (R/L)', '25x|Crossovers', '25x|Swing the Purse (R/L)'] },
+                { drills: ['10x|Pound Cross Pound', '10x|V Cross Pound', '10x|InOut Cross', '10x|Cross Tween (R/L)', '10x|Pound Cross Tween', '10x|Cross Tween Behind', '10x|V Cross Tween Behind'] } ] },
+              2: { name: '2 Ball', sets: 'Level 2 · 2 balls.', cols: [
+                { drills: ['25x|Pound Sync', '25x|Pound Alternate', '25x|V-Sync', '25x|V-Alternate', '25x|Swing the Purse Sync', '25x|Swing the Purse Alternate'] },
+                { drills: ['10x|Cross Clockwise', '10x|Cross Alternate', '10x|Tween Alternate', '4x|Figure 8 Forward', '4x|Figure 8 Reverse', '1x|Piano Dribble Set'] } ] } } },
             { key: 'motion', title: 'Motion Combos', focus: 'Focus on wide moving stance and tight dribble path (use a passing partner between combos, if available)', sets: '1 ball only. Take 1 small step each dribble.', cols: [
               { drills: ['10x|Pound Cross Pound (Loop)', '5x|Pound Tween Cross (L/R)', '5x|Pound Cross Tween (L/R)'] },
               { drills: ['10x|Pound Cross Tween Behind (Loop)', '10x|V Cross Tween Behind (Loop)', '10x|InOut Cross Tween Behind (Loop)'] } ] }
@@ -189,6 +198,16 @@
         }
         function blocks() { var a = []; PROGRAM.forEach(function (g) { g.blocks.forEach(function (b) { a.push(b); }); }); return a; }
         function sess(key, n) { state[key] = state[key] || {}; return state[key][n] || (state[key][n] = { completed_on: null, drills: [], test_score: null, notes: '' }); }
+        // Level for a Stationary session: what it was saved as, else the level of the latest finished session, else 1.
+        function lvlOf(b, n) {
+          if (!b.levels) return null;
+          var s = sess(b.key, n);
+          if (s.level) return s.level;
+          for (var i = SESSIONS; i >= 1; i--) { var x = (state[b.key] || {})[i]; if (x && x.completed_on && x.level) return x.level; }
+          return 1;
+        }
+        // The block as shown for one session: for Stationary, that level's drills.
+        function view(b, n) { return b.levels ? Object.assign({}, b, b.levels[lvlOf(b, n)]) : b; }
         function totalDrills(b) { var t = 0; b.cols.forEach(function (c) { t += c.drills.length; }); return t; }
         function doneCount(key) { var s = state[key] || {}, c = 0; for (var i = 1; i <= SESSIONS; i++) if (s[i] && s[i].completed_on) c++; return c; }
         function nextOpen(key) { for (var i = 1; i <= SESSIONS; i++) if (!sess(key, i).completed_on) return i; return SESSIONS; }
@@ -203,7 +222,7 @@
           if (r.status !== 200) { fail('This link isn’t active', 'Ask Coach Michael for a new Interphase link. Text 541-531-0150.'); return; }
           (r.body.sessions || []).forEach(function (s) {
             var x = sess(s.block_key, s.session_no);
-            x.completed_on = s.completed_on; x.drills = s.drills || []; x.test_score = s.test_score; x.notes = s.notes || '';
+            x.completed_on = s.completed_on; x.level = s.level || null; x.drills = s.drills || []; x.test_score = s.test_score; x.notes = s.notes || '';
           });
           tests = r.body.tests || [];
           hello.textContent = 'Welcome, ' + r.body.player + ' (' + r.body.cohort.replace('/', ' / ') + '). Work through each section and check off your drills. Your progress saves automatically.';
@@ -390,21 +409,35 @@
         var saveTimers = {};
         function save(b, n, statusEl) {
           var s = sess(b.key, n);
+          if (b.levels && !s.level) s.level = lvlOf(b, n);
           statusEl.textContent = 'Saving…';
           var tk = b.key + ':' + n;
           clearTimeout(saveTimers[tk]);
           saveTimers[tk] = setTimeout(function () {
-            call({ action: 'ip_save', block: b.key, session_no: n, completed_on: s.completed_on, drills: s.drills, test_score: s.test_score, notes: s.notes })
+            call({ action: 'ip_save', block: b.key, session_no: n, level: s.level || null, completed_on: s.completed_on, drills: s.drills, test_score: s.test_score, notes: s.notes })
               .then(function (r) { statusEl.textContent = r.status === 200 ? 'Saved' : 'Couldn’t save — try again'; })
               .catch(function () { statusEl.textContent = 'Couldn’t save — check your connection'; });
           }, 500);
         }
 
-        function bodyEl(b, setCount) {
-          var n = selected[b.key] || 1, s = sess(b.key, n);
+        function bodyEl(blk, setCount) {
+          var n = selected[blk.key] || 1, s = sess(blk.key, n), b = view(blk, n);
           var status = el('span', { class: 'saved' });
           var body = el('div', { class: 'body' });
           body.appendChild(el('div', { class: 'sess-head' }, [el('b', { text: 'Session ' + n + ' of ' + SESSIONS }), el('span', { text: s.completed_on ? (s.drills.length < totalDrills(b) ? 'Submitted ' + fmt(s.completed_on) + ' · ' + s.drills.length + ' of ' + totalDrills(b) + ' drills' : 'Completed ' + fmt(s.completed_on)) : 'Not done yet' })]));
+          if (blk.levels) {
+            var cur = lvlOf(blk, n);
+            body.appendChild(el('div', { class: 'lvl', role: 'group', 'aria-label': 'Level' }, [1, 2].map(function (L) {
+              return el('button', { type: 'button', class: L === cur ? 'on' : '', 'aria-pressed': L === cur ? 'true' : 'false', disabled: !!s.completed_on && L !== cur,
+                text: 'Level ' + L + ' · ' + blk.levels[L].name, on: { click: function () {
+                  if (L === cur || s.completed_on) return;
+                  if (s.drills.length && !confirm('Switch to ' + blk.levels[L].name + '? The drills you checked in this session will be cleared.')) return;
+                  s.level = L; s.drills = [];
+                  save(blk, n, status);
+                  document.getElementById('b-' + blk.key).replaceWith(blockEl(blk));
+                } } });
+            })));
+          }
           if (b.sets) body.appendChild(el('p', { class: 'sets', text: b.sets }));
           var idx = 0;
           b.cols.forEach(function (c) {
@@ -415,7 +448,7 @@
               var box = el('input', { type: 'checkbox', checked: s.drills.indexOf(i) !== -1, on: { change: function () {
                 var at = s.drills.indexOf(i);
                 if (box.checked && at === -1) s.drills.push(i); else if (!box.checked && at !== -1) s.drills.splice(at, 1);
-                save(b, n, status); refreshDone();
+                save(blk, n, status); refreshDone();
               } } });
               ul.appendChild(el('li', {}, [el('label', {}, [box, el('span', {}, [el('span', { class: 'reps', text: parts[0] }), ' ' + parts[1]])])]));
             });
@@ -425,24 +458,24 @@
             var score = el('input', { type: 'number', min: '0', max: '10', inputmode: 'numeric', value: s.test_score == null ? '' : String(s.test_score), on: { change: function () {
               var v = score.value === '' ? null : Math.max(0, Math.min(10, parseInt(score.value, 10) || 0));
               s.test_score = v; if (v != null) score.value = v;
-              save(b, n, status);
+              save(blk, n, status);
             } } });
             body.appendChild(el('div', { class: 'test' }, [el('label', { text: b.test }), score, ' / 10']));
           }
           var notes = el('textarea', { placeholder: 'Workout notes (optional)', 'aria-label': 'Workout notes' });
           notes.value = s.notes || '';
-          notes.addEventListener('input', function () { s.notes = notes.value; save(b, n, status); });
+          notes.addEventListener('input', function () { s.notes = notes.value; save(blk, n, status); });
           body.appendChild(el('div', { class: 'col-label', text: 'Workout notes' }));
           body.appendChild(notes);
           var total = totalDrills(b);
           var hint = el('p', { class: 'hint' });
           var done = el('button', { type: 'button', on: { click: function () {
             s.completed_on = s.completed_on ? null : today();
-            save(b, n, status);
-            if (s.completed_on && n < SESSIONS) selected[b.key] = n + 1;
+            save(blk, n, status);
+            if (s.completed_on && n < SESSIONS) selected[blk.key] = n + 1;
             setCount(); updateOverall();
-            var card = document.getElementById('b-' + b.key);
-            card.replaceWith(blockEl(b));
+            var card = document.getElementById('b-' + blk.key);
+            card.replaceWith(blockEl(blk));
           } } });
           function refreshDone() {
             var c = s.drills.length, all = c >= total;

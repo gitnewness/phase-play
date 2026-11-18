@@ -174,7 +174,9 @@ Deno.serve(async (req) => {
       const player = clean(body.player, 120);
       const cohort = clean(body.cohort, 40);
       if (!player || !COHORTS.includes(cohort)) return json({ error: "invalid" }, 400);
-      const signup_type = clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
+      // The $35 standalone never takes a camp spot, whatever the page sent.
+      const standalone = /^Repping & Testing/.test(clean(body.package, 120));
+      const signup_type = standalone ? "interphase" : clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
       const { error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,

@@ -1047,16 +1047,18 @@
           }
         }
         applyWaitlistLabels();
+        function isStandalone() { return !!(pkgSelect && /^Repping & Testing/.test(pkgSelect.value)); }
+        function signupTypeNow() { return isStandalone() ? 'interphase' : isCohortFull(cohortSelect.value) ? 'waitlist' : 'reserve'; }
         function updateSignupType() {
           if (!cohortSelect) return;
-          var full = isCohortFull(cohortSelect.value);
-          var type = full ? 'waitlist' : 'reserve';
+          var type = signupTypeNow(), full = type === 'waitlist';
           if (signupTypeInput) signupTypeInput.value = type;
           if (waitlistNote) waitlistNote.classList.toggle('is-visible', full);
-          if (submitBtn) submitBtn.textContent = full ? 'Join the waitlist' : 'Reserve a spot';
+          if (submitBtn) submitBtn.textContent = full ? 'Join the waitlist' : type === 'interphase' ? 'Sign up' : 'Reserve a spot';
           if (formEl) formEl.setAttribute('data-signup-type', type);
         }
         if (cohortSelect) cohortSelect.addEventListener('change', updateSignupType);
+        if (pkgSelect) pkgSelect.addEventListener('change', updateSignupType);
 
         // Live counts from the backend: never lower than the numbers stored in the page.
         function applyLiveCounts(live) {
@@ -1184,10 +1186,12 @@
           if (thanksTextEl) {
             thanksTextEl.textContent = signupType === 'waitlist'
               ? 'Thanks for joining — you have been added to the waitlist for ' + displayCohortLabel(cohortId) + ' and Coach Michael will follow up if a spot opens.'
+              : signupType === 'interphase'
+              ? 'Thanks for joining the Repping & Testing standalone. Pay with Venmo below, and Coach Michael will send your player’s private Interphase workout link.'
               : 'Thanks for joining — your spot has been received. Pay with Venmo below to lock it in, and Coach Michael will follow up to confirm.';
           }
           setupVenmo(signupType, data || {});
-          if (signupType !== 'waitlist') celebrateSpot(cohortId);
+          if (signupType === 'reserve') celebrateSpot(cohortId);
           if (thanksEl) {
             thanksEl.hidden = false;
             thanksEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -1224,12 +1228,12 @@
             school: document.getElementById('f-school').value.trim(),
             cohort: cohortSelect.value,
             package: pkgSelect.value,
-            signup_type: isCohortFull(cohortSelect.value) ? 'waitlist' : 'reserve'
+            signup_type: signupTypeNow()
           };
           if (signupTypeInput) signupTypeInput.value = formData.signup_type;
           if (statusEl) {
             statusEl.hidden = false;
-            statusEl.textContent = formData.signup_type === 'waitlist' ? 'Joining the waitlist…' : 'Sending your reservation…';
+            statusEl.textContent = formData.signup_type === 'waitlist' ? 'Joining the waitlist…' : formData.signup_type === 'interphase' ? 'Sending your sign-up…' : 'Sending your reservation…';
           }
           if (submitBtn) submitBtn.disabled = true;
           try {

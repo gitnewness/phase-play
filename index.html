@@ -189,7 +189,7 @@
       .ip-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.5); animation: ipPing 3s ease-out infinite; }
       @keyframes ipPing { 0% { box-shadow: 0 0 0 0 rgba(232, 93, 4, 0.45); } 70%, 100% { box-shadow: 0 0 0 9px rgba(232, 93, 4, 0); } }
       .ip-sample { margin-left: auto; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-faint); text-transform: none; font-family: inherit; font-size: 12.5px; }
-      .ip-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+      .ip-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
       .ip-stats div { display: flex; flex-direction: column; }
       .ip-stats b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 40px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
       .ip-stats span { font-size: 13.5px; color: var(--ink-soft); margin-top: 4px; }
@@ -503,7 +503,7 @@
       .pp-paid { cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: #fff; }
       .pp-paid.yes { background: #dcfce7; border-color: #86efac; color: #166534; }
       .pp-scroll { overflow-x: auto; }
-      .wk-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 4px; }
+      .wk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 4px; }
       .wk-stats div { background: #f7f7f7; border-radius: 10px; padding: 10px 12px; }
       .wk-stats b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 34px; line-height: 1; }
       .wk-stats span { font-size: 12.5px; color: var(--ink-faint); }
@@ -571,7 +571,6 @@
               <div class="ip-stats">
                 <div><b data-ip="sessions">0</b><span>sessions completed</span></div>
                 <div><b data-ip="players">0</b><span>players training</span></div>
-                <div><b data-ip="tests">0</b><span>THE 100 tests taken</span></div>
               </div>
               <ul class="ip-feed" id="ip-feed" hidden></ul>
             </div>
@@ -1739,15 +1738,13 @@
           var weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
           var opened = list.filter(function (p) { return access[p.r.id] && access[p.r.id].last_opened_at; }).length;
           var segs = list.reduce(function (s, p) { return s + p.done; }, 0);
-          var tests = list.reduce(function (s, p) { return s + p.tests; }, 0);
 
           var reload = el('button', { class: 'pp-btn alt', type: 'button', text: 'Refresh', on: { click: function () { ipData = null; render(); } } });
           wrap.appendChild(el('div', { class: 'wk-top' }, [el('span', { class: 'pp-summary', style: 'margin:0', text: working.length + ' of ' + list.length + ' players have started · ' + list.filter(function (p) { return p.last && p.last > weekAgo; }).length + ' active this week' }), reload]));
           wrap.appendChild(el('div', { class: 'wk-stats' }, [
             el('div', {}, [el('b', { text: String(segs) }), el('span', { text: 'segments done' })]),
             el('div', {}, [el('b', { text: String(working.length) }), el('span', { text: 'players working out' })]),
-            el('div', {}, [el('b', { text: String(opened) }), el('span', { text: 'opened their link' })]),
-            el('div', {}, [el('b', { text: String(tests) }), el('span', { text: 'THE 100 tests' })])
+            el('div', {}, [el('b', { text: String(opened) }), el('span', { text: 'opened their link' })])
           ]));
 
           wrap.appendChild(el('h3', { text: 'Latest activity' }));
@@ -1779,12 +1776,11 @@
               tbody.appendChild(el('tr', {}, [
                 el('td', {}, [el('b', { text: p.r.player }), el('br'), el('span', { class: 'muted', text: p.r.cohort })]),
                 el('td', {}, [el('span', { text: p.done + ' / 70 segments' }), bars]),
-                el('td', {}, [el('span', { text: wkAgo(p.last) }), el('br'), el('span', { class: 'muted', text: fmtDate(p.last) })]),
-                el('td', {}, [el('span', { class: 'muted', text: p.tests ? p.tests + (p.tests === 1 ? ' test' : ' tests') : 'No test yet' })])
+                el('td', {}, [el('span', { text: wkAgo(p.last) }), el('br'), el('span', { class: 'muted', text: fmtDate(p.last) })])
               ]));
             });
             wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [
-              el('thead', {}, [el('tr', {}, ['Player', 'Progress', 'Last active', 'The 100'].map(function (h) { return el('th', { text: h }); }))]),
+              el('thead', {}, [el('tr', {}, ['Player', 'Progress', 'Last active'].map(function (h) { return el('th', { text: h }); }))]),
               tbody
             ])]));
           }

@@ -111,9 +111,10 @@ async function playerForToken(token: unknown) {
   return { id: data.registration_id as string, player: reg.player as string, cohort: reg.cohort as string };
 }
 
-// Make sure every active, reserved player has an Interphase link.
+// Make sure every active, reserved player (and every Interphase-only player) has an Interphase link.
+// signup_type "interphase" = the $35 standalone: gets a workout link but never takes a camp spot.
 async function ensureTokens() {
-  const { data: regs, error } = await db.from("registrations").select("id").eq("status", "active").eq("signup_type", "reserve");
+  const { data: regs, error } = await db.from("registrations").select("id").eq("status", "active").in("signup_type", ["reserve", "interphase"]);
   if (error) throw error;
   const { data: have } = await db.from("interphase_access").select("registration_id");
   const got = new Set((have ?? []).map((r) => r.registration_id));
@@ -287,7 +288,7 @@ Deno.serve(async (req) => {
       const { data, error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,
-        package: clean(body.package, 120), signup_type: clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve",
+        package: clean(body.package, 120), signup_type: ["waitlist", "interphase"].includes(clean(body.signup_type, 20)) ? clean(body.signup_type, 20) : "reserve",
         source: "admin", notes: clean(body.notes, 500) || null,
       }).select("id").single();
       if (error) throw error;
@@ -300,7 +301,7 @@ Deno.serve(async (req) => {
       const patch: Record<string, unknown> = {};
       if (typeof body.paid === "boolean") patch.paid = body.paid;
       if (body.status === "active" || body.status === "cancelled") patch.status = body.status;
-      if (body.signup_type === "reserve" || body.signup_type === "waitlist") patch.signup_type = body.signup_type;
+      if (body.signup_type === "reserve" || body.signup_type === "waitlist" || body.signup_type === "interphase") patch.signup_type = body.signup_type;
       if (typeof body.cohort === "string" && COHORTS.includes(body.cohort)) patch.cohort = body.cohort;
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);

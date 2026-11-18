@@ -1488,6 +1488,7 @@
           var reserved = all.filter(function (r) { return active(r) && r.signup_type === 'reserve'; });
           var waitlist = all.filter(function (r) { return active(r) && r.signup_type === 'waitlist'; });
           var paid = reserved.filter(function (r) { return r.paid; }).length;
+          var ipOnly = all.filter(function (r) { return active(r) && r.signup_type === 'interphase'; });
           var msg = el('p', { class: 'pp-msg ok', role: 'status', text: flash || '' });
           var box = el('div', { class: 'pp-admin-box' }, [
             el('div', { class: 'pp-admin-top' }, [el('h2', { text: 'Coach backend' }), el('button', { class: 'pp-x', type: 'button', 'aria-label': 'Close', text: '×', on: { click: close } })]),
@@ -1497,7 +1498,7 @@
               el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } })
             ]),
-            el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' }),
+            el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' + (ipOnly.length ? ' · ' + ipOnly.length + ' Interphase only' : '') }),
             msg,
             tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : interphaseView(msg)
           ]);
@@ -1517,6 +1518,12 @@
               wrap.appendChild(table(wl, msg));
             }
           });
+          var ipo = regs().filter(function (r) { return r.signup_type === 'interphase'; });
+          if (ipo.length) {
+            wrap.appendChild(el('h3', { text: 'Interphase only — ' + ipo.filter(active).length }));
+            wrap.appendChild(el('p', { class: 'pp-summary', text: '$35 standalone. Workout link only; does not take a camp spot.' }));
+            wrap.appendChild(table(ipo, msg));
+          }
           wrap.appendChild(addForm(msg));
           return wrap;
         }
@@ -1562,7 +1569,7 @@
             e.preventDefault();
             if (!player.value.trim()) { player.focus(); return; }
             btn.disabled = true;
-            call({ action: 'add_player', player: player.value, school: school.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value }).then(function (x) {
+            call({ action: 'add_player', player: player.value, school: school.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value, signup_type: /^Repping & Testing/.test(pkg.value) ? 'interphase' : 'reserve' }).then(function (x) {
               btn.disabled = false;
               if (x.status === 200) refresh(msg, 'Added ' + player.value.trim() + '.');
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
@@ -1586,7 +1593,7 @@
           ipData.sessions.forEach(function (x) { if (x.completed_on) done[x.registration_id] = (done[x.registration_id] || 0) + 1; });
           wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:12px', text: 'Each player has a private link to their Interphase workout (7 sections × 10 sessions = 70). Copy or text it to the family. Turning a link off blocks it right away.' }));
           COHORTS.forEach(function (c) {
-            var players = regs().filter(function (r) { return r.cohort === c && r.signup_type === 'reserve' && active(r); });
+            var players = regs().filter(function (r) { return r.cohort === c && (r.signup_type === 'reserve' || r.signup_type === 'interphase') && active(r); });
             wrap.appendChild(el('h3', { text: c.replace('/', ' / ') }));
             if (!players.length) { wrap.appendChild(el('p', { class: 'pp-summary', text: 'No players yet.' })); return; }
             var tbody = el('tbody');
@@ -1648,7 +1655,7 @@
             });
             return wrap;
           }
-          var info = {}, players = regs().filter(function (r) { return r.signup_type === 'reserve' && active(r); });
+          var info = {}, players = regs().filter(function (r) { return (r.signup_type === 'reserve' || r.signup_type === 'interphase') && active(r); });
           players.forEach(function (r) { info[r.id] = { r: r, done: 0, blocks: {}, last: null, tests: 0 }; });
           var access = {};
           (ipData.access || []).forEach(function (a) { access[a.registration_id] = a; });

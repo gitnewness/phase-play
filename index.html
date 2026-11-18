@@ -411,6 +411,14 @@
       }
       .form-thanks p { margin: 0; color: var(--ink-soft); font-size: 16.5px; }
       .venmo-pay[hidden] { display: none; }
+      .wl-ip[hidden] { display: none; }
+      .wl-ip { margin-top: 18px; padding: 16px; border-radius: 12px; background: #111; color: #fff; text-align: left; }
+      .wl-ip .kicker { color: #ffa25e; margin: 0 0 2px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
+      .wl-ip h4 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 24px; line-height: 1.05; margin: 0 0 6px; }
+      .wl-ip p { margin: 0 0 12px; color: #d0d0d0; font-size: 15px; }
+      .wl-ip .btn { width: 100%; background: var(--orange); color: #fff; border: 0; }
+      .wl-ip .wl-ip-msg { margin: 10px 0 0; color: #fff; font-weight: 600; }
+      .wl-ip .wl-ip-msg:empty { display: none; }
       .venmo-pay { margin-top: 18px; }
       .btn-venmo { background: #008cff; color: #fff; width: 100%; }
       .btn-venmo:hover { background: #0074d4; }
@@ -489,6 +497,7 @@
       .pp-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
       .pp-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); padding: 6px 8px; border-bottom: 1px solid var(--line); }
       .pp-table td { padding: 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+      .pp-tag { display: inline-block; font-size: 12px; font-weight: 700; color: #fff; background: var(--orange); border-radius: 999px; padding: 1px 8px; vertical-align: middle; }
       .pp-table tr.is-cancelled td { opacity: .45; text-decoration: line-through; }
       .pp-table .muted { color: var(--ink-faint); font-size: 13px; }
       .pp-paid { cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: #fff; }
@@ -836,6 +845,13 @@
               <div class="enroll-head"><span class="enroll-count" id="thanks-spot-text">Your spot</span><span class="enroll-left"></span></div>
               <div class="vpills" aria-hidden="true"></div>
             </div>
+            <div class="wl-ip" id="wl-ip" hidden>
+              <p class="kicker">While you wait</p>
+              <h4>Start the Interphase workouts now · $35</h4>
+              <p>Your player gets the private Interphase workout app and THE 100 shooting test today, and keeps their place on the waitlist.</p>
+              <button class="btn" id="wl-ip-btn" type="button">Add Interphase · $35</button>
+              <p class="wl-ip-msg" id="wl-ip-msg" role="status"></p>
+            </div>
             <div class="venmo-pay" id="venmo-pay" hidden>
               <a class="btn btn-venmo" id="venmo-btn" href="https://venmo.com/u/michael-nunes-3" target="_blank" rel="noopener">Pay <span id="venmo-btn-amt">$150</span> with Venmo</a>
               <div class="venmo-qr">
@@ -1143,6 +1159,36 @@
           document.getElementById('venmo-note').textContent = note;
           box.hidden = false;
         }
+        // Waitlist thank-you: offer the $35 Interphase workouts while they wait.
+        // Adds Interphase to the same waitlist sign-up (keeps their place), then shows the $35 Venmo button.
+        var regReply = null;
+        var IP_PKG = 'Repping & Testing — Standalone — $35';
+        function offerInterphase(signupType, data) {
+          var box = document.getElementById('wl-ip'), btn = document.getElementById('wl-ip-btn'), msg = document.getElementById('wl-ip-msg');
+          if (!box) return;
+          box.hidden = signupType !== 'waitlist';
+          if (box.hidden) return;
+          btn.hidden = false; btn.disabled = false; msg.textContent = '';
+          var reply = regReply;
+          btn.onclick = function () {
+            btn.disabled = true; msg.textContent = 'Adding Interphase…';
+            Promise.resolve(reply).then(function (j) {
+              if (!j || !j.id) throw new Error('no id');
+              return fetch(PP_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'wl_interphase', id: j.id }) })
+                .then(function (r) { if (r.status !== 200) throw new Error('bad'); });
+            }).then(function () {
+              btn.hidden = true;
+              msg.textContent = 'Interphase added. Pay $35 below, and Coach Michael will text you ' + (data.player ? data.player.split(' ')[0] + '’s' : 'your player’s') + ' private workout link.';
+              setupVenmo('interphase', Object.assign({}, data, { package: IP_PKG }));
+              // Let Coach Michael know by email too (same Netlify form as sign-ups).
+              fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: encodeFormData(Object.assign({}, data, { package: IP_PKG + ' (added while on the waitlist)', signup_type: 'waitlist + interphase' })) }).catch(function () {});
+            }).catch(function () {
+              btn.disabled = false;
+              msg.textContent = 'Couldn’t add it here. Text Coach Michael at 541-531-0150 and he’ll set it up.';
+            });
+          };
+        }
         // After a reservation: add the new pill (this visit only) and show the player's spot.
         function celebrateSpot(cohortId) {
           var st = cohortStatus[cohortId];
@@ -1191,6 +1237,7 @@
               : 'Thanks for joining — your spot has been received. Pay with Venmo below to lock it in, and Coach Michael will follow up to confirm.';
           }
           setupVenmo(signupType, data || {});
+          offerInterphase(signupType, data || {});
           if (signupType === 'reserve') celebrateSpot(cohortId);
           if (thanksEl) {
             thanksEl.hidden = false;
@@ -1236,12 +1283,13 @@
             statusEl.textContent = formData.signup_type === 'waitlist' ? 'Joining the waitlist…' : formData.signup_type === 'interphase' ? 'Sending your sign-up…' : 'Sending your reservation…';
           }
           if (submitBtn) submitBtn.disabled = true;
+          regReply = null;
           try {
-            fetch(PP_API, {
+            regReply = fetch(PP_API, {
               method: 'POST', keepalive: true,
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(Object.assign({ action: 'register' }, formData, { bot: '' }))
-            }).catch(function () {});
+            }).then(function (r) { return r.json(); }).catch(function () { return null; });
           } catch (err) {}
           fetch('/', {
             method: 'POST',
@@ -1472,6 +1520,8 @@
 
         function regs() { return (data && data.registrations) || []; }
         function active(r) { return r.status !== 'cancelled'; }
+        // Players with a workout link: camp players, Interphase-only, and waitlisted players who added Interphase.
+        function hasIP(r) { return r.signup_type === 'reserve' || r.signup_type === 'interphase' || (r.signup_type === 'waitlist' && r.interphase_addon); }
         function loadTeams() {
           teams = {};
           ((data && data.teams) || []).forEach(function (t) { teams[t.registration_id] = t.team; });
@@ -1551,7 +1601,7 @@
             var email = r.email ? el('a', { href: 'mailto:' + r.email, text: r.email }) : el('span', { class: 'muted', text: '—' });
             tbody.appendChild(el('tr', { class: r.status === 'cancelled' ? 'is-cancelled' : '' }, [
               el('td', { text: String(i + 1) }),
-              el('td', {}, [el('b', { text: r.player })].concat(r.school ? [el('br'), el('span', { class: 'muted', text: r.school })] : [])),
+              el('td', {}, [el('b', { text: r.player })].concat(r.signup_type === 'waitlist' && r.interphase_addon ? [' ', el('span', { class: 'pp-tag', text: '+ Interphase $35' })] : []).concat(r.school ? [el('br'), el('span', { class: 'muted', text: r.school })] : [])),
               el('td', {}, [document.createTextNode(r.parent || '—'), el('br'), email]),
               el('td', {}, [el('span', { class: 'muted', text: (r.package || '').split(' — ')[0] || '—' })]),
               el('td', {}, [el('span', { class: 'muted', text: fmtDate(r.created_at) + (r.source === 'admin' ? ' · added by you' : '') })]),
@@ -1599,7 +1649,7 @@
           ipData.sessions.forEach(function (x) { if (x.completed_on) done[x.registration_id] = (done[x.registration_id] || 0) + 1; });
           wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:12px', text: 'Each player has a private link to their Interphase workout (7 sections × 10 sessions = 70). Copy or text it to the family. Turning a link off blocks it right away.' }));
           COHORTS.forEach(function (c) {
-            var players = regs().filter(function (r) { return r.cohort === c && (r.signup_type === 'reserve' || r.signup_type === 'interphase') && active(r); });
+            var players = regs().filter(function (r) { return r.cohort === c && hasIP(r) && active(r); });
             wrap.appendChild(el('h3', { text: c.replace('/', ' / ') }));
             if (!players.length) { wrap.appendChild(el('p', { class: 'pp-summary', text: 'No players yet.' })); return; }
             var tbody = el('tbody');
@@ -1661,7 +1711,7 @@
             });
             return wrap;
           }
-          var info = {}, players = regs().filter(function (r) { return (r.signup_type === 'reserve' || r.signup_type === 'interphase') && active(r); });
+          var info = {}, players = regs().filter(function (r) { return hasIP(r) && active(r); });
           players.forEach(function (r) { info[r.id] = { r: r, done: 0, blocks: {}, last: null, tests: 0 }; });
           var access = {};
           (ipData.access || []).forEach(function (a) { access[a.registration_id] = a; });

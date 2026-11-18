@@ -2,7 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Phase Play backend (Supabase project "phase-play").
-// Public:        register, counts, activity (totals + anonymous feed for the main page)
+// Public:        register, counts, activity (totals + anonymous feed for the main page),
+//                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
 const COHORTS = ["5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
@@ -113,8 +114,10 @@ async function playerForToken(token: unknown) {
 
 // Make sure every active, reserved player (and every Interphase-only player) has an Interphase link.
 // signup_type "interphase" = the $35 standalone: gets a workout link but never takes a camp spot.
+// Waitlisted players who added Interphase (interphase_addon) get a link too.
 async function ensureTokens() {
-  const { data: regs, error } = await db.from("registrations").select("id").eq("status", "active").in("signup_type", ["reserve", "interphase"]);
+  const { data: regs, error } = await db.from("registrations").select("id").eq("status", "active")
+    .or("signup_type.in.(reserve,interphase),and(signup_type.eq.waitlist,interphase_addon.eq.true)");
   if (error) throw error;
   const { data: have } = await db.from("interphase_access").select("registration_id");
   const got = new Set((have ?? []).map((r) => r.registration_id));
@@ -177,12 +180,26 @@ Deno.serve(async (req) => {
       // The $35 standalone never takes a camp spot, whatever the page sent.
       const standalone = /^Repping & Testing/.test(clean(body.package, 120));
       const signup_type = standalone ? "interphase" : clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
-      const { error } = await db.from("registrations").insert({
+      const { data: row, error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type, source: "site",
-      });
+      }).select("id").single();
       if (error) throw error;
+      // Waitlist sign-ups get their id back so the thank-you screen can offer Interphase.
+      return json(signup_type === "waitlist" ? { ok: true, id: row.id } : { ok: true });
+    }
+
+    // A family that just joined a waitlist adds the $35 Interphase workouts.
+    // Only for a waitlist row created in the last 6 hours.
+    if (action === "wl_interphase") {
+      const id = clean(body.id, 60);
+      if (!/^[0-9a-f-]{36}$/.test(id)) return json({ error: "invalid" }, 400);
+      const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await db.from("registrations").update({ interphase_addon: true })
+        .eq("id", id).eq("signup_type", "waitlist").eq("status", "active").gte("created_at", since).select("id");
+      if (error) throw error;
+      if (!data?.length) return json({ error: "not_found" }, 404);
       return json({ ok: true });
     }
 
@@ -240,7 +257,7 @@ Deno.serve(async (req) => {
 
     if (action === "admin") {
       const { data: regs, error } = await db.from("registrations")
-        .select("id, created_at, parent, email, player, school, cohort, package, signup_type, status, paid, notes, source")
+        .select("id, created_at, parent, email, player, school, cohort, package, signup_type, interphase_addon, status, paid, notes, source")
         .eq("is_test", false)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -304,6 +321,7 @@ Deno.serve(async (req) => {
       if (!id) return json({ error: "invalid" }, 400);
       const patch: Record<string, unknown> = {};
       if (typeof body.paid === "boolean") patch.paid = body.paid;
+      if (typeof body.interphase_addon === "boolean") patch.interphase_addon = body.interphase_addon;
       if (body.status === "active" || body.status === "cancelled") patch.status = body.status;
       if (body.signup_type === "reserve" || body.signup_type === "waitlist" || body.signup_type === "interphase") patch.signup_type = body.signup_type;
       if (typeof body.cohort === "string" && COHORTS.includes(body.cohort)) patch.cohort = body.cohort;

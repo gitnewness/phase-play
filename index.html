@@ -388,6 +388,12 @@
         background: var(--bg); color: var(--ink); border: 1px solid var(--line);
       }
       .reserve .btn { width: 100%; margin-top: 20px; font-size: 22px; }
+      .questions { margin-top: 18px; background: var(--bg-raise); border: 1px solid var(--line); border-top: 5px solid var(--orange); border-radius: 0 0 10px 10px; padding: 24px 28px; box-shadow: var(--shadow); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; }
+      .questions h2 { margin: 0 0 4px; font-size: 30px; }
+      .questions p { margin: 0; color: var(--ink-soft); font-size: 16px; }
+      .q-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+      .q-actions .btn { white-space: nowrap; }
+      @media (max-width: 560px) { .questions { padding: 22px 20px; } .q-actions, .q-actions .btn { width: 100%; } }
       .cohort .c-price { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 30px; line-height: 1; color: var(--ink); margin: 0 0 8px; }
       .cohort .c-incl { margin: 0 0 14px; padding-left: 18px; color: var(--ink-soft); font-size: 15px; line-height: 1.45; }
       .cohort-9u .vpills { gap: 5px; }
@@ -891,6 +897,18 @@
             </div>
             <button class="btn btn-ghost another-btn" id="another-btn" type="button">Register another player</button>
             <p class="another-note">Same parent name and email are kept — just add the next player.</p>
+          </div>
+        </div>
+      </section>
+      <section id="questions" aria-labelledby="questions-h" style="padding-top:0;">
+        <div class="questions">
+          <div>
+            <h2 id="questions-h">Questions?</h2>
+            <p>Text or call Coach Michael at <span style="white-space:nowrap">541-531-0150</span>.</p>
+          </div>
+          <div class="q-actions">
+            <a class="btn btn-orange" href="sms:+15415310150">Text Coach Michael</a>
+            <a class="btn btn-ghost" href="tel:+15415310150">Call</a>
           </div>
         </div>
       </section>

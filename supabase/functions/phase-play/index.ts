@@ -6,8 +6,14 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 //                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
-const COHORTS = ["9 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
-// 9 & Under (game day only, $50) asks for an experience level: 1 some experience,
+const COHORTS = ["10 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
+// 10 & Under was first called "9 & Under"; pages cached under the old name still work.
+const U10 = "10 & Under";
+function cohortName(v: unknown): string {
+  const c = clean(v, 40);
+  return c === "9 & Under" ? U10 : c;
+}
+// 10 & Under (game day only, $50) asks for an experience level: 1 some experience,
 // 2 plays recreational, 3 plays competitively. Accepts 2 or "2 — Plays recreational".
 function skillLevel(v: unknown): number | null {
   const n = parseInt(String(v ?? "").trim(), 10);
@@ -101,6 +107,7 @@ async function counts() {
     o.enrolled++;
     if (Date.parse(r.created_at) >= dayAgo) o.recent.push(r.created_at);
   }
+  out["9 & Under"] = out[U10]; // old name, for pages loaded before the rename
   return out;
 }
 
@@ -181,7 +188,7 @@ Deno.serve(async (req) => {
     if (action === "register") {
       if (clean(body.bot, 10)) return json({ ok: true });
       const player = clean(body.player, 120);
-      const cohort = clean(body.cohort, 40);
+      const cohort = cohortName(body.cohort);
       if (!player || !COHORTS.includes(cohort)) return json({ error: "invalid" }, 400);
       // The $35 standalone never takes a camp spot, whatever the page sent.
       const standalone = /^Repping & Testing/.test(clean(body.package, 120));
@@ -190,7 +197,7 @@ Deno.serve(async (req) => {
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type, source: "site",
-        skill_level: cohort === "9 & Under" ? skillLevel(body.skill_level) : null,
+        skill_level: cohort === U10 ? skillLevel(body.skill_level) : null,
       }).select("id").single();
       if (error) throw error;
       // Waitlist sign-ups get their id back so the thank-you screen can offer Interphase.
@@ -311,14 +318,14 @@ Deno.serve(async (req) => {
 
     if (action === "add_player") {
       const player = clean(body.player, 120);
-      const cohort = clean(body.cohort, 40);
+      const cohort = cohortName(body.cohort);
       if (!player || !COHORTS.includes(cohort)) return json({ error: "invalid" }, 400);
       const { data, error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type: ["waitlist", "interphase"].includes(clean(body.signup_type, 20)) ? clean(body.signup_type, 20) : "reserve",
         source: "admin", notes: clean(body.notes, 500) || null,
-        skill_level: cohort === "9 & Under" ? skillLevel(body.skill_level) : null,
+        skill_level: cohort === U10 ? skillLevel(body.skill_level) : null,
       }).select("id").single();
       if (error) throw error;
       return json({ ok: true, id: data.id });
@@ -332,7 +339,7 @@ Deno.serve(async (req) => {
       if (typeof body.interphase_addon === "boolean") patch.interphase_addon = body.interphase_addon;
       if (body.status === "active" || body.status === "cancelled") patch.status = body.status;
       if (body.signup_type === "reserve" || body.signup_type === "waitlist" || body.signup_type === "interphase") patch.signup_type = body.signup_type;
-      if (typeof body.cohort === "string" && COHORTS.includes(body.cohort)) patch.cohort = body.cohort;
+      if (typeof body.cohort === "string" && COHORTS.includes(cohortName(body.cohort))) patch.cohort = cohortName(body.cohort);
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
       if (body.skill_level !== undefined) patch.skill_level = skillLevel(body.skill_level);
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);

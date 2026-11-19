@@ -388,6 +388,17 @@
         background: var(--bg); color: var(--ink); border: 1px solid var(--line);
       }
       .reserve .btn { width: 100%; margin-top: 20px; font-size: 22px; }
+      .cohort .c-price { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 30px; line-height: 1; color: var(--ink); margin: 0 0 8px; }
+      .cohort .c-incl { margin: 0 0 14px; padding-left: 18px; color: var(--ink-soft); font-size: 15px; line-height: 1.45; }
+      .cohort-9u .vpills { gap: 5px; }
+      .field-skill { grid-column: 1 / -1; }
+      .field-skill input[type="range"] { padding: 0; border: 0; background: none; accent-color: var(--orange); height: 32px; }
+      .skill-labels { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--ink-faint); }
+      .skill-labels span { flex: 1; }
+      .skill-labels span:nth-child(2) { text-align: center; }
+      .skill-labels span:last-child { text-align: right; }
+      .skill-labels span.is-on { color: var(--ink); font-weight: 700; }
+      .skill-now { margin: 6px 0 0; font-weight: 700; color: var(--orange-deep); }
       .reserve .fine { color: var(--ink-faint); font-size: 14.5px; margin: 14px 0 0; text-align: center; }
       .reserve .netlify-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
       .waitlist-note {
@@ -554,7 +565,7 @@
           <p><strong>Monday Clinic</strong> - 10:00-12:00 &amp; 1:00-3:00 PM</p>
           <p><strong>Tuesday Games</strong> - 60 Minute Games at 10:00 AM</p>
           <p><strong>Where</strong> - Athletic Club of Bend</p>
-          <p><strong>Cost</strong> $150 for both Days</p>
+          <p><strong>Cost</strong> $150 for both Days · 9 &amp; Under game day $50</p>
         </div>
         <div class="camp" id="phases" aria-labelledby="camp-h">
           <div class="camp-head">
@@ -580,7 +591,7 @@
             <h3 class="day-head" id="day1-h">The Camp <span class="day-k">(Day 1)</span> <span class="day-note">Mon, Nov 23 · Phases 1–3, by cohort</span></h3>
             <div class="day-times day-games">
               <div><strong>7th / 8th (Boys &amp; Girls)</strong>Mon, Nov 23 - 10:00 AM-12:00 PM</div>
-              <div><strong>5th / 6th (Boys &amp; Girls)</strong>Mon, Nov 23 - 1:00 PM-3:00 PM</div>
+              <div><strong>5th / 6th Boys</strong>Mon, Nov 23 - 1:00 PM-3:00 PM</div>
             </div>
             <div class="hp-list hp-list-3">
               <div class="hp">
@@ -606,7 +617,7 @@
             <div class="day-times day-games">
               <div><strong>10:00-11:00</strong>7th/8th Grade Boys Game</div>
               <div><strong>11:15-12:15</strong>7th/8th Grade Girls Game</div>
-              <div><strong>12:30-1:30</strong>5th/6th Grade Girls Game</div>
+              <div><strong>12:30-1:30</strong>9 &amp; Under Game · game day only</div>
               <div><strong>1:45-2:45</strong>5th/6th Grade Boys Game</div>
             </div>
             <div class="hp hp-wide">
@@ -621,7 +632,7 @@
         </div>
         <div class="fact-strip">
           <div><strong>Where</strong>Athletic Club of Bend</div>
-          <div><strong>Camp Cap</strong>Only 12 boys &amp; 12 girls per session — 24 total</div>
+          <div><strong>Camp Cap</strong>12 players per cohort · 9 &amp; Under: 14 spots</div>
           <div><strong>All-In</strong>$200 — $150 camp + $50 film breakdown</div>
         </div>
         <div class="hero-cta">
@@ -642,16 +653,23 @@
       <section id="cohorts" aria-labelledby="cohorts-h">
         <h2 id="cohorts-h">Find your cohort</h2>
         <div class="cohorts">
-          <article class="cohort">
-            <div class="c-k">5th / 6th Session · Girls</div>
-            <h3>5th / 6th Grade Girls</h3>
-            <p class="c-time"><strong>Mon, Nov 23</strong> <b>1:00 PM – 3:00 PM</b></p>
-            <div class="enroll-counter is-open" data-enrolled="3" data-capacity="12" role="status" aria-label="3 of 12 enrolled, 9 spots left">
-              <div class="enroll-head"><span class="enroll-count">3 of 12 enrolled</span><span class="enroll-left">9 spots left</span></div>
-              <div class="vpills" aria-hidden="true"><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill is-filled"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
+          <article class="cohort cohort-9u">
+            <div class="c-k">New · Game Day Only · Boys &amp; Girls</div>
+            <h3>9 &amp; Under</h3>
+            <p class="c-time"><strong>Tue, Nov 24</strong> <b>12:30 PM – 1:30 PM</b></p>
+            <p class="c-price">$50</p>
+            <ul class="c-incl">
+              <li>Interphase workouts — start the day you register</li>
+              <li>One hour of refereed gameplay</li>
+              <li>Full game footage</li>
+            </ul>
+            <div class="enroll-counter is-open" data-enrolled="0" data-capacity="14" role="status" aria-label="0 of 14 enrolled, 14 spots left">
+              <div class="enroll-head"><span class="enroll-count">0 of 14 enrolled</span><span class="enroll-left">14 spots left</span></div>
+              <div class="vpills" aria-hidden="true"><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span><span class="vpill"></span></div>
             </div>
             <p class="c-meta c-recent" aria-live="polite"></p>
-            <a class="btn-cohort" href="#reserve" data-cohort="5th/6th Girls">Reserve — 5th / 6th Girls</a>
+            <p class="c-meta">Teams are split by the coaches.</p>
+            <a class="btn-cohort" href="#reserve" data-cohort="9 &amp; Under">Reserve — 9 &amp; Under · $50</a>
           </article>
           <article class="cohort">
             <div class="c-k">5th / 6th Session · Boys</div>
@@ -754,7 +772,7 @@
 
       <section id="pricing" aria-labelledby="pricing-h">
         <h2 id="pricing-h">Pricing</h2>
-        <p class="sec-note" style="margin-bottom:14px;">The camp is the $150 two-day package — that is the only camp offer, both days mandatory. Each camp is limited to 12 boys and 12 girls, 24 total per session.</p>
+        <p class="sec-note" style="margin-bottom:14px;">The camp is the $150 two-day package, both days mandatory, limited to 12 players per cohort. Players 9 and under join the $50 game day only option (14 spots).</p>
         <div class="price-box">
           <div class="price-row">
             <div class="what">Full Camp — 2 Days <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Includes interphase structured workouts and testing and both days of camp (Day 1 clinic and Day 2 gameday)</span></div>
@@ -763,6 +781,10 @@
           <div class="price-row">
             <div class="what">Full Camp + Film Breakdown <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">The $150 two-day camp plus a film breakdown of your player's Day 2 gameplay · Breakdown is offered <strong>only</strong> on the $150 full package · Feedback within 7 days of the end of camp. Breakdown can be added up to 7 days after camp.</span></div>
             <div class="amt">$200</div>
+          </div>
+          <div class="price-row">
+            <div class="what">9 &amp; Under — Game Day Only <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Interphase workouts, one hour of refereed gameplay on Tue, Nov 24 (12:30–1:30 PM) and full game footage · 14 spots · Teams split by the coaches</span></div>
+            <div class="amt">$50</div>
           </div>
           <div class="caps-box">
             <div class="caps-card">
@@ -782,9 +804,9 @@
           <script type="application/json" id="phase-play-enrollments">
           {
             "totalEnrolled": 27,
-            "totalCapacity": 48,
+            "totalCapacity": 50,
             "cohorts": [
-              { "id": "5th/6th Girls", "label": "5th/6th Girls", "enrolled": 3, "extra": -1, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
+              { "id": "9 & Under", "label": "9 & Under", "enrolled": 0, "extra": 0, "capacity": 14, "recent": [] },
               { "id": "5th/6th Boys", "label": "5th/6th Boys", "enrolled": 12, "extra": -1, "capacity": 12, "recent": ["2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T05:41:53Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
               { "id": "7th/8th Girls", "label": "7th/8th Girls", "enrolled": 9, "extra": 1, "capacity": 12, "recent": ["2026-11-15T17:25:44Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] },
               { "id": "7th/8th Boys", "label": "7th/8th Boys", "enrolled": 12, "extra": 0, "capacity": 12, "recent": ["2026-11-15T05:46:36Z", "2026-11-15T05:46:36Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z", "2026-11-15T23:42:55Z"] }
@@ -816,8 +838,9 @@
               </div>
               <div class="field">
                 <label for="f-cohort">Cohort</label>
-                <select id="f-cohort" name="cohort">
-                  <option value="5th/6th Girls">5th/6th Girls</option>
+                <select id="f-cohort" name="cohort" required>
+                  <option value="" disabled selected>Choose a cohort</option>
+                  <option value="9 &amp; Under">9 &amp; Under — Game Day Only</option>
                   <option value="5th/6th Boys">5th/6th Boys</option>
                   <option value="7th/8th Girls">7th/8th Girls</option>
                   <option value="7th/8th Boys">7th/8th Boys</option>
@@ -829,7 +852,15 @@
                   <option value="Full Two-Day Camp — $150" selected>Full Two-Day Camp — $150</option>
                   <option value="Full Two-Day Camp + Film Breakdown — $200">Full Two-Day Camp + Film Breakdown — $200</option>
                   <option value="Repping &amp; Testing — Standalone — $35">Repping &amp; Testing — Standalone — $35</option>
+                  <option value="9 &amp; Under Game Day — $50">9 &amp; Under Game Day — $50</option>
                 </select>
+              </div>
+              <div class="field field-skill" id="skill-field" hidden>
+                <label for="f-skill">Experience level</label>
+                <input id="f-skill" name="skill_level" type="range" min="1" max="3" step="1" value="1" list="skill-marks" aria-valuetext="Some experience" />
+                <datalist id="skill-marks"><option value="1"></option><option value="2"></option><option value="3"></option></datalist>
+                <div class="skill-labels" aria-hidden="true"><span data-v="1">1 · Some experience</span><span data-v="2">2 · Plays recreational</span><span data-v="3">3 · Plays competitively</span></div>
+                <p class="skill-now" id="skill-now">Level 1 — Some experience</p>
               </div>
             </div>
             <p class="waitlist-note" id="waitlist-note" role="status">This cohort is full — submitting this form will join the waitlist for this cohort.</p>
@@ -912,6 +943,7 @@
           }
           var vpillsWrap = counter.querySelector('.vpills');
           if (vpillsWrap) {
+            vpillsWrap.style.gridTemplateColumns = 'repeat(' + capacity + ', 1fr)';
             var vpills = vpillsWrap.querySelectorAll('.vpill');
             // Rebuild if the markup does not already hold exactly one pill per spot
             if (vpills.length !== capacity) {
@@ -1010,7 +1042,7 @@
 
         // Enrollment data in JSON — drives the waitlist logic.
         // A cohort at capacity (12/12) offers Join Waitlist instead of Reserve.
-        var enrollmentData = { totalEnrolled: 27, totalCapacity: 48, cohorts: [] };
+        var enrollmentData = { totalEnrolled: 27, totalCapacity: 50, cohorts: [] };
         try {
           var enrollmentJsonEl = document.getElementById('phase-play-enrollments');
           if (enrollmentJsonEl) enrollmentData = JSON.parse(enrollmentJsonEl.textContent);
@@ -1062,10 +1094,32 @@
           }
         }
         applyWaitlistLabels();
+        // 9 & Under is game day only: its own $50 package and an experience level (1–3).
+        var U9 = '9 & Under', U9_PKG = '9 & Under Game Day — $50';
+        var SKILL = { 1: 'Some experience', 2: 'Plays recreational', 3: 'Plays competitively' };
+        var skillField = document.getElementById('skill-field'), skillInput = document.getElementById('f-skill'), skillNow = document.getElementById('skill-now');
+        function showSkill() {
+          if (!skillInput) return;
+          var v = Number(skillInput.value) || 1;
+          skillInput.setAttribute('aria-valuetext', SKILL[v]);
+          if (skillNow) skillNow.textContent = 'Level ' + v + ' — ' + SKILL[v];
+          document.querySelectorAll('.skill-labels span').forEach(function (sp) { sp.classList.toggle('is-on', Number(sp.getAttribute('data-v')) === v); });
+        }
+        if (skillInput) { skillInput.addEventListener('input', showSkill); showSkill(); }
+        function is9U() { return !!(cohortSelect && cohortSelect.value === U9); }
+        function syncPackages() {
+          if (!pkgSelect || !cohortSelect) return;
+          var u9 = is9U();
+          Array.prototype.forEach.call(pkgSelect.options, function (o) { o.disabled = u9 ? o.value !== U9_PKG : o.value === U9_PKG; o.hidden = o.disabled; });
+          if (u9) pkgSelect.value = U9_PKG;
+          else if (pkgSelect.value === U9_PKG) pkgSelect.value = 'Full Two-Day Camp — $150';
+          if (skillField) skillField.hidden = !u9;
+        }
         function isStandalone() { return !!(pkgSelect && /^Repping & Testing/.test(pkgSelect.value)); }
         function signupTypeNow() { return isStandalone() ? 'interphase' : isCohortFull(cohortSelect.value) ? 'waitlist' : 'reserve'; }
         function updateSignupType() {
           if (!cohortSelect) return;
+          syncPackages();
           var type = signupTypeNow(), full = type === 'waitlist';
           if (signupTypeInput) signupTypeInput.value = type;
           if (waitlistNote) waitlistNote.classList.toggle('is-visible', full);
@@ -1113,7 +1167,9 @@
         });
         document.querySelectorAll('[data-day2]').forEach(function (link) {
           link.addEventListener('click', function () {
+            if (is9U()) cohortSelect.value = '';
             pkgSelect.value = 'Full Two-Day Camp — $150';
+            updateSignupType();
           });
         });
         updateSignupType();
@@ -1214,6 +1270,7 @@
           if (!box) return;
           var wall = box.querySelector('.vpills');
           wall.innerHTML = '';
+          wall.style.gridTemplateColumns = 'repeat(' + st.capacity + ', 1fr)';
           for (var i = 0; i < st.capacity; i++) {
             var pill = document.createElement('span');
             pill.className = 'vpill' + (i < spot ? ' is-filled' : '') + (i === spot - 1 ? ' is-new' : '');
@@ -1276,6 +1333,10 @@
             package: pkgSelect.value,
             signup_type: signupTypeNow()
           };
+          if (formData.cohort === U9) {
+            var lv = Number(skillInput && skillInput.value) || 1;
+            formData.skill_level = lv + ' — ' + SKILL[lv];
+          }
           if (signupTypeInput) signupTypeInput.value = formData.signup_type;
           if (statusEl) {
             statusEl.hidden = false;
@@ -1422,11 +1483,14 @@
       // Hidden coach backend: long-press the header image, enter the code.
       (function () {
         var API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
-        var COHORTS = ['5th/6th Girls', '5th/6th Boys', '7th/8th Girls', '7th/8th Boys'];
+        var COHORTS = ['9 & Under', '5th/6th Girls', '5th/6th Boys', '7th/8th Girls', '7th/8th Boys'];
+        var CAP = { '9 & Under': 14 };
+        var SKILL = { 1: 'Some experience', 2: 'Plays recreational', 3: 'Plays competitively' };
+        function skillTag(r) { return r.skill_level ? el('span', { class: 'pp-tag', title: SKILL[r.skill_level], text: 'Level ' + r.skill_level }) : null; }
         var GAMES = [
           { time: '10:00-11:00', cohort: '7th/8th Boys' },
           { time: '11:15-12:15', cohort: '7th/8th Girls' },
-          { time: '12:30-1:30', cohort: '5th/6th Girls' },
+          { time: '12:30-1:30', cohort: '9 & Under' },
           { time: '1:45-2:45', cohort: '5th/6th Boys' }
         ];
         var root = document.getElementById('pp-admin');
@@ -1566,7 +1630,8 @@
             var list = regs().filter(function (r) { return r.cohort === c; });
             var res = list.filter(function (r) { return r.signup_type === 'reserve'; });
             var wl = list.filter(function (r) { return r.signup_type === 'waitlist'; });
-            wrap.appendChild(el('h3', { text: c.replace('/', ' / ') + ' — ' + res.filter(active).length + ' of 12' }));
+            if (c === '5th/6th Girls' && !list.length) return;
+            wrap.appendChild(el('h3', { text: c.replace('/', ' / ') + ' — ' + res.filter(active).length + ' of ' + (CAP[c] || 12) }));
             wrap.appendChild(table(res, msg));
             if (wl.length) {
               wrap.appendChild(el('p', { class: 'pp-summary', text: 'Waitlist' }));
@@ -1600,7 +1665,7 @@
             var email = r.email ? el('a', { href: 'mailto:' + r.email, text: r.email }) : el('span', { class: 'muted', text: '—' });
             tbody.appendChild(el('tr', { class: r.status === 'cancelled' ? 'is-cancelled' : '' }, [
               el('td', { text: String(i + 1) }),
-              el('td', {}, [el('b', { text: r.player })].concat(r.signup_type === 'waitlist' && r.interphase_addon ? [' ', el('span', { class: 'pp-tag', text: '+ Interphase $35' })] : []).concat(r.school ? [el('br'), el('span', { class: 'muted', text: r.school })] : [])),
+              el('td', {}, [el('b', { text: r.player })].concat(r.skill_level ? [' ', skillTag(r)] : []).concat(r.signup_type === 'waitlist' && r.interphase_addon ? [' ', el('span', { class: 'pp-tag', text: '+ Interphase $35' })] : []).concat(r.school ? [el('br'), el('span', { class: 'muted', text: r.school })] : [])),
               el('td', {}, [document.createTextNode(r.parent || '—'), el('br'), email]),
               el('td', {}, [el('span', { class: 'muted', text: (r.package || '').split(' — ')[0] || '—' })]),
               el('td', {}, [el('span', { class: 'muted', text: fmtDate(r.created_at) + (r.source === 'admin' ? ' · added by you' : '') })]),
@@ -1618,18 +1683,25 @@
           var parent = el('input', { placeholder: 'Parent name' });
           var email = el('input', { type: 'email', placeholder: 'Parent email' });
           var cohort = el('select', {}, COHORTS.map(function (c) { return el('option', { value: c, text: c }); }));
-          var pkg = el('select', {}, ['Full Two-Day Camp — $150', 'Full Two-Day Camp + Film Breakdown — $200', 'Repping & Testing — Standalone — $35'].map(function (p) { return el('option', { value: p, text: p }); }));
+          var pkg = el('select', {}, ['Full Two-Day Camp — $150', 'Full Two-Day Camp + Film Breakdown — $200', 'Repping & Testing — Standalone — $35', '9 & Under Game Day — $50'].map(function (p) { return el('option', { value: p, text: p }); }));
+          var skill = el('select', { hidden: '' }, [1, 2, 3].map(function (v) { return el('option', { value: String(v), text: 'Level ' + v + ' — ' + SKILL[v] }); }));
+          cohort.addEventListener('change', function () {
+            var u9 = cohort.value === '9 & Under';
+            skill.hidden = !u9;
+            if (u9) pkg.value = '9 & Under Game Day — $50';
+            else if (pkg.value === '9 & Under Game Day — $50') pkg.value = 'Full Two-Day Camp — $150';
+          });
           var btn = el('button', { class: 'pp-btn', type: 'submit', text: 'Add player' });
           return el('form', { on: { submit: function (e) {
             e.preventDefault();
             if (!player.value.trim()) { player.focus(); return; }
             btn.disabled = true;
-            call({ action: 'add_player', player: player.value, school: school.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value, signup_type: /^Repping & Testing/.test(pkg.value) ? 'interphase' : 'reserve' }).then(function (x) {
+            call({ action: 'add_player', player: player.value, school: school.value, parent: parent.value, email: email.value, cohort: cohort.value, package: pkg.value, skill_level: cohort.value === '9 & Under' ? Number(skill.value) : null, signup_type: /^Repping & Testing/.test(pkg.value) ? 'interphase' : 'reserve' }).then(function (x) {
               btn.disabled = false;
               if (x.status === 200) refresh(msg, 'Added ' + player.value.trim() + '.');
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
             });
-          } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, school, parent, email, cohort, pkg, btn])]);
+          } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, school, parent, email, cohort, skill, pkg, btn])]);
         }
 
         function interphaseView(msg) {
@@ -1807,14 +1879,16 @@
             var black = players.filter(function (r) { return teams[r.id] === 'black'; });
             var none = players.filter(function (r) { return !teams[r.id]; });
             function chip(r) {
-              return el('button', { class: 'pp-chip', type: 'button', text: r.player, on: { click: function () {
+              return el('button', { class: 'pp-chip', type: 'button', text: r.player + (r.skill_level ? ' · L' + r.skill_level : ''), on: { click: function () {
                 teams[r.id] = teams[r.id] === 'orange' ? 'black' : 'orange'; dirty = true; render();
               } } });
             }
             var split = el('button', { class: 'pp-btn alt', type: 'button', text: players.length ? 'Auto-split' : 'No players yet', on: { click: function () {
               if ((orange.length || black.length) && !confirm('Re-split ' + g.cohort + ' into new even teams?')) return;
+              // Shuffle, then (when levels are known) deal out strongest first, snake order, so both teams get a mix.
               var order = players.slice().sort(function () { return Math.random() - 0.5; });
-              order.forEach(function (r, i) { teams[r.id] = i % 2 === 0 ? 'orange' : 'black'; });
+              order.sort(function (a, b) { return (b.skill_level || 0) - (a.skill_level || 0); });
+              order.forEach(function (r, i) { teams[r.id] = (i % 4 === 0 || i % 4 === 3) ? 'orange' : 'black'; });
               dirty = true; render();
             } } });
             if (!players.length) split.disabled = true;

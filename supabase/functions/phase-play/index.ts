@@ -6,7 +6,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 //                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
-const COHORTS = ["5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
+const COHORTS = ["9 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
+// 9 & Under (game day only, $50) asks for an experience level: 1 some experience,
+// 2 plays recreational, 3 plays competitively. Accepts 2 or "2 — Plays recreational".
+function skillLevel(v: unknown): number | null {
+  const n = parseInt(String(v ?? "").trim(), 10);
+  return n >= 1 && n <= 3 ? n : null;
+}
 const IP_BLOCKS = ["stationary", "motion", "form", "pickup", "pullup", "finishing", "passing"];
 // THE 100 shooting test: 10 stations x 10 shots; each shot 0 (miss) or 1-3 points.
 const TEST_STATIONS = ["classic_r", "classic_l", "ext_r", "ext_l", "rev_r", "rev_l", "ft10", "ft15", "ft20", "ft_free"];
@@ -184,6 +190,7 @@ Deno.serve(async (req) => {
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type, source: "site",
+        skill_level: cohort === "9 & Under" ? skillLevel(body.skill_level) : null,
       }).select("id").single();
       if (error) throw error;
       // Waitlist sign-ups get their id back so the thank-you screen can offer Interphase.
@@ -257,7 +264,7 @@ Deno.serve(async (req) => {
 
     if (action === "admin") {
       const { data: regs, error } = await db.from("registrations")
-        .select("id, created_at, parent, email, player, school, cohort, package, signup_type, interphase_addon, status, paid, notes, source")
+        .select("id, created_at, parent, email, player, school, cohort, package, signup_type, interphase_addon, skill_level, status, paid, notes, source")
         .eq("is_test", false)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -311,6 +318,7 @@ Deno.serve(async (req) => {
         school: clean(body.school, 120) || null,
         package: clean(body.package, 120), signup_type: ["waitlist", "interphase"].includes(clean(body.signup_type, 20)) ? clean(body.signup_type, 20) : "reserve",
         source: "admin", notes: clean(body.notes, 500) || null,
+        skill_level: cohort === "9 & Under" ? skillLevel(body.skill_level) : null,
       }).select("id").single();
       if (error) throw error;
       return json({ ok: true, id: data.id });
@@ -326,6 +334,7 @@ Deno.serve(async (req) => {
       if (body.signup_type === "reserve" || body.signup_type === "waitlist" || body.signup_type === "interphase") patch.signup_type = body.signup_type;
       if (typeof body.cohort === "string" && COHORTS.includes(body.cohort)) patch.cohort = body.cohort;
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
+      if (body.skill_level !== undefined) patch.skill_level = skillLevel(body.skill_level);
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);
       if (typeof body.school === "string") patch.school = clean(body.school, 120) || null;
       if (typeof body.parent === "string") patch.parent = clean(body.parent, 120);

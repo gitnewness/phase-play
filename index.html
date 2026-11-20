@@ -1647,15 +1647,21 @@
           COHORTS.forEach(function (c) {
             var list = regs().filter(function (r) { return r.cohort === c; });
             var res = list.filter(function (r) { return r.signup_type === 'reserve'; });
-            var wl = list.filter(function (r) { return r.signup_type === 'waitlist'; });
-            if (c === '5th/6th Girls' && !list.length) return;
+            if (c === '5th/6th Girls' && !res.length) return;
             wrap.appendChild(el('h3', { text: c.replace('/', ' / ') + ' — ' + res.filter(active).length + ' of ' + (CAP[c] || 12) }));
             wrap.appendChild(table(res, msg));
-            if (wl.length) {
-              wrap.appendChild(el('p', { class: 'pp-summary', text: 'Waitlist' }));
-              wrap.appendChild(table(wl, msg));
-            }
           });
+          // Waitlist: its own section, kept off the cohort rosters.
+          var wlAll = regs().filter(function (r) { return r.signup_type === 'waitlist'; });
+          if (wlAll.length) {
+            wrap.appendChild(el('h3', { text: 'Waitlist — ' + wlAll.filter(active).length }));
+            COHORTS.forEach(function (c) {
+              var wl = wlAll.filter(function (r) { return r.cohort === c; });
+              if (!wl.length) return;
+              wrap.appendChild(el('p', { class: 'pp-summary', text: c.replace('/', ' / ') }));
+              wrap.appendChild(table(wl, msg));
+            });
+          }
           var ipo = regs().filter(function (r) { return r.signup_type === 'interphase'; });
           if (ipo.length) {
             wrap.appendChild(el('h3', { text: 'Interphase only — ' + ipo.filter(active).length }));

@@ -34,7 +34,8 @@
       .block-title { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 21px; line-height: 1.05; }
       .block-focus { grid-column: 1 / -1; font-size: 14.5px; color: var(--ink-soft); }
       .watch { display: flex; align-items: center; gap: 8px; margin: 0 16px 12px; padding: 9px 14px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); font: 700 15px "Barlow", sans-serif; cursor: pointer; }
-      .watch .play { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 11px; padding-left: 2px; flex-shrink: 0; }
+      .watch .play { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+      .watch .play svg { width: 10px; height: 10px; margin-left: 2px; display: block; }
       .watch.on { background: var(--ink); color: #fff; }
       .vid { margin: 0 16px 14px; }
       .vid-frame { position: relative; width: 100%; max-width: 340px; margin: 0 auto; aspect-ratio: 9 / 16; background: #000; border-radius: 12px; overflow: hidden; }
@@ -398,11 +399,17 @@
           passing: { id: 'RuKATjX7nbs', title: 'Dribble Catch Passing' }
         };
         var watching = {};
+        // Drawn triangle, not the ▶ character: iPhones turn that into a gray emoji square.
+        function playIcon() {
+          var span = el('span', { class: 'play', 'aria-hidden': 'true' });
+          span.innerHTML = '<svg viewBox="0 0 10 10"><path d="M1 0.5 L9.5 5 L1 9.5 Z" fill="#fff"/></svg>';
+          return span;
+        }
         function watchEl(b) {
           var v = VIDEOS[b.key];
           if (!v) return null;
           var wrap = el('div');
-          var btn = el('button', { type: 'button', class: 'watch', 'aria-expanded': 'false' }, [el('span', { class: 'play', 'aria-hidden': 'true', text: '▶' }), el('span', { class: 'watch-txt', text: 'Watch the demo · ' + v.title })]);
+          var btn = el('button', { type: 'button', class: 'watch', 'aria-expanded': 'false' }, [playIcon(), el('span', { class: 'watch-txt', text: 'Watch the demo · ' + v.title })]);
           var box = el('div', { class: 'vid', hidden: '' });
           function show(on) {
             watching[b.key] = on;

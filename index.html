@@ -1128,10 +1128,16 @@
         function syncPackages() {
           if (!pkgSelect || !cohortSelect) return;
           var u9 = is10U();
-          Array.prototype.forEach.call(pkgSelect.options, function (o) { o.disabled = u9 ? o.value !== U10_PKG : o.value === U10_PKG; o.hidden = o.disabled; });
           if (u9) pkgSelect.value = U10_PKG;
           else if (pkgSelect.value === U10_PKG) pkgSelect.value = 'Full Two-Day Camp — $150';
           if (skillField) skillField.hidden = !u9;
+        }
+        // Every package stays pickable: the 10 & Under package picks that cohort,
+        // and a camp package clears a 10 & Under cohort so the family picks theirs.
+        function pkgPicked() {
+          if (!pkgSelect || !cohortSelect) return;
+          if (pkgSelect.value === U10_PKG) cohortSelect.value = U10;
+          else if (is10U()) cohortSelect.value = '';
         }
         function isStandalone() { return !!(pkgSelect && /^Repping & Testing/.test(pkgSelect.value)); }
         function signupTypeNow() { return isStandalone() ? 'interphase' : isCohortFull(cohortSelect.value) ? 'waitlist' : 'reserve'; }
@@ -1145,7 +1151,7 @@
           if (formEl) formEl.setAttribute('data-signup-type', type);
         }
         if (cohortSelect) cohortSelect.addEventListener('change', updateSignupType);
-        if (pkgSelect) pkgSelect.addEventListener('change', updateSignupType);
+        if (pkgSelect) pkgSelect.addEventListener('change', function () { pkgPicked(); updateSignupType(); });
 
         // Live counts from the backend: never lower than the numbers stored in the page.
         function applyLiveCounts(live) {

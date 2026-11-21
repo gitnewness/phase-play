@@ -414,6 +414,7 @@
       .waitlist-note.is-visible { display: block; }
       .btn-cohort.is-waitlist { background: var(--orange); color: #fff; }
       .btn-cohort.is-waitlist:hover { background: var(--orange-deep); color: #fff; }
+      .wl-24 { margin: 8px 0 0; font-size: 14.5px; font-weight: 600; color: var(--ink-faint); text-align: center; }
       .form-thanks {
         margin-top: 18px; padding: 22px; border: 1px solid var(--line);
         border-top: 5px solid var(--orange); border-radius: 0 0 8px 8px;
@@ -871,6 +872,7 @@
             </div>
             <p class="waitlist-note" id="waitlist-note" role="status">This cohort is full — submitting this form will join the waitlist for this cohort.</p>
             <button class="btn btn-orange" id="res-submit" type="submit">Reserve a spot</button>
+            <p class="wl-24" id="wl-24" hidden>You will be notified within 24 hours.</p>
             <p class="form-status" id="form-status" hidden>Sending your reservation…</p>
             <p class="fine">Or text <a href="sms:+15415310150">541-531-0150</a> with your player's name and cohort.</p>
           </form>
@@ -1098,6 +1100,10 @@
               link.textContent = 'Join waitlist — ' + displayCohortLabel(cohortId);
               link.classList.add('is-waitlist');
               link.setAttribute('data-signup-type', 'waitlist');
+              if (!(link.nextElementSibling && link.nextElementSibling.classList.contains('wl-24'))) {
+                var n = document.createElement('p'); n.className = 'wl-24'; n.textContent = 'You will be notified within 24 hours.';
+                link.insertAdjacentElement('afterend', n);
+              }
             }
           });
           if (cohortSelect) {
@@ -1147,6 +1153,7 @@
           var type = signupTypeNow(), full = type === 'waitlist';
           if (signupTypeInput) signupTypeInput.value = type;
           if (waitlistNote) waitlistNote.classList.toggle('is-visible', full);
+          var wl24 = document.getElementById('wl-24'); if (wl24) wl24.hidden = !full;
           if (submitBtn) submitBtn.textContent = full ? 'Join the waitlist' : type === 'interphase' ? 'Sign up' : 'Reserve a spot';
           if (formEl) formEl.setAttribute('data-signup-type', type);
         }

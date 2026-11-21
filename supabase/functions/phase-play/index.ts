@@ -192,7 +192,9 @@ Deno.serve(async (req) => {
       if (!player || !COHORTS.includes(cohort)) return json({ error: "invalid" }, 400);
       // The $35 standalone never takes a camp spot, whatever the page sent.
       const standalone = /^Repping & Testing/.test(clean(body.package, 120));
-      const signup_type = standalone ? "interphase" : clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
+      // After registration closes (8:30 PM Pacific, Nov 21) a page left open can't take a camp spot.
+      const closed = Date.now() >= Date.parse("2026-11-22T04:30:00Z");
+      const signup_type = standalone ? "interphase" : closed || clean(body.signup_type, 20) === "waitlist" ? "waitlist" : "reserve";
       const { data: row, error } = await db.from("registrations").insert({
         parent: clean(body.parent, 120), email: clean(body.email, 200).toLowerCase(), player, cohort,
         school: clean(body.school, 120) || null,

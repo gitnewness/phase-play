@@ -204,6 +204,20 @@
       /* Top ticker: scrolling Interphase workouts */
       .ip-ticker { display: flex; align-items: stretch; background: #161616; color: #fff; font-size: 14px; line-height: 1; overflow: hidden; text-decoration: none; }
       .ip-ticker[hidden] { display: none; }
+      /* Registration deadline: countdown bar + closed state */
+      .reg-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 12px; padding: 10px 16px; background: var(--orange); color: #fff; text-align: center; text-decoration: none; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; font-size: 16px; line-height: 1.2; }
+      .reg-bar .reg-left { font-variant-numeric: tabular-nums; background: rgba(0,0,0,0.22); border-radius: 4px; padding: 2px 8px; }
+      .reg-bar.is-closed { background: #161616; }
+      .reg-bar[hidden], .reg-bar [hidden] { display: none; }
+      .reg-timer { margin: 0 0 18px; padding: 14px 16px; border-radius: 6px; background: var(--orange-soft); color: var(--ink); text-align: center; }
+      .reg-timer p { margin: 0; font-weight: 600; }
+      .reg-timer .reg-left { display: block; margin-top: 4px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 30px; letter-spacing: 0.04em; color: var(--orange-deep); font-variant-numeric: tabular-nums; }
+      .reg-closed-note { display: none; margin: 0; padding: 18px 16px; border-radius: 6px; background: #161616; color: #fff; text-align: center; font-weight: 600; }
+      .reg-closed-note a { color: #fff; }
+      body.reg-closed .reg-closed-note { display: block; }
+      body.reg-closed #res-form, body.reg-closed .reg-timer, body.reg-closed [data-reg-cta] { display: none !important; }
+      body.reg-closed .btn-cohort { background: #d9d9d9; color: #555; pointer-events: none; }
+      body.reg-closed .wl-24 { display: none; }
       .ip-ticker-label { flex: none; display: flex; align-items: center; gap: 7px; padding: 10px 12px 10px 14px; background: var(--orange); font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-size: 13px; }
       .ip-ticker-label .tk-dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: tkBlink 1.6s ease-in-out infinite; }
       @keyframes tkBlink { 50% { opacity: 0.25; } }
@@ -558,6 +572,7 @@
       <span class="ip-ticker-label"><span class="tk-dot" aria-hidden="true"></span>Interphase live</span>
       <span class="ip-ticker-view"><span class="ip-ticker-track" id="ip-ticker-track"></span></span>
     </a>
+    <a class="reg-bar" id="reg-bar" href="#reserve" hidden><span id="reg-bar-text">Registration closes tonight at 8:30 PM</span><span class="reg-left" data-reg-left></span></a>
     <!-- ================= HERO ================= -->
     <header class="hero">
       <div class="wrap hero-inner">
@@ -643,7 +658,7 @@
           <div><strong>All-In</strong>$200 — $150 camp + $50 film breakdown</div>
         </div>
         <div class="hero-cta">
-          <a class="btn btn-orange" href="#reserve">Reserve the two-day camp — $150</a>
+          <a class="btn btn-orange" href="#reserve" data-reg-cta>Reserve the two-day camp — $150</a>
           <a class="btn btn-ghost" href="#cohorts">Find your cohort</a>
           <a class="btn btn-ghost" href="#pricing">Pricing</a>
         </div>
@@ -734,7 +749,7 @@
             <div><strong>Officiating</strong>Actual hired refs for Day 2 games</div>
             <div><strong>With breakdown</strong>$150 + $50 = $200 all-in</div>
           </div>
-          <a class="btn btn-orange" href="#reserve" data-day2="1">Reserve the two-day camp — $150</a>
+          <a class="btn btn-orange" href="#reserve" data-day2="1" data-reg-cta>Reserve the two-day camp — $150</a>
         </div>
       </section>
 
@@ -808,6 +823,8 @@
       <section id="reserve" aria-labelledby="reserve-h" style="padding-bottom:24px;">
         <div class="reserve">
           <h2 id="reserve-h">Reserve a spot</h2>
+          <div class="reg-timer" id="reg-timer" hidden><p>Registration closes tonight at 8:30 PM.</p><span class="reg-left" data-reg-left></span></div>
+          <p class="reg-closed-note">Registration is closed. Questions? Text Coach Michael at <a href="sms:+15415310150" style="white-space:nowrap">541-531-0150</a>.</p>
           <script type="application/json" id="phase-play-enrollments">
           {
             "totalEnrolled": 27,
@@ -1118,6 +1135,27 @@
           }
         }
         applyWaitlistLabels();
+        // Registration deadline: 8:30 PM Pacific, Sat Nov 21 (04:30 UTC Nov 22).
+        var REG_CLOSE = Date.parse('2026-11-22T04:30:00Z');
+        function regIsClosed() { return Date.now() >= REG_CLOSE; }
+        function regTick() {
+          var left = REG_CLOSE - Date.now();
+          var bar = document.getElementById('reg-bar'), box = document.getElementById('reg-timer');
+          if (left <= 0) {
+            document.body.classList.add('reg-closed');
+            document.querySelectorAll('.btn-cohort').forEach(function (b) { b.textContent = 'Registration closed'; b.removeAttribute('href'); b.setAttribute('aria-disabled', 'true'); });
+            if (bar) { bar.hidden = false; bar.classList.add('is-closed'); document.getElementById('reg-bar-text').textContent = 'Registration is closed'; bar.querySelector('[data-reg-left]').hidden = true; }
+            if (box) box.hidden = true;
+            return false;
+          }
+          var t = Math.floor(left / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), sec = t % 60;
+          var txt = (h ? h + 'h ' : '') + (h || m ? (m < 10 && h ? '0' : '') + m + 'm ' : '') + (sec < 10 ? '0' : '') + sec + 's left';
+          document.querySelectorAll('[data-reg-left]').forEach(function (e) { e.textContent = txt; });
+          if (bar) bar.hidden = false;
+          if (box) box.hidden = false;
+          return true;
+        }
+        if (regTick()) { var regTimer = setInterval(function () { if (!regTick()) clearInterval(regTimer); }, 1000); }
         // 10 & Under is game day only: its own $50 package and an experience level (1–3).
         var U10 = '10 & Under', U10_PKG = '10 & Under Game Day — $50';
         var SKILL = { 1: 'Some experience', 2: 'Plays recreational', 3: 'Plays competitively' };
@@ -1182,6 +1220,7 @@
           });
           applyWaitlistLabels();
           updateSignupType();
+          regTick();
         }
         try {
           fetch(PP_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'counts' }) })
@@ -1353,6 +1392,7 @@
         });
         if (formEl) formEl.addEventListener('submit', function (e) {
           e.preventDefault();
+          if (regIsClosed()) { regTick(); return; }
           var formData = {
             'form-name': 'phase-play-reserve',
             'bot-field': '',

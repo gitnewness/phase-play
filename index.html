@@ -1625,10 +1625,11 @@
         banner.addEventListener('contextmenu', function (e) { e.preventDefault(); });
         // Bookmarkable: phaseplayhoops.com/#workouts opens straight to the Workouts dashboard.
         var wantWorkouts = false, wantCheckin = false;
-        // phaseplayhoops.com/#checkin opens straight to the Check-in board.
+        // phaseplayhoops.com/#checkin opens straight to the Check-in board, #attendance to Attendance.
         function checkHash() {
           if (location.hash === '#workouts' && root.hidden) { wantWorkouts = true; openCode(); }
           if (location.hash === '#checkin' && root.hidden) { wantCheckin = true; openCode(); }
+          if (location.hash === '#attendance' && root.hidden) { wantCheckin = 'attendance'; openCode(); }
         }
         window.addEventListener('hashchange', checkHash);
         checkHash();
@@ -1648,7 +1649,7 @@
             go.disabled = true; msg.className = 'pp-msg'; msg.textContent = 'Checking…';
             call({ action: 'admin' }).then(function (r) {
               go.disabled = false;
-              if (r.status === 200) { data = r.body; loadTeams(); if (wantWorkouts) { tab = 'workouts'; ipData = null; } if (wantCheckin) { tab = 'checkin'; ciData = null; } render(); return; }
+              if (r.status === 200) { data = r.body; loadTeams(); if (wantWorkouts) { tab = 'workouts'; ipData = null; } if (wantCheckin) { tab = wantCheckin === 'attendance' ? 'attendance' : 'checkin'; ciData = null; } render(); return; }
               code = '';
               msg.textContent = r.body.error === 'locked' ? r.body.message
                 : r.body.error === 'admin_code_not_set' ? 'The backend code has not been set up yet.'
@@ -1700,11 +1701,12 @@
               el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } }),
-              el('button', { class: 'pp-tab' + (tab === 'checkin' ? ' on' : ''), type: 'button', text: 'Check-in', on: { click: function () { tab = 'checkin'; ciData = null; render(); } } })
+              el('button', { class: 'pp-tab' + (tab === 'checkin' ? ' on' : ''), type: 'button', text: 'Check-in', on: { click: function () { tab = 'checkin'; ciData = null; render(); } } }),
+              el('button', { class: 'pp-tab' + (tab === 'attendance' ? ' on' : ''), type: 'button', text: 'Attendance', on: { click: function () { tab = 'attendance'; ciData = null; render(); } } })
             ]),
             el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' + (ipOnly.length ? ' · ' + ipOnly.length + ' Interphase only' : '') }),
             msg,
-            tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : tab === 'checkin' ? checkinView(msg) : interphaseView(msg)
+            tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : tab === 'checkin' ? checkinView(msg) : tab === 'attendance' ? attendanceView(msg) : interphaseView(msg)
           ]);
           root.appendChild(box);
         }
@@ -1799,12 +1801,12 @@
         function ciTime(iso) { var d = new Date(iso); var h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM'); }
         function ciLoad() {
           return call({ action: 'checkin_admin' }).then(function (r) {
-            if (r.status === 200) { ciData = r.body; if (tab === 'checkin' && !root.hidden) render(); }
+            if (r.status === 200) { ciData = r.body; if ((tab === 'checkin' || tab === 'attendance') && !root.hidden) render(); }
           });
         }
         function ciPoll() {
           clearTimeout(ciTimer);
-          ciTimer = setTimeout(function () { if (tab === 'checkin' && !root.hidden && code) ciLoad().then(ciPoll, ciPoll); }, 10000);
+          ciTimer = setTimeout(function () { if ((tab === 'checkin' || tab === 'attendance') && !root.hidden && code) ciLoad().then(ciPoll, ciPoll); }, 10000);
         }
         function checkinView(msg) {
           var wrap = el('div');
@@ -1874,6 +1876,105 @@
           });
           var noGroup = (ciData.sessions[0] ? ciData.sessions[0].players : []).filter(function (p) { return p.cohort === '7th/8th Boys' && !p.day1_group; }).length;
           if (noGroup) wrap.insertBefore(el('p', { class: 'pp-msg', text: noGroup + ' 7th/8th Boys have no Day 1 group yet, so they show on both Day 1 lists. Tap AM or PM next to their name.' }), wrap.children[1]);
+          return wrap;
+        }
+
+        // ---- Attendance: every player across every session they belong to, with a CSV download ----
+        var CI_SHORT = { 'd1-am': 'D1 AM', 'd1-pm': 'D1 PM', 'd2-boys': 'D2 7/8 Boys', 'd2-girls': 'D2 7/8 Girls', 'd2-u10': 'D2 10U', 'd2-56': 'D2 5/6 Boys' };
+        function ciDay(iso) { var d = new Date(iso); return (d.getMonth() + 1) + '/' + d.getDate(); }
+        function attendanceRows() {
+          var done = {}, players = {}, order = [];
+          ciData.check_ins.forEach(function (c) { done[c.session + '|' + c.registration_id] = c; });
+          ciData.sessions.forEach(function (s) {
+            s.players.forEach(function (p) {
+              if (!players[p.id]) { players[p.id] = { id: p.id, name: p.name, cohort: p.cohort, group: p.day1_group, cells: {} }; order.push(p.id); }
+              players[p.id].cells[s.key] = done[s.key + '|' + p.id] || 'due';
+            });
+          });
+          return order.map(function (id) { return players[id]; }).sort(function (a, b) {
+            return a.cohort === b.cohort ? a.name.localeCompare(b.name) : COHORT_ORDER(a.cohort) - COHORT_ORDER(b.cohort);
+          });
+        }
+        function COHORT_ORDER(c) { var i = ['10 & Under', '5th/6th Girls', '5th/6th Boys', '7th/8th Girls', '7th/8th Boys'].indexOf(c); return i < 0 ? 9 : i; }
+        function attendanceCsv(rows) {
+          var q = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+          var head = ['Player', 'Cohort', 'Day 1 group'];
+          ciData.sessions.forEach(function (s) { head.push(s.title + ' (' + s.day + ')'); });
+          head.push('Checked in', 'Sessions');
+          var lines = [head.map(q).join(',')];
+          rows.forEach(function (p) {
+            var n = 0, of = 0;
+            var line = [p.name, p.cohort, p.group ? p.group.toUpperCase() : ''];
+            ciData.sessions.forEach(function (s) {
+              var c = p.cells[s.key];
+              if (!c) { line.push(''); return; }
+              of++;
+              if (c === 'due') line.push('Not checked in');
+              else { n++; line.push('Checked in ' + ciDay(c.checked_in_at) + ' ' + ciTime(c.checked_in_at)); }
+            });
+            line.push(n, of);
+            lines.push(line.map(q).join(','));
+          });
+          return lines.join('\r\n') + '\r\n';
+        }
+        function attendanceView(msg) {
+          var wrap = el('div');
+          if (!ciData) {
+            wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading attendance…' }));
+            ciLoad().then(function () { if (!ciData) { msg.className = 'pp-msg'; msg.textContent = 'Could not load attendance.'; } });
+            return wrap;
+          }
+          ciPoll();
+          var rows = attendanceRows(), now = Date.now();
+          var totalIn = 0, totalOf = 0;
+          rows.forEach(function (p) { Object.keys(p.cells).forEach(function (k) { totalOf++; if (p.cells[k] !== 'due') totalIn++; }); });
+          wrap.appendChild(el('div', { class: 'pp-admin-top', style: 'margin-top:12px; flex-wrap:wrap' }, [
+            el('span', { class: 'pp-summary', style: 'margin:0' }, [el('b', { text: rows.length + ' players · ' + totalIn + ' of ' + totalOf + ' session check-ins' }), ' · updates every 10 seconds']),
+            el('span', {}, [
+              el('button', { class: 'pp-btn', type: 'button', text: 'Download CSV', on: { click: function () {
+                var blob = new Blob(['﻿' + attendanceCsv(rows)], { type: 'text/csv;charset=utf-8' });
+                var a = el('a', { href: URL.createObjectURL(blob), download: 'phase-play-attendance-' + new Date().toISOString().slice(0, 10) + '.csv' });
+                document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+              } } }), ' ',
+              el('button', { class: 'pp-btn alt', type: 'button', text: 'Refresh', on: { click: function () { ciLoad(); } } })
+            ])
+          ]));
+          // Totals per session
+          var tot = el('div', { style: 'display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 12px' });
+          ciData.sessions.forEach(function (s) {
+            var n = 0; rows.forEach(function (r) { var c = r.cells[s.key]; if (c && c !== 'due') n++; });
+            var live = now >= Date.parse(s.start) - 45 * 60000 && now <= Date.parse(s.end);
+            tot.appendChild(el('div', { style: 'border:1px solid ' + (live ? 'var(--orange)' : 'var(--line)') + '; border-radius:8px; padding:6px 10px; font-size:13px' }, [
+              el('div', { class: 'muted', text: CI_SHORT[s.key] || s.title }), el('b', { style: 'font-size:17px', text: n + ' / ' + s.players.length })
+            ]));
+          });
+          wrap.appendChild(tot);
+          var head = el('tr', {}, [el('th', { text: 'Player' })]);
+          ciData.sessions.forEach(function (s) { head.appendChild(el('th', { style: 'text-align:center; white-space:nowrap', title: s.title + ', ' + s.day + ', ' + s.time, text: CI_SHORT[s.key] || s.title })); });
+          head.appendChild(el('th', { style: 'text-align:center', text: 'Total' }));
+          var body = el('tbody');
+          var lastCohort = '';
+          rows.forEach(function (p) {
+            if (p.cohort !== lastCohort) { lastCohort = p.cohort; body.appendChild(el('tr', {}, [el('td', { colspan: String(ciData.sessions.length + 2), style: 'background:#fafafa; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em', text: p.cohort })])); }
+            var n = 0, of = 0;
+            var tr = el('tr', {}, [el('td', {}, [el('b', { text: p.name }), p.cohort === '7th/8th Boys' ? el('span', { class: 'muted', text: p.group ? ' · ' + p.group.toUpperCase() : ' · no group' }) : null])]);
+            ciData.sessions.forEach(function (s) {
+              var c = p.cells[s.key];
+              if (!c) { tr.appendChild(el('td', { style: 'background:#f6f6f6' })); return; }
+              of++;
+              if (c === 'due') {
+                var over = now > Date.parse(s.end);
+                tr.appendChild(el('td', { style: 'text-align:center; color:' + (over ? '#b91c1c' : 'var(--ink-faint)'), text: over ? 'Missed' : '—' }));
+              } else {
+                n++;
+                tr.appendChild(el('td', { style: 'text-align:center; background:#f3faf3; white-space:nowrap' }, [el('b', { style: 'color:#15803d', text: '✓ ' }), el('span', { class: 'muted', text: ciTime(c.checked_in_at) })]));
+              }
+            });
+            tr.appendChild(el('td', { style: 'text-align:center; font-weight:800', text: n + '/' + of }));
+            body.appendChild(tr);
+          });
+          wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [el('thead', {}, [head]), body])]));
+          wrap.appendChild(el('p', { class: 'pp-summary', text: '✓ checked in (time) · — not yet · Missed: the session ended without a check-in · gray: not in that session.' }));
           return wrap;
         }
 

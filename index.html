@@ -585,7 +585,7 @@
         <div class="details-block" aria-label="Camp details">
           <p><strong>When</strong> - November 23 &amp; 24, 2026</p>
           <p><strong>Monday Clinic</strong> - 10:00-12:00 &amp; 1:00-3:00 PM</p>
-          <p><strong>Tuesday Games</strong> - 60 Minute Games at 10:00 AM</p>
+          <p><strong>Tuesday Games</strong> - 10:00 AM-3:20 PM</p>
           <p><strong>Where</strong> - Athletic Club of Bend</p>
           <p><strong>Cost</strong> $150 for both Days · 10 &amp; Under game day $50</p>
         </div>
@@ -637,10 +637,14 @@
           <div class="camp-day" aria-labelledby="day2-sub-h">
             <h3 class="day-head" id="day2-sub-h">Game Day <span class="day-k">(Day 2)</span> <span class="day-note">Tue, Nov 24 · Phase 4 gameplay — actual refs, filmed, included in the $150</span></h3>
             <div class="day-times day-games">
-              <div><strong>10:00-11:00</strong>7th/8th Grade Boys Game</div>
-              <div><strong>11:15-12:15</strong>7th/8th Grade Girls Game</div>
-              <div><strong>12:30-1:30</strong>10 &amp; Under Game · game day only</div>
-              <div><strong>1:45-2:45</strong>5th/6th Grade Boys Game</div>
+              <div><strong>10:00-10:10</strong>7th/8th Grade Boys Warm-up</div>
+              <div><strong>10:10-10:45</strong>7th/8th Boys Game 1 · Team 1 vs Team 2</div>
+              <div><strong>10:50-11:25</strong>7th/8th Boys Game 2 · Team 1 vs Team 3</div>
+              <div><strong>11:30-12:05</strong>7th/8th Boys Game 3 · Team 2 vs Team 3</div>
+              <div><strong>12:10-1:10</strong>7th/8th Grade Girls Game</div>
+              <div><strong>1:15-2:15</strong>10 &amp; Under Game · game day only</div>
+              <div><strong>2:20-3:20</strong>5th/6th Grade Boys Game</div>
+              <div style="color:var(--ink-faint); font-size:15px;">7th/8th Boys play a three-team round robin with 15-minute halves. All other games are 60 minutes.</div>
             </div>
             <div class="hp hp-wide">
               <div class="hp-k">Phase 4</div>
@@ -678,7 +682,7 @@
           <article class="cohort cohort-10u">
             <div class="c-k">New · Game Day Only · Boys &amp; Girls</div>
             <h3>10 &amp; Under</h3>
-            <p class="c-time"><strong>Tue, Nov 24</strong> <b>12:30 PM – 1:30 PM</b></p>
+            <p class="c-time"><strong>Tue, Nov 24</strong> <b>1:15 PM – 2:15 PM</b></p>
             <p class="c-price">$50</p>
             <ul class="c-incl">
               <li>Interphase workouts — start the day you register</li>
@@ -805,7 +809,7 @@
             <div class="amt">$200</div>
           </div>
           <div class="price-row">
-            <div class="what">10 &amp; Under — Game Day Only <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Interphase workouts, one hour of refereed gameplay on Tue, Nov 24 (12:30–1:30 PM) and full game footage · 14 spots · Teams split by the coaches</span></div>
+            <div class="what">10 &amp; Under — Game Day Only <span style="display:block; font-weight:500; color:var(--ink-faint); font-size:15px; margin-top:2px;">Interphase workouts, one hour of refereed gameplay on Tue, Nov 24 (1:15–2:15 PM) and full game footage · 14 spots · Teams split by the coaches</span></div>
             <div class="amt">$50</div>
           </div>
           <div class="caps-box">
@@ -1559,10 +1563,10 @@
         var SKILL = { 1: 'Some experience', 2: 'Plays recreational', 3: 'Plays competitively' };
         function skillTag(r) { return r.skill_level ? el('span', { class: 'pp-tag', title: SKILL[r.skill_level], text: 'Level ' + r.skill_level }) : null; }
         var GAMES = [
-          { time: '10:00-11:00', cohort: '7th/8th Boys' },
-          { time: '11:15-12:15', cohort: '7th/8th Girls' },
-          { time: '12:30-1:30', cohort: '10 & Under' },
-          { time: '1:45-2:45', cohort: '5th/6th Boys' }
+          { time: '10:10-12:05 round robin', cohort: '7th/8th Boys' },
+          { time: '12:10-1:10', cohort: '7th/8th Girls' },
+          { time: '1:15-2:15', cohort: '10 & Under' },
+          { time: '2:20-3:20', cohort: '5th/6th Boys' }
         ];
         var root = document.getElementById('pp-admin');
         var banner = document.querySelector('.hero-banner img');

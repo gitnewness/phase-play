@@ -1838,7 +1838,10 @@
             inList.sort(function (x, y) { return done[s.key + '|' + x.id].checked_in_at < done[s.key + '|' + y.id].checked_in_at ? 1 : -1; }).forEach(function (p) {
               var c = done[s.key + '|' + p.id];
               a.appendChild(el('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #e6efe6' }, [
-                el('span', {}, [el('b', { text: p.name }), ' ', el('span', { class: 'muted', text: ciTime(c.checked_in_at) })]),
+                el('span', { style: 'display:flex; align-items:center; gap:8px' }, [
+                  c.photo_url ? el('a', { href: c.photo_url, target: '_blank', rel: 'noopener', title: 'Open photo' }, [el('img', { src: c.photo_url, alt: 'Check-in photo of ' + p.name, loading: 'lazy', style: 'width:44px; height:44px; object-fit:cover; border-radius:6px; display:block; background:#e6efe6' })]) : el('span', { class: 'muted', text: 'No photo' }),
+                  el('span', {}, [el('b', { text: p.name }), ' ', el('span', { class: 'muted', text: ciTime(c.checked_in_at) })])
+                ]),
                 el('button', { class: 'pp-paid', type: 'button', text: 'Undo', on: { click: function () {
                   if (!confirm('Undo check-in for ' + p.name + ' (' + s.title + ')?')) return;
                   call({ action: 'checkin_undo', id: p.id, session: s.key }).then(function (r) {

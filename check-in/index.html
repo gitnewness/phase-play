@@ -56,6 +56,12 @@
       .done h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 38px; line-height: 1; margin: 0 0 8px; }
       .done p { margin: 0 0 4px; color: var(--ink-soft); }
       .again { margin-top: 26px; min-height: 52px; padding: 0 22px; border: 1.5px solid var(--ink); border-radius: 8px; background: #fff; color: var(--ink); font: 700 17px "Barlow", sans-serif; cursor: pointer; }
+      .shot { text-align: center; padding-top: 14px; }
+      .shot h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 30px; line-height: 1; margin: 0 0 4px; }
+      .shot p { margin: 0 0 14px; color: var(--ink-soft); font-size: 15.5px; }
+      .shot img { display: block; width: 100%; max-width: 360px; max-height: 52vh; object-fit: contain; margin: 0 auto; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+      .row2 { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+      .ghost { min-height: 46px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: 600 16px "Barlow", sans-serif; cursor: pointer; }
       .err { color: #b42318; font-weight: 600; margin: 10px 0; }
       .help { margin-top: 30px; font-size: 15px; color: var(--ink-faint); }
       .help a { color: var(--ink); }
@@ -67,18 +73,20 @@
       <header>
         <p class="kicker">Michael Nunes presents Phase Play</p>
         <h1>Check-in</h1>
-        <p class="lede" id="lede">Tap your player's name, then tap check in. One tap per player.</p>
+        <p class="lede" id="lede">Tap your player's name, take a quick photo of them, then check in. One check-in per player.</p>
       </header>
       <div id="app"><p class="none">Loading the sessions...</p></div>
       <p class="help">Wrong name or a problem? Find a coach at the door, or text Coach Michael at <a href="sms:+15415310150" style="white-space:nowrap">541-531-0150</a>.</p>
       <footer>A Sportdork production</footer>
     </main>
     <div class="bar" id="bar" hidden><button class="go" id="go" type="button">Check in</button></div>
+    <input type="file" id="cam" accept="image/*" capture="environment" hidden />
     <script>
       (function () {
         var API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
         var app = document.getElementById('app'), bar = document.getElementById('bar'), go = document.getElementById('go'), lede = document.getElementById('lede');
-        var sessions = [], current = null, picked = null, filter = '';
+        var cam = document.getElementById('cam');
+        var sessions = [], current = null, picked = null, filter = '', photo = null;
 
         function el(tag, attrs, kids) {
           var n = document.createElement(tag);
@@ -110,8 +118,9 @@
         function render() {
           var s = find(current);
           app.innerHTML = '';
+          if (picked && photo) { renderShot(); return; }
           bar.hidden = !picked;
-          if (picked) go.textContent = 'Check in ' + picked.name;
+          if (picked) go.textContent = 'Take a photo of ' + picked.name;
           lede.hidden = false;
           if (!s) { app.appendChild(el('p', { class: 'none', text: 'No sessions found.' })); return; }
           app.appendChild(el('section', { class: 'now' }, [
@@ -134,7 +143,7 @@
             if (!shown.length) grid.appendChild(el('p', { class: 'none', text: q ? 'No name matches. Try the first name.' : 'No players on this list yet.' }));
             shown.forEach(function (p) {
               grid.appendChild(el('button', { class: 'name' + (picked && picked.id === p.id ? ' on' : ''), type: 'button', role: 'listitem', 'aria-pressed': picked && picked.id === p.id ? 'true' : 'false', text: p.name, on: { click: function () {
-                picked = picked && picked.id === p.id ? null : p; render();
+                picked = picked && picked.id === p.id ? null : p; photo = null; render();
               } } }));
             });
           }
@@ -143,7 +152,7 @@
           if (others.length) {
             app.appendChild(el('p', { class: 'h2', text: 'Other sessions' }));
             app.appendChild(el('div', { class: 'other' }, others.map(function (x) {
-              return el('button', { class: 'sess', type: 'button', on: { click: function () { current = x.key; picked = null; filter = ''; render(); window.scrollTo(0, 0); } } }, [
+              return el('button', { class: 'sess', type: 'button', on: { click: function () { current = x.key; picked = null; photo = null; filter = ''; render(); window.scrollTo(0, 0); } } }, [
                 el('b', { text: x.title }), el('small', { text: x.day + ', ' + x.time }), el('span', { 'aria-hidden': 'true', text: '›' })
               ]);
             })));
@@ -160,24 +169,69 @@
             el('h2', { text: res.name + (res.already ? ' is already checked in' : ' is checked in') }),
             el('p', { text: res.session + ', ' + res.time }),
             el('p', { text: res.day }),
-            el('button', { class: 'again', type: 'button', text: 'Check in another player', on: { click: function () { picked = null; filter = ''; render(); window.scrollTo(0, 0); } } })
+            el('button', { class: 'again', type: 'button', text: 'Check in another player', on: { click: function () { picked = null; photo = null; filter = ''; render(); window.scrollTo(0, 0); } } })
           ]));
           window.scrollTo(0, 0);
         }
 
+        // Photo step: the parent's photo of the player, shrunk on the phone (max 1024px, no location data).
+        function renderShot() {
+          lede.hidden = true; bar.hidden = false;
+          go.textContent = 'Check in ' + picked.name;
+          var s = find(current);
+          app.innerHTML = '';
+          var img = el('img', { alt: 'Photo of ' + picked.name, src: photo });
+          app.appendChild(el('section', { class: 'shot' }, [
+            el('h2', { text: picked.name }),
+            el('p', { text: s.title + ', ' + s.time }),
+            img,
+            el('div', { class: 'row2' }, [
+              el('button', { class: 'ghost', type: 'button', text: 'Retake photo', on: { click: function () { cam.value = ''; cam.click(); } } }),
+              el('button', { class: 'ghost', type: 'button', text: 'Different name', on: { click: function () { picked = null; photo = null; render(); } } })
+            ])
+          ]));
+          window.scrollTo(0, 0);
+        }
+        function shrink(file) {
+          return new Promise(function (resolve, reject) {
+            var url = URL.createObjectURL(file), im = new Image();
+            im.onload = function () {
+              var max = 1024, w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, max / Math.max(w, h));
+              var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+              c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+              URL.revokeObjectURL(url);
+              resolve(c.toDataURL('image/jpeg', 0.8));
+            };
+            im.onerror = function () { URL.revokeObjectURL(url); reject(new Error('image')); };
+            im.src = url;
+          });
+        }
+        cam.addEventListener('change', function () {
+          var f = cam.files && cam.files[0];
+          if (!f || !picked) return;
+          go.disabled = true; go.textContent = 'Loading photo...';
+          shrink(f).then(function (d) { go.disabled = false; photo = d; renderShot(); })
+            .catch(function () { go.disabled = false; photo = null; render(); showErr('Could not read that photo. Please try again.'); });
+        });
+        function showErr(t) {
+          var e = app.querySelector('.err') || app.insertBefore(el('p', { class: 'err' }), app.firstChild);
+          e.textContent = t;
+        }
+
         go.addEventListener('click', function () {
           if (!picked) return;
+          if (!photo) { cam.value = ''; cam.click(); return; }
           go.disabled = true; go.textContent = 'Checking in...';
-          post({ action: 'check_in', id: picked.id, session: current }).then(function (r) {
+          post({ action: 'check_in', id: picked.id, session: current, photo: photo }).then(function (r) {
             go.disabled = false;
-            if (r.status === 200 && r.body.ok) { picked = null; confirmDone(r.body); return; }
+            if (r.status === 200 && r.body.ok) { picked = null; photo = null; confirmDone(r.body); return; }
             go.textContent = 'Try again';
-            var e = app.querySelector('.err') || app.insertBefore(el('p', { class: 'err' }), app.firstChild);
-            e.textContent = r.body && r.body.error === 'not_on_list' ? 'That name is not on this session list. Please find a coach.' : 'Could not check in. Please try again.';
+            showErr(r.body && r.body.error === 'not_on_list' ? 'That name is not on this session list. Please find a coach.'
+              : r.body && r.body.error === 'photo_required' ? 'The photo did not come through. Tap Retake photo and try again.'
+              : 'Could not check in. Please try again.');
           }).catch(function () {
             go.disabled = false; go.textContent = 'Try again';
-            var e = app.querySelector('.err') || app.insertBefore(el('p', { class: 'err' }), app.firstChild);
-            e.textContent = 'No connection. Please try again.';
+            showErr('No connection. Please try again.');
           });
         });
 

@@ -63,6 +63,18 @@ function shortName(full: string): string {
 function sessionMeta(s: typeof SESSIONS[number]) {
   return { key: s.key, day: s.day, title: s.title, time: s.time, who: s.who, start: s.start, end: s.end };
 }
+const PHOTO_BUCKET = "check-in-photos";
+// Base64 JPEG (with or without a data: prefix), at most 1.5 MB.
+function photoBytes(v: unknown): Uint8Array | null {
+  if (typeof v !== "string" || v.length > 2_100_000) return null;
+  const b64 = v.replace(/^data:image\/jpeg;base64,/, "");
+  let bin: string;
+  try { bin = atob(b64); } catch { return null; }
+  if (bin.length < 2000 || bin.length > 1_500_000) return null;
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out[0] === 0xff && out[1] === 0xd8 ? out : null;
+}
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
 const IP_BLOCKS = ["stationary", "motion", "form", "pickup", "pullup", "finishing", "passing"];
@@ -264,10 +276,24 @@ Deno.serve(async (req) => {
       if (!s || !/^[0-9a-f-]{36}$/.test(id)) return json({ error: "invalid" }, 400);
       const { data: r } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions, signup_type, status, is_test").eq("id", id).maybeSingle();
       if (!r || r.signup_type !== "reserve" || r.status !== "active" || r.is_test || !inSession(r as CheckReg, key)) return json({ error: "not_on_list" }, 404);
-      const { data: ins, error } = await db.from("check_ins")
-        .upsert({ registration_id: id, session: key, player: r.player }, { onConflict: "registration_id,session", ignoreDuplicates: true }).select("id");
-      if (error) throw error;
-      return json({ ok: true, already: !ins?.length, name: shortName(r.player), session: s.title, time: s.time, day: s.day });
+      const done = { ok: true, name: shortName(r.player), session: s.title, time: s.time, day: s.day };
+      const { data: prev } = await db.from("check_ins").select("id, photo_path").eq("registration_id", id).eq("session", key).maybeSingle();
+      if (prev?.photo_path) return json({ ...done, already: true });
+      // The parent's photo: a JPEG the page has already shrunk (no location data). Required to check in.
+      const photo = photoBytes(body.photo);
+      if (!photo) return json({ error: "photo_required" }, 400);
+      const path = `${key}/${id}.jpg`;
+      const { error: upErr } = await db.storage.from(PHOTO_BUCKET).upload(path, photo, { contentType: "image/jpeg", upsert: true });
+      if (upErr) throw upErr;
+      if (prev) {
+        const { error } = await db.from("check_ins").update({ photo_path: path }).eq("id", prev.id);
+        if (error) throw error;
+      } else {
+        const { error } = await db.from("check_ins")
+          .upsert({ registration_id: id, session: key, player: r.player, photo_path: path }, { onConflict: "registration_id,session", ignoreDuplicates: true });
+        if (error) throw error;
+      }
+      return json({ ...done, already: !!prev });
     }
 
     // A family that just joined a waitlist adds the $35 Interphase workouts.
@@ -348,8 +374,16 @@ Deno.serve(async (req) => {
 
     if (action === "checkin_admin") {
       const regs = await checkRegs();
-      const { data: rows, error } = await db.from("check_ins").select("registration_id, session, player, checked_in_at");
+      const { data: rows0, error } = await db.from("check_ins").select("registration_id, session, player, checked_in_at, photo_path");
       if (error) throw error;
+      // Photos: short-lived signed links (1 hour); the bucket itself is private.
+      const paths = (rows0 ?? []).map((x) => x.photo_path).filter(Boolean) as string[];
+      const urls: Record<string, string> = {};
+      if (paths.length) {
+        const { data: signed } = await db.storage.from(PHOTO_BUCKET).createSignedUrls(paths, 3600);
+        for (const x of signed ?? []) if (x.path && x.signedUrl) urls[x.path] = x.signedUrl;
+      }
+      const rows = (rows0 ?? []).map((x) => ({ ...x, photo_url: x.photo_path ? urls[x.photo_path] ?? null : null }));
       return json({ sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
         players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort, day1_group: r.day1_group, extra: (r.extra_sessions ?? []).includes(s.key) }))
           .sort(byName) })), check_ins: rows ?? [] });
@@ -357,8 +391,10 @@ Deno.serve(async (req) => {
     if (action === "checkin_undo") {
       const id = clean(body.id, 60), key = clean(body.session, 20);
       if (!id || !SESSIONS.some((x) => x.key === key)) return json({ error: "invalid" }, 400);
-      const { error } = await db.from("check_ins").delete().eq("registration_id", id).eq("session", key);
+      const { data: gone, error } = await db.from("check_ins").delete().eq("registration_id", id).eq("session", key).select("photo_path");
       if (error) throw error;
+      const paths = (gone ?? []).map((x) => x.photo_path).filter(Boolean) as string[];
+      if (paths.length) await db.storage.from(PHOTO_BUCKET).remove(paths);
       return json({ ok: true });
     }
 

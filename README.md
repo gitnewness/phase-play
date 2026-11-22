@@ -30,7 +30,8 @@ Form submissions will appear in Netlify under Site settings > Forms.
 
 ## Camp check-in (QR code at the door)
 
-- Parents scan the QR code (`images/check-in-qr.png` / `.svg`, printable sign at `/check-in/sign.html`) and land on `/check-in/`. The page shows the session running now first (from 45 minutes before it starts), with the other sessions below. Tap a name, tap check in. Public lists show first name + last initial only.
+- Parents scan the QR code (`images/check-in-qr.png` / `.svg`, printable sign at `/check-in/sign.html`) and land on `/check-in/`. The page shows the session running now first (from 45 minutes before it starts), with the other sessions below. Tap a name, take a photo of the player (required; the phone shrinks it to 1024px JPEG, no location data), tap check in. Public lists show first name + last initial only.
+- Photos go to the private Storage bucket `check-in-photos` (`<session>/<registration id>.jpg`, path in `check_ins.photo_path`). The coach board shows them through 1-hour signed links; Undo deletes the photo too. Delete the bucket's files after camp.
 - Lists come live from `registrations` (active, `signup_type = reserve`, not test). Sessions and who belongs in each are defined in `SESSIONS` / `inSession()` in the edge function.
   - Day 1 7th/8th Boys morning vs afternoon: `registrations.day1_group` (`am` / `pm`). A boy with no group shows on both Day 1 lists until set (coach screen → Check-in tab → AM / PM).
   - A player in an extra session: `registrations.extra_sessions` (Billy Nunes has `{d2-u10}`).

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="light" />
+    <title>Check-in Sign - Phase Play</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      @page { size: letter portrait; margin: 0.5in; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: #fff; color: #161616; font-family: "Barlow", system-ui, sans-serif; }
+      .sign { max-width: 7.5in; margin: 0 auto; padding: 24px; text-align: center; }
+      .kicker { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .16em; font-size: 22px; color: #c24e02; margin: 0; }
+      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 104px; line-height: .9; margin: 10px 0 6px; }
+      .sub { font-size: 24px; font-weight: 600; margin: 0 0 26px; }
+      .qr { display: block; width: 4.6in; max-width: 100%; height: auto; margin: 0 auto; padding: 0.22in; border: 6px solid #e85d04; border-radius: 18px; }
+      .url { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 34px; letter-spacing: .02em; margin: 20px 0 22px; }
+      ol { list-style: none; padding: 0; margin: 0 auto; max-width: 5.6in; text-align: left; font-size: 22px; font-weight: 600; }
+      ol li { display: flex; gap: 14px; align-items: baseline; padding: 7px 0; border-top: 1px solid #e3e3e3; }
+      ol li b { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #e85d04; color: #fff; display: inline-grid; place-items: center; font-family: "Barlow Condensed", sans-serif; font-size: 22px; transform: translateY(-2px); }
+      .foot { margin-top: 26px; font-size: 16px; color: #6f6f6f; }
+      .print { margin: 18px auto 0; padding: 12px 22px; border: 0; border-radius: 8px; background: #161616; color: #fff; font: 700 17px "Barlow", sans-serif; cursor: pointer; }
+      @media print { .print { display: none; } .sign { padding: 0; } }
+    </style>
+  </head>
+  <body>
+    <div class="sign">
+      <p class="kicker">Michael Nunes presents Phase Play</p>
+      <h1>Check in here</h1>
+      <p class="sub">Point your phone camera at the code</p>
+      <img class="qr" src="/images/check-in-qr.svg" alt="QR code for phaseplayhoops.com/check-in" width="460" height="460" />
+      <p class="url">phaseplayhoops.com/check-in</p>
+      <ol>
+        <li><b>1</b>Scan the code with your phone camera</li>
+        <li><b>2</b>Tap your player's name</li>
+        <li><b>3</b>Tap check in. One tap per player.</li>
+      </ol>
+      <p class="foot">A Sportdork production</p>
+      <button class="print" type="button" onclick="window.print()">Print this sign</button>
+    </div>
+  </body>
+</html>

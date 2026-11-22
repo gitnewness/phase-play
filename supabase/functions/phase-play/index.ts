@@ -6,6 +6,8 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 //                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
+// Check-in:      checkin_roster, check_in (public, QR code at the door);
+//                checkin_admin, checkin_undo (coach code)
 const COHORTS = ["10 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
 // 10 & Under was first called "9 & Under"; pages cached under the old name still work.
 const U10 = "10 & Under";
@@ -19,6 +21,50 @@ function skillLevel(v: unknown): number | null {
   const n = parseInt(String(v ?? "").trim(), 10);
   return n >= 1 && n <= 3 ? n : null;
 }
+// Camp check-in sessions (Pacific time). Rosters come from active camp registrations:
+// Day 1 7th/8th Boys are split by registrations.day1_group ('am'/'pm'); a boy with no group
+// shows on both Day 1 lists until the coach sets one. extra_sessions adds a player to another
+// session (Billy Nunes also plays the 10 & Under game).
+const SESSIONS = [
+  { key: "d1-am", day: "Day 1, Mon Nov 23", title: "Morning session", time: "10 AM - 12 PM", who: "7th/8th Girls and the 7th/8th Boys morning group", start: "2026-11-23T10:00:00-08:00", end: "2026-11-23T12:00:00-08:00" },
+  { key: "d1-pm", day: "Day 1, Mon Nov 23", title: "Afternoon session", time: "1 - 3 PM", who: "5th/6th Boys and the 7th/8th Boys afternoon group", start: "2026-11-23T13:00:00-08:00", end: "2026-11-23T15:00:00-08:00" },
+  { key: "d2-boys", day: "Day 2, Tue Nov 24", title: "7th/8th Boys round robin", time: "10:10 AM - 12:05 PM", who: "Warm-up at 10:00", start: "2026-11-24T10:00:00-08:00", end: "2026-11-24T12:05:00-08:00" },
+  { key: "d2-girls", day: "Day 2, Tue Nov 24", title: "7th/8th Girls game", time: "12:10 - 1:10 PM", who: "", start: "2026-11-24T12:10:00-08:00", end: "2026-11-24T13:10:00-08:00" },
+  { key: "d2-u10", day: "Day 2, Tue Nov 24", title: "10 & Under game", time: "1:15 - 2:15 PM", who: "", start: "2026-11-24T13:15:00-08:00", end: "2026-11-24T14:15:00-08:00" },
+  { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:20 - 3:20 PM", who: "", start: "2026-11-24T14:20:00-08:00", end: "2026-11-24T15:20:00-08:00" },
+];
+type CheckReg = { id: string; player: string; cohort: string; day1_group: string | null; extra_sessions: string[] | null };
+function inSession(r: CheckReg, key: string): boolean {
+  if ((r.extra_sessions ?? []).includes(key)) return true;
+  const c = r.cohort, g = r.day1_group;
+  switch (key) {
+    case "d1-am": return c === "7th/8th Girls" || (c === "7th/8th Boys" && g !== "pm");
+    case "d1-pm": return c === "5th/6th Boys" || c === "5th/6th Girls" || (c === "7th/8th Boys" && g !== "am");
+    case "d2-boys": return c === "7th/8th Boys";
+    case "d2-girls": return c === "7th/8th Girls";
+    case "d2-u10": return c === U10;
+    case "d2-56": return c === "5th/6th Boys";
+  }
+  return false;
+}
+async function checkRegs(): Promise<CheckReg[]> {
+  const { data, error } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions")
+    .eq("signup_type", "reserve").eq("status", "active").eq("is_test", false);
+  if (error) throw error;
+  return (data ?? []) as CheckReg[];
+}
+// Public lists show first name + last initial only.
+function shortName(full: string): string {
+  const parts = full.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] ?? "";
+  const first = parts[0], last = parts[parts.length - 1];
+  return first.charAt(0).toUpperCase() + first.slice(1) + " " + last.charAt(0).toUpperCase() + ".";
+}
+function sessionMeta(s: typeof SESSIONS[number]) {
+  return { key: s.key, day: s.day, title: s.title, time: s.time, who: s.who, start: s.start, end: s.end };
+}
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+
 const IP_BLOCKS = ["stationary", "motion", "form", "pickup", "pullup", "finishing", "passing"];
 // THE 100 shooting test: 10 stations x 10 shots; each shot 0 (miss) or 1-3 points.
 const TEST_STATIONS = ["classic_r", "classic_l", "ext_r", "ext_l", "rev_r", "rev_l", "ft10", "ft15", "ft20", "ft_free"];
@@ -206,6 +252,24 @@ Deno.serve(async (req) => {
       return json(signup_type === "waitlist" ? { ok: true, id: row.id } : { ok: true });
     }
 
+    // ---- Camp check-in (public: names only, never who has checked in) ----
+    if (action === "checkin_roster") {
+      const regs = await checkRegs();
+      return json({ sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+        players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: shortName(r.player) })).sort(byName) })) });
+    }
+    if (action === "check_in") {
+      const id = clean(body.id, 60), key = clean(body.session, 20);
+      const s = SESSIONS.find((x) => x.key === key);
+      if (!s || !/^[0-9a-f-]{36}$/.test(id)) return json({ error: "invalid" }, 400);
+      const { data: r } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions, signup_type, status, is_test").eq("id", id).maybeSingle();
+      if (!r || r.signup_type !== "reserve" || r.status !== "active" || r.is_test || !inSession(r as CheckReg, key)) return json({ error: "not_on_list" }, 404);
+      const { data: ins, error } = await db.from("check_ins")
+        .upsert({ registration_id: id, session: key, player: r.player }, { onConflict: "registration_id,session", ignoreDuplicates: true }).select("id");
+      if (error) throw error;
+      return json({ ok: true, already: !ins?.length, name: shortName(r.player), session: s.title, time: s.time, day: s.day });
+    }
+
     // A family that just joined a waitlist adds the $35 Interphase workouts.
     // Only for a waitlist row created in the last 6 hours.
     if (action === "wl_interphase") {
@@ -282,6 +346,22 @@ Deno.serve(async (req) => {
       return json({ registrations: regs ?? [], teams: teams ?? [] });
     }
 
+    if (action === "checkin_admin") {
+      const regs = await checkRegs();
+      const { data: rows, error } = await db.from("check_ins").select("registration_id, session, player, checked_in_at");
+      if (error) throw error;
+      return json({ sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+        players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort, day1_group: r.day1_group, extra: (r.extra_sessions ?? []).includes(s.key) }))
+          .sort(byName) })), check_ins: rows ?? [] });
+    }
+    if (action === "checkin_undo") {
+      const id = clean(body.id, 60), key = clean(body.session, 20);
+      if (!id || !SESSIONS.some((x) => x.key === key)) return json({ error: "invalid" }, 400);
+      const { error } = await db.from("check_ins").delete().eq("registration_id", id).eq("session", key);
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
     if (action === "ip_admin") {
       await ensureTokens();
       const { data: access, error } = await db.from("interphase_access").select("registration_id, token, code, active, last_opened_at");
@@ -344,6 +424,8 @@ Deno.serve(async (req) => {
       if (typeof body.cohort === "string" && COHORTS.includes(cohortName(body.cohort))) patch.cohort = cohortName(body.cohort);
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
       if (body.skill_level !== undefined) patch.skill_level = skillLevel(body.skill_level);
+      if (body.day1_group === "am" || body.day1_group === "pm" || body.day1_group === null) patch.day1_group = body.day1_group;
+      if (Array.isArray(body.extra_sessions)) patch.extra_sessions = body.extra_sessions.map((x) => clean(x, 20)).filter((k) => SESSIONS.some((s) => s.key === k));
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);
       if (typeof body.school === "string") patch.school = clean(body.school, 120) || null;
       if (typeof body.parent === "string") patch.parent = clean(body.parent, 120);

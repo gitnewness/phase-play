@@ -27,3 +27,12 @@ netlify deploy --prod
 ```
 
 Form submissions will appear in Netlify under Site settings > Forms.
+
+## Camp check-in (QR code at the door)
+
+- Parents scan the QR code (`images/check-in-qr.png` / `.svg`, printable sign at `/check-in/sign.html`) and land on `/check-in/`. The page shows the session running now first (from 45 minutes before it starts), with the other sessions below. Tap a name, tap check in. Public lists show first name + last initial only.
+- Lists come live from `registrations` (active, `signup_type = reserve`, not test). Sessions and who belongs in each are defined in `SESSIONS` / `inSession()` in the edge function.
+  - Day 1 7th/8th Boys morning vs afternoon: `registrations.day1_group` (`am` / `pm`). A boy with no group shows on both Day 1 lists until set (coach screen → Check-in tab → AM / PM).
+  - A player in an extra session: `registrations.extra_sessions` (Billy Nunes has `{d2-u10}`).
+- Check-ins are rows in `check_ins` (one per player per session, unique, so a second tap does not double count). RLS is on with no policies: the browser only reaches it through the edge function (`checkin_roster`, `check_in` public; `checkin_admin`, `checkin_undo` behind the coach code).
+- Coach board: coach screen → Check-in tab, or open `phaseplayhoops.com/#checkin`. Refreshes every 10 seconds; Undo removes a check-in.

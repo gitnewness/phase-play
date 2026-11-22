@@ -538,6 +538,7 @@
       .pp-table .muted { color: var(--ink-faint); font-size: 13px; }
       .pp-paid { cursor: pointer; border-radius: 999px; padding: 3px 10px; font-size: 12.5px; font-weight: 700; border: 1px solid var(--line); background: #fff; }
       .pp-paid.yes { background: #dcfce7; border-color: #86efac; color: #166534; }
+      .pp-team .muted { color: var(--ink-faint); font-size: 13px; }
       .pp-scroll { overflow-x: auto; }
       .wk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0 4px; }
       .wk-stats div { background: #f7f7f7; border-radius: 10px; padding: 10px 12px; }
@@ -1575,7 +1576,7 @@
         var root = document.getElementById('pp-admin');
         var banner = document.querySelector('.hero-banner img');
         if (!root || !banner) return;
-        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false, ipData = null;
+        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false, ipData = null, ciData = null, ciTimer = null;
 
         function el(tag, attrs, kids) {
           var n = document.createElement(tag);
@@ -1593,8 +1594,8 @@
         }
         function close() {
           if (dirty && !confirm('You have unsaved team changes. Close anyway?')) return;
-          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false; wantWorkouts = false;
-          if (location.hash === '#workouts' && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false; wantWorkouts = false; wantCheckin = false; ciData = null;
+          if ((location.hash === '#workouts' || location.hash === '#checkin') && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
           document.body.style.overflow = '';
         }
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !root.hidden) close(); });
@@ -1623,8 +1624,12 @@
         banner.addEventListener('mouseleave', stop);
         banner.addEventListener('contextmenu', function (e) { e.preventDefault(); });
         // Bookmarkable: phaseplayhoops.com/#workouts opens straight to the Workouts dashboard.
-        var wantWorkouts = false;
-        function checkHash() { if (location.hash === '#workouts' && root.hidden) { wantWorkouts = true; openCode(); } }
+        var wantWorkouts = false, wantCheckin = false;
+        // phaseplayhoops.com/#checkin opens straight to the Check-in board.
+        function checkHash() {
+          if (location.hash === '#workouts' && root.hidden) { wantWorkouts = true; openCode(); }
+          if (location.hash === '#checkin' && root.hidden) { wantCheckin = true; openCode(); }
+        }
         window.addEventListener('hashchange', checkHash);
         checkHash();
 
@@ -1643,7 +1648,7 @@
             go.disabled = true; msg.className = 'pp-msg'; msg.textContent = 'Checking…';
             call({ action: 'admin' }).then(function (r) {
               go.disabled = false;
-              if (r.status === 200) { data = r.body; loadTeams(); if (wantWorkouts) { tab = 'workouts'; ipData = null; } render(); return; }
+              if (r.status === 200) { data = r.body; loadTeams(); if (wantWorkouts) { tab = 'workouts'; ipData = null; } if (wantCheckin) { tab = 'checkin'; ciData = null; } render(); return; }
               code = '';
               msg.textContent = r.body.error === 'locked' ? r.body.message
                 : r.body.error === 'admin_code_not_set' ? 'The backend code has not been set up yet.'
@@ -1694,11 +1699,12 @@
               el('button', { class: 'pp-tab' + (tab === 'workouts' ? ' on' : ''), type: 'button', text: 'Workouts', on: { click: function () { tab = 'workouts'; ipData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
-              el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } })
+              el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } }),
+              el('button', { class: 'pp-tab' + (tab === 'checkin' ? ' on' : ''), type: 'button', text: 'Check-in', on: { click: function () { tab = 'checkin'; ciData = null; render(); } } })
             ]),
             el('p', { class: 'pp-summary', text: reserved.length + ' registered · ' + paid + ' marked paid · ' + waitlist.length + ' on waitlist' + (ipOnly.length ? ' · ' + ipOnly.length + ' Interphase only' : '') }),
             msg,
-            tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : interphaseView(msg)
+            tab === 'workouts' ? workoutsView(msg) : tab === 'rosters' ? rosters(msg) : tab === 'teams' ? teamsView(msg) : tab === 'checkin' ? checkinView(msg) : interphaseView(msg)
           ]);
           root.appendChild(box);
         }
@@ -1787,6 +1793,85 @@
               else { msg.className = 'pp-msg'; msg.textContent = 'Could not add player.'; }
             });
           } } }, [el('h3', { text: 'Add a player (signed up in person)' }), el('div', { class: 'pp-add' }, [player, school, parent, email, cohort, skill, pkg, btn])]);
+        }
+
+        // ---- Check-in board: who has checked in at the door (live, refreshes every 10 seconds) ----
+        function ciTime(iso) { var d = new Date(iso); var h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM'); }
+        function ciLoad() {
+          return call({ action: 'checkin_admin' }).then(function (r) {
+            if (r.status === 200) { ciData = r.body; if (tab === 'checkin' && !root.hidden) render(); }
+          });
+        }
+        function ciPoll() {
+          clearTimeout(ciTimer);
+          ciTimer = setTimeout(function () { if (tab === 'checkin' && !root.hidden && code) ciLoad().then(ciPoll, ciPoll); }, 10000);
+        }
+        function checkinView(msg) {
+          var wrap = el('div');
+          var url = location.origin + '/check-in/';
+          wrap.appendChild(el('div', { class: 'pp-admin-top', style: 'margin-top:12px; flex-wrap:wrap' }, [
+            el('span', { class: 'pp-summary', style: 'margin:0' }, ['Parents scan the QR code at the door: ', el('a', { href: url, target: '_blank', rel: 'noopener', text: url.replace(/^https?:\/\//, '') }), ' · ', el('a', { href: '/images/check-in-qr.png', target: '_blank', rel: 'noopener', text: 'QR code' }), ' · ', el('a', { href: '/check-in/sign.html', target: '_blank', rel: 'noopener', text: 'Printable sign' })]),
+            el('button', { class: 'pp-btn alt', type: 'button', text: 'Refresh', on: { click: function () { ciLoad(); } } })
+          ]));
+          if (!ciData) {
+            wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading check-ins…' }));
+            ciLoad().then(function () { if (!ciData) { msg.className = 'pp-msg'; msg.textContent = 'Could not load check-ins.'; } });
+            return wrap;
+          }
+          ciPoll();
+          var done = {};
+          ciData.check_ins.forEach(function (c) { done[c.session + '|' + c.registration_id] = c; });
+          var now = Date.now();
+          ciData.sessions.forEach(function (s) {
+            var inList = s.players.filter(function (p) { return done[s.key + '|' + p.id]; });
+            var out = s.players.filter(function (p) { return !done[s.key + '|' + p.id]; });
+            var live = now >= Date.parse(s.start) - 45 * 60000 && now <= Date.parse(s.end);
+            var box = el('div', { class: 'pp-game', style: live ? 'border-color: var(--orange); box-shadow: inset 0 0 0 1px var(--orange)' : '' });
+            box.appendChild(el('div', { class: 'pp-game-head' }, [
+              el('b', { text: s.title + ' · ' + s.day + ', ' + s.time }),
+              el('span', { style: 'font-weight:800; font-size:18px', text: inList.length + ' of ' + s.players.length + ' checked in' }),
+              live ? el('span', { class: 'pp-tag', text: 'Now' }) : null
+            ]));
+            if (s.who) box.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:2px', text: s.who }));
+            var cols = el('div', { class: 'pp-teams' });
+            var a = el('div', { class: 'pp-team', style: 'background:#f3faf3' }, [el('h4', { text: 'Checked in (' + inList.length + ')' })]);
+            inList.sort(function (x, y) { return done[s.key + '|' + x.id].checked_in_at < done[s.key + '|' + y.id].checked_in_at ? 1 : -1; }).forEach(function (p) {
+              var c = done[s.key + '|' + p.id];
+              a.appendChild(el('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #e6efe6' }, [
+                el('span', {}, [el('b', { text: p.name }), ' ', el('span', { class: 'muted', text: ciTime(c.checked_in_at) })]),
+                el('button', { class: 'pp-paid', type: 'button', text: 'Undo', on: { click: function () {
+                  if (!confirm('Undo check-in for ' + p.name + ' (' + s.title + ')?')) return;
+                  call({ action: 'checkin_undo', id: p.id, session: s.key }).then(function (r) {
+                    if (r.status === 200) ciLoad(); else { msg.className = 'pp-msg'; msg.textContent = 'Could not undo.'; }
+                  });
+                } } })
+              ]));
+            });
+            if (!inList.length) a.appendChild(el('p', { class: 'pp-summary', text: 'Nobody yet.' }));
+            var b = el('div', { class: 'pp-team', style: 'background:#fafafa' }, [el('h4', { text: 'Still missing (' + out.length + ')' })]);
+            out.forEach(function (p) {
+              var row = el('div', { style: 'display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding:4px 0; border-bottom:1px solid #eee' }, [el('span', {}, [p.name, p.extra ? el('span', { class: 'muted', text: ' · also ' + p.cohort.replace('/', ' / ') }) : null])]);
+              // 7th/8th Boys on Day 1: set their morning / afternoon group.
+              if (p.cohort === '7th/8th Boys' && (s.key === 'd1-am' || s.key === 'd1-pm')) {
+                var setG = function (g) { return function () {
+                  call({ action: 'update_player', id: p.id, day1_group: g }).then(function (r) { if (r.status === 200) ciLoad(); });
+                }; };
+                row.appendChild(el('span', {}, [
+                  p.day1_group ? null : el('span', { class: 'pp-tag', style: 'background:#b45309', text: 'No group' }), ' ',
+                  el('button', { class: 'pp-paid' + (p.day1_group === 'am' ? ' yes' : ''), type: 'button', text: 'AM', on: { click: setG('am') } }), ' ',
+                  el('button', { class: 'pp-paid' + (p.day1_group === 'pm' ? ' yes' : ''), type: 'button', text: 'PM', on: { click: setG('pm') } })
+                ]));
+              }
+              b.appendChild(row);
+            });
+            if (!out.length) b.appendChild(el('p', { class: 'pp-summary', text: 'Everyone is in.' }));
+            cols.appendChild(a); cols.appendChild(b);
+            box.appendChild(cols);
+            wrap.appendChild(box);
+          });
+          var noGroup = (ciData.sessions[0] ? ciData.sessions[0].players : []).filter(function (p) { return p.cohort === '7th/8th Boys' && !p.day1_group; }).length;
+          if (noGroup) wrap.insertBefore(el('p', { class: 'pp-msg', text: noGroup + ' 7th/8th Boys have no Day 1 group yet, so they show on both Day 1 lists. Tap AM or PM next to their name.' }), wrap.children[1]);
+          return wrap;
         }
 
         function interphaseView(msg) {

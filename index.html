@@ -393,7 +393,11 @@
       @media (max-width: 760px) {
         .gallery { grid-template-columns: 1fr; grid-auto-rows: auto; }
         .gallery figure.tall { grid-row: auto; }
-        .gallery img { height: auto; }
+        /* Safari on iPhone: give each photo its real shape so the column never collapses or shows a blank screen. */
+        .gallery figure { aspect-ratio: 4 / 3; }
+        .gallery figure.tall { aspect-ratio: 3 / 4; }
+        .gallery figure:last-child { aspect-ratio: 1200 / 733; }
+        .gallery figure img { height: 100%; }
       }
       .qualify span { color: var(--orange-deep); }
 
@@ -569,7 +573,23 @@
       .pp-chip { display: inline-block; margin: 3px; padding: 6px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font-size: 14px; cursor: pointer; }
       .pp-chip:hover { border-color: var(--ink); }
       .pp-unassigned { margin-top: 8px; font-size: 14px; }
-      @media (max-width: 760px) { .pp-teams { grid-template-columns: 1fr; } .pp-admin { padding: 0; } .pp-admin-box { border-radius: 0; min-height: 100%; } .pp-admin-box.is-code { margin-top: 0; } }
+      .pp-teams.t3 { grid-template-columns: repeat(3, 1fr); }
+      .pp-team.t1 { background: #fff4ec; border: 2px solid var(--orange); }
+      .pp-team.t2 { background: #f4f4f4; border: 2px solid var(--ink); }
+      .pp-team.t3 { background: #eef4fb; border: 2px solid #1d4f91; }
+      .pp-team.drop { outline: 3px dashed var(--orange); outline-offset: 2px; }
+      .pp-rank { list-style: none; margin: 10px 0 0; padding: 0; counter-reset: none; }
+      .pp-rank li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 4px; background: #fff; font-size: 14.5px; }
+      .pp-rank li.drag-over { border-color: var(--orange); box-shadow: 0 -3px 0 var(--orange); }
+      .pp-rank .grip { cursor: grab; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 0 2px; user-select: none; }
+      .pp-rank input { width: 52px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; text-align: center; }
+      .pp-rank .nm { flex: 1; min-width: 0; }
+      .pp-rank .mv { border: 1px solid var(--line); background: #fff; border-radius: 6px; width: 30px; height: 30px; cursor: pointer; }
+      .pp-rank .tm { font-size: 12px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #f1f1f1; }
+      .pp-chip select { margin-left: 6px; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+      .pp-pub { display: inline-block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 3px 8px; border-radius: 999px; background: #15803d; color: #fff; }
+      .pp-pub.no { background: #f1f1f1; color: var(--ink-faint); }
+      @media (max-width: 760px) { .pp-teams, .pp-teams.t3 { grid-template-columns: 1fr; } .pp-admin { padding: 0; } .pp-admin-box { border-radius: 0; min-height: 100%; } .pp-admin-box.is-code { margin-top: 0; } }
     </style>
   </head>
   <body>
@@ -957,11 +977,11 @@
       <section id="gallery" aria-labelledby="gallery-h">
         <h2 id="gallery-h">Gallery</h2>
         <div class="gallery">
-          <figure><img src="images/gallery-1.jpg" alt="Coach Michael Nunes with his team after the Memorial Day Championships, players holding up number-one fingers and a basketball" width="1200" height="899" loading="lazy" decoding="async" /></figure>
-          <figure class="tall"><img src="images/gallery-2.jpg" alt="Coach Michael Nunes with a championship team holding their trophy plaque" width="900" height="1200" loading="lazy" decoding="async" /></figure>
-          <figure><img src="images/gallery-3.jpg" alt="Coach Michael Nunes with a large group of girls basketball players at center court" width="1200" height="900" loading="lazy" decoding="async" /></figure>
-          <figure><img src="images/gallery-4.jpg" alt="Coach Michael Nunes with a big group of youth campers in a gym" width="1200" height="900" loading="lazy" decoding="async" /></figure>
-          <figure><img src="images/gallery-5.jpg" alt="2004 NAIA Division II Men's Basketball National Champions celebrating on the court with their banner" width="1200" height="733" loading="lazy" decoding="async" /></figure>
+          <figure><img src="images/gallery-1.jpg" alt="Coach Michael Nunes with his team after the Memorial Day Championships, players holding up number-one fingers and a basketball" width="1200" height="899" /></figure>
+          <figure class="tall"><img src="images/gallery-2.jpg" alt="Coach Michael Nunes with a championship team holding their trophy plaque" width="900" height="1200" /></figure>
+          <figure><img src="images/gallery-3.jpg" alt="Coach Michael Nunes with a large group of girls basketball players at center court" width="1200" height="900" /></figure>
+          <figure><img src="images/gallery-4.jpg" alt="Coach Michael Nunes with a big group of youth campers in a gym" width="1200" height="900" /></figure>
+          <figure><img src="images/gallery-5.jpg" alt="2004 NAIA Division II Men's Basketball National Champions celebrating on the court with their banner" width="1200" height="733" /></figure>
         </div>
       </section>
     </main>
@@ -1592,7 +1612,7 @@
         var root = document.getElementById('pp-admin');
         var banner = document.querySelector('.hero-banner img');
         if (!root || !banner) return;
-        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false, ipData = null, ciData = null, ciTimer = null;
+        var code = '', data = null, teams = {}, tab = 'rosters', dirty = false, ipData = null, ciData = null, ciTimer = null, tmData = null, tmDirty = {};
 
         function el(tag, attrs, kids) {
           var n = document.createElement(tag);
@@ -1609,8 +1629,8 @@
             .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
         }
         function close() {
-          if (dirty && !confirm('You have unsaved team changes. Close anyway?')) return;
-          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false; wantWorkouts = false; wantCheckin = false; ciData = null;
+          if (dirty && !confirm('You have unsaved rank or team changes. Close anyway?')) return;
+          root.hidden = true; root.innerHTML = ''; code = ''; data = null; dirty = false; tmData = null; tmDirty = {}; wantWorkouts = false; wantCheckin = false; ciData = null;
           if ((location.hash === '#workouts' || location.hash === '#checkin') && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
           document.body.style.overflow = '';
         }
@@ -1715,7 +1735,7 @@
             el('div', { class: 'pp-tabs', role: 'tablist' }, [
               el('button', { class: 'pp-tab' + (tab === 'workouts' ? ' on' : ''), type: 'button', text: 'Workouts', on: { click: function () { tab = 'workouts'; ipData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'rosters' ? ' on' : ''), type: 'button', text: 'Rosters', on: { click: function () { tab = 'rosters'; render(); } } }),
-              el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Day 2 teams', on: { click: function () { tab = 'teams'; render(); } } }),
+              el('button', { class: 'pp-tab' + (tab === 'teams' ? ' on' : ''), type: 'button', text: 'Ranks & teams', on: { click: function () { if (dirty && tab === 'teams') return; tab = 'teams'; tmData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'interphase' ? ' on' : ''), type: 'button', text: 'Interphase', on: { click: function () { tab = 'interphase'; ipData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'checkin' ? ' on' : ''), type: 'button', text: 'Check-in', on: { click: function () { tab = 'checkin'; ciData = null; render(); } } }),
               el('button', { class: 'pp-tab' + (tab === 'attendance' ? ' on' : ''), type: 'button', text: 'Attendance', on: { click: function () { tab = 'attendance'; ciData = null; render(); } } })
@@ -2183,49 +2203,159 @@
           return wrap;
         }
 
+        // ---- Ranks & teams (Day 2): rank each game's players 1..N, snake-draft them into teams,
+        // adjust, save, then publish. Coach-only until published; parents then see only their own
+        // kid's team and game times at /team/<name>#k=<code> (the player's private link code).
+        var TEAM_NAMES = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6'];
+        function tmLoad() {
+          return call({ action: 'teams_admin' }).then(function (r) {
+            if (r.status !== 200) return;
+            tmData = r.body;
+            tmData.games.forEach(function (g) {
+              // Working order: saved ranks first (1..N), then unranked players by name.
+              g.order = g.players.slice().sort(function (a, b) {
+                if (a.rank && b.rank) return a.rank - b.rank;
+                if (a.rank) return -1; if (b.rank) return 1;
+                return a.name.localeCompare(b.name);
+              }).map(function (p) { return p.id; });
+              g.teamOf = {}; g.players.forEach(function (p) { if (p.team) g.teamOf[p.id] = p.team; });
+              g.byId = {}; g.players.forEach(function (p) { g.byId[p.id] = p; });
+            });
+            tmDirty = {}; dirty = false;
+            if (tab === 'teams' && !root.hidden) render();
+          });
+        }
+        function tmMark(g) { tmDirty[g.key] = true; dirty = true; render(); }
+        function teamLink(p) {
+          var slug = p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          return location.origin + '/team/' + slug + '#k=' + p.code;
+        }
         function teamsView(msg) {
           var wrap = el('div');
-          var save = el('button', { class: 'pp-btn orange', type: 'button', text: dirty ? 'Save teams' : 'Saved', on: { click: saveTeams } });
-          if (!dirty) save.disabled = true;
-          wrap.appendChild(el('div', { class: 'pp-admin-top', style: 'margin-top:12px' }, [el('span', { class: 'pp-summary', text: 'Tap a player to move them to the other team.' }), save]));
-          GAMES.forEach(function (g) {
-            var players = regs().filter(function (r) { return r.cohort === g.cohort && r.signup_type === 'reserve' && active(r); });
-            var orange = players.filter(function (r) { return teams[r.id] === 'orange'; });
-            var black = players.filter(function (r) { return teams[r.id] === 'black'; });
-            var none = players.filter(function (r) { return !teams[r.id]; });
-            function chip(r) {
-              return el('button', { class: 'pp-chip', type: 'button', text: r.player + (r.skill_level ? ' · L' + r.skill_level : ''), on: { click: function () {
-                teams[r.id] = teams[r.id] === 'orange' ? 'black' : 'orange'; dirty = true; render();
-              } } });
-            }
-            var split = el('button', { class: 'pp-btn alt', type: 'button', text: players.length ? 'Auto-split' : 'No players yet', on: { click: function () {
-              if ((orange.length || black.length) && !confirm('Re-split ' + g.cohort + ' into new even teams?')) return;
-              // Shuffle, then (when levels are known) deal out strongest first, snake order, so both teams get a mix.
-              var order = players.slice().sort(function () { return Math.random() - 0.5; });
-              order.sort(function (a, b) { return (b.skill_level || 0) - (a.skill_level || 0); });
-              order.forEach(function (r, i) { teams[r.id] = (i % 4 === 0 || i % 4 === 3) ? 'orange' : 'black'; });
-              dirty = true; render();
-            } } });
-            if (!players.length) split.disabled = true;
-            var game = el('div', { class: 'pp-game' }, [
-              el('div', { class: 'pp-game-head' }, [el('b', { text: g.time + ' · ' + g.cohort.replace('/', ' / ') + ' game' }), el('span', { class: 'pp-summary', text: orange.length + ' vs ' + black.length }), split]),
-              el('div', { class: 'pp-teams' }, [
-                el('div', { class: 'pp-team orange' }, [el('h4', { text: 'Team Orange (' + orange.length + ')' })].concat(orange.map(chip))),
-                el('div', { class: 'pp-team black' }, [el('h4', { text: 'Team Black (' + black.length + ')' })].concat(black.map(chip)))
-              ]),
-              none.length ? el('div', { class: 'pp-unassigned' }, [el('span', { class: 'pp-summary', text: 'Not on a team yet: ' })].concat(none.map(chip))) : null
-            ]);
-            wrap.appendChild(game);
-          });
-          function saveTeams() {
-            var assignments = Object.keys(teams).map(function (id) { return { id: id, team: teams[id] }; });
-            save.disabled = true; save.textContent = 'Saving…';
-            call({ action: 'save_teams', assignments: assignments }).then(function (x) {
-              if (x.status === 200) { dirty = false; render('Teams saved.'); }
-              else { save.disabled = false; save.textContent = 'Save teams'; msg.className = 'pp-msg'; msg.textContent = 'Could not save teams.'; }
-            });
+          if (!tmData) {
+            wrap.appendChild(el('p', { class: 'pp-summary', text: 'Loading ranks and teams…' }));
+            tmLoad().then(function () { if (!tmData) { msg.className = 'pp-msg'; msg.textContent = 'Could not load ranks and teams.'; } });
+            return wrap;
           }
+          wrap.appendChild(el('p', { class: 'pp-summary', style: 'margin-top:12px', text: 'Rank each game 1 to N (drag the ≡ handle, type a number, or use the arrows), then Snake draft. Move players between teams by dragging, or with the team picker on each name. Save, then Publish when ready: until then, ranks and teams are coach-only.' }));
+          tmData.games.forEach(function (g) { wrap.appendChild(gameCard(g, msg)); });
           return wrap;
+        }
+        function gameCard(g, msg) {
+          var n = g.teams, isDirty = !!tmDirty[g.key];
+          var save = el('button', { class: 'pp-btn orange', type: 'button', text: isDirty ? 'Save' : 'Saved', on: { click: function () { tmSave(g, msg); } } });
+          if (!isDirty) save.disabled = true;
+          var pub = el('button', { class: 'pp-btn' + (g.published ? ' alt' : ''), type: 'button', text: g.published ? 'Unpublish' : 'Publish to parents', on: { click: function () {
+            var go = !g.published;
+            if (go && g.players.some(function (p) { return !g.teamOf[p.id]; }) && !confirm('Some players are not on a team yet. Publish anyway?')) return;
+            if (go && !confirm('Publish ' + g.title + ' teams? Each family will see their own player\'s team and game times.')) return;
+            var first = isDirty ? tmSave(g, msg, true) : Promise.resolve(true);
+            first.then(function (ok) {
+              if (!ok) return;
+              call({ action: 'teams_publish', game: g.key, published: go }).then(function (r) {
+                if (r.status === 200) { g.published = go; render(go ? 'Published. Families can see their own team.' : 'Unpublished.'); }
+                else { msg.className = 'pp-msg'; msg.textContent = 'Could not change publish.'; }
+              });
+            });
+          } } });
+          var draft = el('button', { class: 'pp-btn alt', type: 'button', text: 'Snake draft into ' + n + ' teams', on: { click: function () {
+            if (Object.keys(g.teamOf).length && !confirm('Replace the current teams with a new snake draft from the ranking?')) return;
+            g.teamOf = {};
+            g.order.forEach(function (id, i) {
+              var round = Math.floor(i / n), pos = i % n;
+              g.teamOf[id] = round % 2 === 0 ? pos + 1 : n - pos;
+            });
+            tmMark(g);
+          } } });
+          if (!g.players.length) { draft.disabled = true; pub.disabled = true; }
+          var card = el('div', { class: 'pp-game' }, [
+            el('div', { class: 'pp-game-head' }, [
+              el('b', { text: g.title + ' · ' + g.time }),
+              el('span', { class: 'pp-pub' + (g.published ? '' : ' no'), text: g.published ? 'Published' : 'Coach only' })
+            ]),
+            el('p', { class: 'pp-summary', style: 'margin:2px 0 0', text: g.players.length + ' players · ' + n + ' teams' + (g.slots.length ? ' · round robin: ' + g.slots.map(function (x) { return x.label + ' T' + x.a + ' v T' + x.b; }).join(', ') : '') }),
+            el('div', { style: 'display:flex; flex-wrap:wrap; gap:8px; margin-top:10px' }, [draft, save, pub])
+          ]);
+          // Ranking list
+          var dragId = null;
+          var list = el('ol', { class: 'pp-rank' });
+          function moveTo(id, idx) {
+            var from = g.order.indexOf(id); if (from < 0) return;
+            g.order.splice(from, 1);
+            idx = Math.max(0, Math.min(idx, g.order.length));
+            g.order.splice(idx, 0, id); tmMark(g);
+          }
+          g.order.forEach(function (id, i) {
+            var p = g.byId[id];
+            var num = el('input', { type: 'number', min: '1', max: String(g.order.length), value: String(i + 1), 'aria-label': 'Rank for ' + p.name, inputmode: 'numeric', on: { change: function () {
+              var v = parseInt(num.value, 10); if (!isNaN(v)) moveTo(id, v - 1);
+            } } });
+            var li = el('li', { draggable: 'true', on: {
+              dragstart: function (e) { dragId = id; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', id); } catch (x) {} },
+              dragover: function (e) { if (dragId) { e.preventDefault(); li.classList.add('drag-over'); } },
+              dragleave: function () { li.classList.remove('drag-over'); },
+              drop: function (e) { e.preventDefault(); li.classList.remove('drag-over'); if (dragId && dragId !== id) { var to = g.order.indexOf(id); var d = dragId; dragId = null; moveTo(d, to); } }
+            } }, [
+              el('span', { class: 'grip', 'aria-hidden': 'true', text: '≡' }), num,
+              el('span', { class: 'nm' }, [el('b', { text: p.name }), p.cohort && g.key === 'd2-u10' && p.cohort !== '10 & Under' ? el('span', { class: 'muted', text: ' · ' + p.cohort }) : null]),
+              g.teamOf[id] ? el('span', { class: 'tm', text: 'T' + g.teamOf[id] }) : null,
+              el('button', { class: 'mv', type: 'button', 'aria-label': 'Move ' + p.name + ' up', text: '▲', on: { click: function () { moveTo(id, i - 1); } } }),
+              el('button', { class: 'mv', type: 'button', 'aria-label': 'Move ' + p.name + ' down', text: '▼', on: { click: function () { moveTo(id, i + 1); } } })
+            ]);
+            list.appendChild(li);
+          });
+          var rankBox = el('details', { style: 'margin-top:10px' }, [el('summary', { style: 'cursor:pointer; font-weight:700', text: 'Ranking (1 = top)' }), list]);
+          if (g.rankOpen !== false && (g.rankOpen || !Object.keys(g.teamOf).length)) rankBox.open = true;
+          rankBox.addEventListener('toggle', function () { g.rankOpen = rankBox.open; });
+          card.appendChild(rankBox);
+          // Teams
+          var cols = el('div', { class: 'pp-teams' + (n === 3 ? ' t3' : '') });
+          function chip(id) {
+            var p = g.byId[id];
+            var sel = el('select', { 'aria-label': 'Team for ' + p.name, on: { change: function () { if (sel.value) g.teamOf[id] = parseInt(sel.value, 10); else delete g.teamOf[id]; tmMark(g); } } },
+              [el('option', { value: '', text: '—' })].concat(TEAM_NAMES.slice(0, n).map(function (t, k) { var o = el('option', { value: String(k + 1), text: 'T' + (k + 1) }); if (g.teamOf[id] === k + 1) o.selected = true; return o; })));
+            return el('span', { class: 'pp-chip', draggable: 'true', on: { dragstart: function (e) { dragId = id; try { e.dataTransfer.setData('text/plain', id); } catch (x) {} } } },
+              ['#' + (g.order.indexOf(id) + 1) + ' ' + p.name, sel]);
+          }
+          for (var t = 1; t <= n; t++) (function (t) {
+            var ids = g.order.filter(function (id) { return g.teamOf[id] === t; });
+            var col = el('div', { class: 'pp-team t' + t, on: {
+              dragover: function (e) { if (dragId) { e.preventDefault(); col.classList.add('drop'); } },
+              dragleave: function () { col.classList.remove('drop'); },
+              drop: function (e) { e.preventDefault(); col.classList.remove('drop'); if (dragId) { g.teamOf[dragId] = t; dragId = null; tmMark(g); } }
+            } }, [el('h4', { text: TEAM_NAMES[t - 1] + ' (' + ids.length + ')' })].concat(ids.map(chip)));
+            cols.appendChild(col);
+          })(t);
+          card.appendChild(cols);
+          var none = g.order.filter(function (id) { return !g.teamOf[id]; });
+          if (none.length) card.appendChild(el('div', { class: 'pp-unassigned' }, [el('span', { class: 'pp-summary', text: 'Not on a team yet: ' })].concat(none.map(chip))));
+          // Parent links (each family's private link; shows their own team only once published)
+          var links = el('details', { style: 'margin-top:10px' }, [el('summary', { style: 'cursor:pointer; font-weight:700', text: 'Parent team links' })]);
+          g.order.forEach(function (id) {
+            var p = g.byId[id];
+            if (!p.code) { links.appendChild(el('p', { class: 'pp-summary', text: p.name + ': no private link (Interphase link turned off)' })); return; }
+            var url = teamLink(p);
+            links.appendChild(el('div', { style: 'display:flex; gap:8px; align-items:center; padding:3px 0; font-size:14px' }, [
+              el('span', { style: 'flex:1; min-width:0' }, [el('b', { text: p.name })]),
+              el('button', { class: 'pp-paid', type: 'button', text: 'Copy link', on: { click: function (e) {
+                var b = e.target; (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { b.textContent = 'Copied'; }, function () { prompt('Copy this link:', url); });
+              } } })
+            ]));
+          });
+          card.appendChild(links);
+          return card;
+        }
+        function tmSave(g, msg, quiet) {
+          var ranks = g.order.map(function (id, i) { return { id: id, rank: i + 1 }; });
+          var tms = Object.keys(g.teamOf).map(function (id) { return { id: id, team: g.teamOf[id] }; });
+          return call({ action: 'teams_save', game: g.key, ranks: ranks, teams: tms }).then(function (r) {
+            if (r.status === 200) {
+              delete tmDirty[g.key]; dirty = Object.keys(tmDirty).length > 0;
+              if (!quiet) render(g.title + ' saved.');
+              return true;
+            }
+            msg.className = 'pp-msg'; msg.textContent = 'Could not save ' + g.title + '.'; return false;
+          }, function () { msg.className = 'pp-msg'; msg.textContent = 'No connection.'; return false; });
         }
       })();
     </script>

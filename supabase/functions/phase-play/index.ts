@@ -9,6 +9,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
 // Check-in:      checkin_roster, check_in (public, QR code at the door; first check-in signs the releases);
 //                checkin_admin, checkin_undo (coach code)
+// Day 2 teams:   teams_admin, teams_save, teams_publish (coach code); my_team (player's private link, published only)
 const COHORTS = ["10 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
 // 10 & Under was first called "9 & Under"; pages cached under the old name still work.
 const U10 = "10 & Under";
@@ -67,6 +68,18 @@ function shortName(full: string): string {
 function sessionMeta(s: typeof SESSIONS[number]) {
   return { key: s.key, day: s.day, title: s.title, time: s.time, who: s.who, start: s.start, end: s.end };
 }
+// Day 2 games: ranking + team split. Ranks and teams are coach-only; a parent sees their own
+// kid's team and game times (my_team, via the player's private link) only once that game is published.
+const TEAM_GAMES: Record<string, { teams: number; slots?: { label: string; time: string; a: number; b: number }[] }> = {
+  "d2-boys": { teams: 3, slots: [
+    { label: "Game 1", time: "10:10 - 10:45 AM", a: 1, b: 2 },
+    { label: "Game 2", time: "10:50 - 11:25 AM", a: 1, b: 3 },
+    { label: "Game 3", time: "11:30 AM - 12:05 PM", a: 2, b: 3 },
+  ] },
+  "d2-girls": { teams: 2 },
+  "d2-u10": { teams: 2 },
+  "d2-56": { teams: 2 },
+};
 const PHOTO_BUCKET = "check-in-photos";
 // Liability + media releases (text: check-in/releases.html). A parent signs once per player per version,
 // the first time they check that player in. Change the version whenever the wording changes.
@@ -297,6 +310,31 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    // A parent's view of their own kid's Day 2 team(s): player's private link, published games only.
+    if (action === "my_team") {
+      const who = await playerForToken(body.token);
+      if (!who) { await sleep(400); return json({ error: "bad_link" }, 404); }
+      const { data: r } = await db.from("registrations").select("id, player, cohort, signup_type, day1_group, extra_sessions, status").eq("id", who.id).maybeSingle();
+      if (!r || r.status !== "active") return json({ error: "bad_link" }, 404);
+      const keys = Object.keys(TEAM_GAMES).filter((k) => inSession(r as CheckReg, k));
+      const [{ data: pub }, { data: tm }] = await Promise.all([
+        db.from("game_publish").select("game, published").in("game", keys.length ? keys : ["-"]),
+        db.from("game_teams").select("game, team").eq("registration_id", r.id),
+      ]);
+      const isPub = new Set((pub ?? []).filter((x) => x.published).map((x) => x.game));
+      const teamOf: Record<string, number> = {};
+      for (const t of tm ?? []) teamOf[t.game] = t.team;
+      const games = keys.map((k) => {
+        const s = SESSIONS.find((x) => x.key === k)!;
+        const team = isPub.has(k) ? teamOf[k] ?? null : null;
+        const slots = team && TEAM_GAMES[k].slots
+          ? TEAM_GAMES[k].slots!.filter((g) => g.a === team || g.b === team).map((g) => ({ label: g.label, time: g.time, opponent: "Team " + (g.a === team ? g.b : g.a) }))
+          : [];
+        return { key: k, title: s.title, day: s.day, time: s.time, who: s.who, published: isPub.has(k) && !!team, team: team ? "Team " + team : null, slots };
+      });
+      return json({ player: r.player.split(/\s+/)[0], games });
+    }
+
     // ---- Camp check-in (public: names only, never who has checked in) ----
     if (action === "checkin_roster") {
       const [regs, signed] = await Promise.all([checkRegs(), waiverIds()]);
@@ -440,6 +478,50 @@ Deno.serve(async (req) => {
       return json({ waivers: waivers ?? [], sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
         players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort, day1_group: r.day1_group, extra: (r.extra_sessions ?? []).includes(s.key) }))
           .sort(byName) })), check_ins: rows ?? [] });
+    }
+    if (action === "teams_admin") {
+      await ensureTokens();
+      const regs = await checkRegs();
+      const [{ data: ranks, error: e1 }, { data: tms, error: e2 }, { data: pub, error: e3 }, { data: acc, error: e4 }] = await Promise.all([
+        db.from("game_ranks").select("game, registration_id, rank"),
+        db.from("game_teams").select("game, registration_id, team"),
+        db.from("game_publish").select("game, published, published_at"),
+        db.from("interphase_access").select("registration_id, code, active"),
+      ]);
+      if (e1 || e2 || e3 || e4) throw e1 || e2 || e3 || e4;
+      const rk: Record<string, number> = {}, tmOf: Record<string, number> = {}, code: Record<string, string> = {};
+      for (const x of ranks ?? []) rk[x.game + "|" + x.registration_id] = x.rank;
+      for (const x of tms ?? []) tmOf[x.game + "|" + x.registration_id] = x.team;
+      for (const x of acc ?? []) if (x.active && x.code) code[x.registration_id] = x.code;
+      return json({ games: Object.keys(TEAM_GAMES).map((k) => {
+        const s = SESSIONS.find((x) => x.key === k)!;
+        const p = (pub ?? []).find((x) => x.game === k);
+        return { ...sessionMeta(s), teams: TEAM_GAMES[k].teams, slots: TEAM_GAMES[k].slots ?? [], published: !!p?.published, published_at: p?.published_at ?? null,
+          players: regs.filter((r) => inSession(r, k)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort,
+            rank: rk[k + "|" + r.id] ?? null, team: tmOf[k + "|" + r.id] ?? null, code: code[r.id] ?? null })) };
+      }) });
+    }
+    if (action === "teams_save") {
+      const k = clean(body.game, 20);
+      if (!TEAM_GAMES[k]) return json({ error: "invalid" }, 400);
+      const roster = new Set((await checkRegs()).filter((r) => inSession(r, k)).map((r) => r.id));
+      const now = new Date().toISOString();
+      const ranks = (Array.isArray(body.ranks) ? body.ranks : []).map((x: any) => ({ game: k, registration_id: clean(x?.id, 60), rank: Number(x?.rank), updated_at: now }))
+        .filter((x: any) => roster.has(x.registration_id) && Number.isInteger(x.rank) && x.rank > 0);
+      const teams = (Array.isArray(body.teams) ? body.teams : []).map((x: any) => ({ game: k, registration_id: clean(x?.id, 60), team: Number(x?.team), updated_at: now }))
+        .filter((x: any) => roster.has(x.registration_id) && Number.isInteger(x.team) && x.team >= 1 && x.team <= TEAM_GAMES[k].teams);
+      const d1 = await db.from("game_ranks").delete().eq("game", k); if (d1.error) throw d1.error;
+      const d2 = await db.from("game_teams").delete().eq("game", k); if (d2.error) throw d2.error;
+      if (ranks.length) { const { error } = await db.from("game_ranks").insert(ranks); if (error) throw error; }
+      if (teams.length) { const { error } = await db.from("game_teams").insert(teams); if (error) throw error; }
+      return json({ ok: true, ranks: ranks.length, teams: teams.length });
+    }
+    if (action === "teams_publish") {
+      const k = clean(body.game, 20);
+      if (!TEAM_GAMES[k] || typeof body.published !== "boolean") return json({ error: "invalid" }, 400);
+      const { error } = await db.from("game_publish").upsert({ game: k, published: body.published, published_at: body.published ? new Date().toISOString() : null });
+      if (error) throw error;
+      return json({ ok: true });
     }
     if (action === "checkin_undo") {
       const id = clean(body.id, 60), key = clean(body.session, 20);

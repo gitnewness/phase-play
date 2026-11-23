@@ -12,3 +12,10 @@
   from = "/interphase/*"
   to = "/interphase/index.html"
   status = 200
+
+# Day 2 team links: /team/billy-nunes#k=CODE loads the family's team page.
+# The name is only a label; the #k= code (the player's private link code) decides what it shows.
+[[redirects]]
+  from = "/team/*"
+  to = "/team/index.html"
+  status = 200

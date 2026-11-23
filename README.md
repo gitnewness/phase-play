@@ -37,3 +37,10 @@ Form submissions will appear in Netlify under Site settings > Forms.
   - A player in an extra session: `registrations.extra_sessions` (Billy Nunes has `{d2-u10}`).
 - Check-ins are rows in `check_ins` (one per player per session, unique, so a second tap does not double count). RLS is on with no policies: the browser only reaches it through the edge function (`checkin_roster`, `check_in` public; `checkin_admin`, `checkin_undo` behind the coach code).
 - Coach board: coach screen → Check-in tab, or open `phaseplayhoops.com/#checkin`. Refreshes every 10 seconds; Undo removes a check-in.
+
+## Day 2 ranks & teams (coach only until published)
+
+- Coach screen → **Ranks & teams** tab. One card per Day 2 game (7th/8th Boys round robin, 7th/8th Girls, 10 & Under, 5th/6th Boys).
+- Rank players 1–N: drag the ≡ handle (desktop), type a number, or use ▲▼ (phone). **Snake draft** deals teams in rank order 1-2-3, 3-2-1, … (3 teams for the 7th/8th Boys round robin, 2 for the other games). Move players by dragging between teams or with the T1/T2/T3 picker. **Save**, then **Publish to parents**.
+- Data: `game_ranks`, `game_teams`, `game_publish` (RLS on, no policies; edge function actions `teams_admin`, `teams_save`, `teams_publish`).
+- Parents: each family's private link `phaseplayhoops.com/team/<name>#k=<code>` (same code as the player's Interphase link; copy it from "Parent team links" on each card). `my_team` shows only that player's own team and game times, and only for published games. The round robin shows the two games that team plays and the opponent.

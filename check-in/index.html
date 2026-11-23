@@ -46,8 +46,8 @@
       .other { display: flex; flex-direction: column; gap: 8px; }
       .sess { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: left; font: inherit; color: inherit; cursor: pointer; }
       .sess b { font-weight: 700; }
-      .sess small { grid-column: 1; color: var(--ink-faint); font-size: 14px; }
-      .sess span { grid-row: 1 / span 2; grid-column: 2; color: var(--ink-faint); font-size: 22px; }
+      .sess small { grid-column: 1; display: block; color: var(--ink-faint); font-size: 14px; }
+      .sess span { grid-row: 1 / span 3; grid-column: 2; color: var(--ink-faint); font-size: 22px; }
 
       .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 24px calc(12px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--line); }
       .bar[hidden] { display: none; }
@@ -93,7 +93,7 @@
       </header>
       <div id="app"><p class="none">Loading the sessions...</p></div>
       <p class="help">Wrong name or a problem? Find a coach at the door, or text Coach Michael at <a href="sms:+15415310150" style="white-space:nowrap">541-531-0150</a>.</p>
-      <footer>A Sportdork production</footer>
+      <footer>Phase Play Hoops, 2026</footer>
     </main>
     <div class="bar" id="bar" hidden><button class="go" id="go" type="button">Check in</button></div>
     <input type="file" id="cam" accept="image/*" capture="environment" hidden />
@@ -131,6 +131,12 @@
           return next || (sessions.length ? sessions[sessions.length - 1].key : null);
         }
         function isLive(s) { var now = Date.now(); return now >= Date.parse(s.start) - 45 * 60000 && now <= Date.parse(s.end); }
+        // The cohorts in a session, in list order, with counts: "7th/8th Girls (10), 7th/8th Boys (9)".
+        function cohortsOf(x) {
+          var order = [], n = {};
+          x.players.forEach(function (p) { var g = p.group || ''; if (!g) return; if (!n[g]) { n[g] = 0; order.push(g); } n[g]++; });
+          return order.map(function (g) { return g + ' (' + n[g] + ')'; }).join(', ');
+        }
         function find(key) { for (var i = 0; i < sessions.length; i++) if (sessions[i].key === key) return sessions[i]; return null; }
 
         function render() {
@@ -164,7 +170,7 @@
             // A heading per group (7th/8th Girls, 7th/8th Boys) when the session has more than one.
             var groups = {};
             list.forEach(function (p) { if (p.group) groups[p.group] = (groups[p.group] || 0) + 1; });
-            var multi = Object.keys(groups).length > 1, lastGroup = null;
+            var multi = Object.keys(groups).length > 0, lastGroup = null; // a heading for every group, even a single-cohort game
             shown.forEach(function (p) {
               if (multi && p.group !== lastGroup) {
                 lastGroup = p.group;
@@ -181,7 +187,7 @@
             app.appendChild(el('p', { class: 'h2', text: 'Other sessions' }));
             app.appendChild(el('div', { class: 'other' }, others.map(function (x) {
               return el('button', { class: 'sess', type: 'button', on: { click: function () { current = x.key; picked = null; photo = null; filter = ''; render(); window.scrollTo(0, 0); } } }, [
-                el('b', { text: x.title }), el('small', { text: x.day + ', ' + x.time }), el('span', { 'aria-hidden': 'true', text: '›' })
+                el('b', { text: x.title }), el('small', { text: x.day + ', ' + x.time }), el('small', { class: 'coh', text: cohortsOf(x) }), el('span', { 'aria-hidden': 'true', text: '›' })
               ]);
             })));
           }

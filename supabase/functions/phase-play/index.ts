@@ -31,7 +31,7 @@ const SESSIONS = [
   { key: "d2-boys", day: "Day 2, Tue Nov 24", title: "7th/8th Boys round robin", time: "10:10 AM - 12:05 PM", who: "Warm-up at 10:00", start: "2026-11-24T10:00:00-08:00", end: "2026-11-24T12:05:00-08:00" },
   { key: "d2-girls", day: "Day 2, Tue Nov 24", title: "7th/8th Girls game", time: "12:10 - 1:10 PM", who: "", start: "2026-11-24T12:10:00-08:00", end: "2026-11-24T13:10:00-08:00" },
   { key: "d2-u10", day: "Day 2, Tue Nov 24", title: "10 & Under game", time: "1:15 - 2:15 PM", who: "", start: "2026-11-24T13:15:00-08:00", end: "2026-11-24T14:15:00-08:00" },
-  { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:20 - 3:20 PM", who: "", start: "2026-11-24T14:20:00-08:00", end: "2026-11-24T15:20:00-08:00" },
+  { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:25 - 3:25 PM", who: "", start: "2026-11-24T14:25:00-08:00", end: "2026-11-24T15:25:00-08:00" },
 ];
 type CheckReg = { id: string; player: string; cohort: string; signup_type?: string | null; day1_group: string | null; extra_sessions: string[] | null };
 function inSession(r: CheckReg, key: string): boolean {

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light" />
+    <title>Coaches Packet - Phase Play</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #161616; --ink-soft: #404040; --ink-faint: #6f6f6f; --line: #e3e3e3;
+        --orange: #e85d04; --orange-deep: #c24e02; --orange-soft: #fbe3cf; --bg: #ffffff; --panel: #fafafa;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Barlow", system-ui, sans-serif; font-size: 17px; line-height: 1.45; }
+      .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 60px; }
+      header { padding: 26px 0 8px; border-bottom: 4px solid var(--orange); }
+      .kicker { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .14em; font-size: 14px; color: var(--orange-deep); margin: 0; }
+      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: clamp(40px, 11vw, 60px); line-height: .95; margin: 4px 0 8px; }
+      .lede { color: var(--ink-soft); margin: 0 0 12px; }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 4px; }
+      nav a { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); text-decoration: none; font-weight: 600; font-size: 15px; }
+      h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 32px; line-height: 1; margin: 34px 0 6px; scroll-margin-top: 12px; }
+      h3 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: 21px; margin: 22px 0 6px; }
+      .sub { color: var(--ink-faint); margin: 0 0 10px; }
+      .sched { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+      .sched > div { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); }
+      .sched > div:first-child { border-top: 0; }
+      .sched b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; color: var(--orange-deep); font-size: 18px; letter-spacing: .02em; }
+      .sched small { display: block; color: var(--ink-faint); font-size: 14.5px; }
+      .sched .hl { background: var(--panel); }
+      .phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+      .phases div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+      .phases span { display: block; color: var(--orange-deep); font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; }
+      .phases b { font-size: 16.5px; }
+      ol.steps, ul.list { margin: 6px 0 0; padding-left: 22px; }
+      ol.steps li, ul.list li { margin: 5px 0; }
+      .note { background: var(--orange-soft); border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 16px; }
+      table.ros { width: 100%; border-collapse: collapse; font-size: 15.5px; margin-top: 8px; }
+      table.ros th { text-align: left; background: var(--ink); color: #fff; font-weight: 700; padding: 7px 10px; font-size: 14px; }
+      table.ros td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      table.ros td:first-child { white-space: nowrap; font-weight: 700; color: var(--orange-deep); width: 1%; }
+      table.ros small { display: block; color: var(--ink-faint); font-size: 14px; margin-top: 2px; }
+      .blk { border-left: 5px solid var(--orange); background: #fff8f1; border-radius: 0 10px 10px 0; padding: 12px 14px; margin-top: 14px; }
+      .blk.def { border-left-color: #1d4f91; background: #f1f6fc; }
+      .blk h4 { margin: 0 0 2px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: 20px; }
+      .court { display: block; width: 100%; height: auto; margin-top: 8px; }
+      .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+      .two > div { border-radius: 8px; padding: 12px 14px; background: #fff8f1; border-left: 5px solid var(--orange); }
+      .two > div + div { background: #f1f6fc; border-left-color: #1d4f91; }
+      .two b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 19px; }
+      .dl { display: flex; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-top: 14px; }
+      .dl a { flex: none; padding: 10px 16px; border-radius: 8px; background: var(--ink); color: #fff; text-decoration: none; font-weight: 700; }
+      .dl span { color: var(--ink-soft); font-size: 15px; }
+      .todo { border: 2px dashed var(--line); border-radius: 10px; padding: 14px 16px; color: var(--ink-faint); }
+      a { color: var(--ink); }
+      .print { margin-top: 26px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 8px; background: var(--ink); color: #fff; font: 700 17px "Barlow", sans-serif; cursor: pointer; }
+      footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-faint); }
+      @media (max-width: 520px) { .phases, .two { grid-template-columns: 1fr; } table.ros td:first-child { white-space: normal; } .sched > div { grid-template-columns: 92px 1fr; } }
+      @media print {
+        @page { size: letter; margin: 0.5in; }
+        body { font-size: 12.5pt; }
+        nav, .print { display: none; }
+        h2 { break-after: avoid; } .sched, .phases div, section > ol, section > ul { break-inside: avoid; }
+        a { text-decoration: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <p class="kicker">Michael Nunes presents Phase Play</p>
+        <h1>Coaches Packet</h1>
+        <p class="lede">Mon Nov 23 and Tue Nov 24 at Athletic Club of Bend, in the courts building at the back of the courtyard. Questions during camp: text Coach Michael at <a href="sms:+15415310150" style="white-space:nowrap">541-531-0150</a>.</p>
+      </header>
+      <nav aria-label="Sections">
+        <a href="#day1">Day 1</a><a href="#day2">Day 2</a><a href="#checkin">Check-in</a><a href="#instructions">Instructions</a><a href="#run">Run of show</a><a href="#courts">Court setups</a><a href="#whistle">Whistles &amp; rules</a>
+      </nav>
+
+      <section id="day1">
+        <h2>Day 1 - The Camp</h2>
+        <p class="sub">Monday, November 23 · Prephase testing &amp; reps + Phases 1-3 · same run of show in both blocks</p>
+        <div class="sched">
+          <div><b>10:00-12:00</b><span>Morning session<small>7th/8th Girls and the 7th/8th Boys morning group</small></span></div>
+          <div><b>1:00-3:00</b><span>Afternoon session<small>5th/6th Boys and the 7th/8th Boys afternoon group</small></span></div>
+        </div>
+        <div class="phases">
+          <div><span>Phase 1</span><b>Wiring to Win</b></div>
+          <div><span>Phase 2</span><b>Defend the Trend</b></div>
+          <div><span>Phase 3</span><b>Chatter for Championships</b><small style="display:block;color:var(--ink-faint);font-size:14px">Communication That Matters, blended into Defend the Trend</small></div>
+        </div>
+      </section>
+
+      <section id="day2">
+        <h2>Day 2 - Game Day</h2>
+        <p class="sub">Tuesday, November 24 · Phase 4 Gameplay &amp; Integration · 10:00 AM - 3:25 PM</p>
+        <div class="sched">
+          <div><b>10:00-10:10</b><span>7th/8th Boys warm-up</span></div>
+          <div class="hl"><b>10:10-10:45</b><span>7th/8th Boys Game 1<small>Team 1 vs Team 2</small></span></div>
+          <div class="hl"><b>10:50-11:25</b><span>7th/8th Boys Game 2<small>Team 1 vs Team 3</small></span></div>
+          <div class="hl"><b>11:30-12:05</b><span>7th/8th Boys Game 3<small>Team 2 vs Team 3</small></span></div>
+          <div><b>12:10-1:10</b><span>7th/8th Girls game</span></div>
+          <div><b>1:15-2:15</b><span>10 &amp; Under game<small>Game day only players</small></span></div>
+          <div class="hl"><b>2:15-2:25</b><span>Dunk contest<small>Biggest crowd of the day: 10 &amp; Under families staying, 5th/6th families arriving</small></span></div>
+          <div><b>2:25-3:25</b><span>5th/6th Boys game</span></div>
+        </div>
+        <p class="note">7th/8th Boys: three-team round robin. Each game is 35 minutes: 15-minute halves and a 5-minute halftime. Each team plays twice and sits once. All other games are 60 minutes. Games are filmed, with hired refs.</p>
+      </section>
+
+      <section id="checkin">
+        <h2>Check-in at the door</h2>
+        <p class="sub">Every player checks in for every session. Parents do it on their phone.</p>
+        <h3>What parents do</h3>
+        <ol class="steps">
+          <li>Scan the QR code on the "Check in" sign at the door (or open phaseplayhoops.com/check-in).</li>
+          <li>Tap their player's name. The session happening now is shown first, split by group.</li>
+          <li>First check-in only: read and agree to the liability release and the photo/video media release, and type their name to sign. Both are required to check in.</li>
+          <li>Take a quick photo of their player, then tap Check in.</li>
+        </ol>
+        <h3>What coaches do</h3>
+        <ul class="list">
+          <li>Welcome the kids as they come in.</li>
+          <li>Shoot around with them before the session starts.</li>
+          <li>Be friendly. First impressions set the tone for the day.</li>
+        </ul>
+        <h3>What Coach Michael does</h3>
+        <ul class="list">
+          <li>Makes sure every player is checked in, and welcomes campers at the door.</li>
+          <li>Handles any check-in problem: a name missing from the list, a parent without a phone, or releases not signed. Send those parents to Coach Michael.</li>
+        </ul>
+      </section>
+
+      <section id="instructions">
+        <h2>Coach instructions</h2>
+        <h3>How each block runs</h3>
+        <ol class="steps">
+          <li><b>Coach Michael</b> brings the players together, demonstrates the drill and answers questions.</li>
+          <li>He then releases the players to <b>two baskets</b>, each run by coaches.</li>
+          <li><b>Coaches</b> run their basket: rules, rotations, general basketball coaching and suggestions to players.</li>
+        </ol>
+        <p class="note">The camp moves fast, and directions are kept simple to follow. Numbered cones mark where everything goes on the court.</p>
+        <h3 id="session-schedule">Session schedule and court setup</h3>
+        <p class="sub">The run of show and court setups are below. Coach Michael will expand on them.</p>
+      </section>
+
+      <section id="run">
+        <h2>Day 1 run of show</h2>
+        <p class="sub">Same plan in both blocks. Times below are the morning session; the afternoon runs the same blocks starting at 1:00 PM (add 3 hours).</p>
+        <div class="blk">
+          <h4>Wiring to Win</h4>
+          <table class="ros">
+            <tr><th>Time</th><th>Block</th></tr>
+            <tr><td>10:00-10:05</td><td>Intro &amp; Rules</td></tr>
+            <tr><td>10:05</td><td>Free Play with Rule Practice; Teach Locations<small>12-spot grid (see Court setups)</small></td></tr>
+            <tr><td>10:10-10:20</td><td><b>"CONE DRIBBLING"</b> (Finger Direction): <i>Pound, Cross, Tween, Behind</i><small>10:12-10:15 Reps · 10:15-10:19 Cone · 10:19-10:20 Reps</small></td></tr>
+            <tr><td>10:20-10:30</td><td><b>"TWO FOOT FOOTWORK"</b>: <i>Shoot, Cross Step, Cross Step Counter</i><small>10:22-10:25 Jumpstop Air Shots (Dribble Step Hop) · 10:25-10:28 Pumpfake Cross Step Knee Drive · 10:28-10:30 Cross Step Counter Air Shots</small></td></tr>
+            <tr><td>10:30-10:45</td><td><b>"RIP 2-FOOT FINISHING"</b>: 900 Line setup (see Court setups)<small>10:32-10:35 Pass / Sweep / 2-Foot 1s · 10:35-10:38 Pass / Sweep / Jumpstop Cross Step · 10:38-10:43 Rip Finishing (1 point 1 foot / 2 points 2 feet)</small></td></tr>
+            <tr><td>10:43-11:00</td><td>Water, Rest &amp; Review</td></tr>
+          </table>
+        </div>
+        <div class="blk def">
+          <h4>Defend the Trend</h4>
+          <p class="sub" style="margin:0">All defense lives here.</p>
+          <table class="ros">
+            <tr><th>Time</th><th>Block</th></tr>
+            <tr><td>11:02-11:10</td><td><b>"DEFENSE FOOTWORK"</b>: 1 <i>Hip Switch</i> · 2 <i>Drop &amp; Hop</i> · 3 <i>Drop, Hop &amp; Recover</i><small>11:02-11:05 Hot Feet Hip Switches · 11:05-11:07 Drop &amp; Hop · 11:07-11:10 Drop, Hop, Recover &amp; Box</small></td></tr>
+            <tr><td>11:15-11:55</td><td><b>Live Defense</b><small>11:15-11:18 Behind 1v1 (Split Start) · 11:18-11:21 Aside 1v1 (Switch Starts) · 11:21-11:24 Stack 1v1 (Square Start) · 11:25-11:30 Closeout / Gap / Hand Position · 11:30-11:35 High Shot Advantage (2v2) · 11:35-11:40 HSA (3v3) · 11:40-11:45 3v3 (Good Outlet) · 11:45-11:55 3v3 or 4v4 Continuous (FIBA)</small></td></tr>
+            <tr><td>11:55-12:00</td><td>Close &amp; Break</td></tr>
+          </table>
+          <p class="note" style="background:#fff"><b>Communication That Matters is blended in here, not a separate block.</b> The talk runs through the footwork and the live play: calling the switch, help and closeout communication, talking through High Shot Advantage and the live 3v3 / 4v4.</p>
+        </div>
+        <p class="sub" style="margin-top:8px">11:10-11:15 and 11:24-11:25 are transitions.</p>
+      </section>
+
+      <section id="courts">
+        <h2>Court setups</h2>
+        <p class="sub">Numbered cones mark every spot.</p>
+        <h3>1. The 12-spot grid: Free Play / Teach Locations</h3>
+        <svg class="court" viewBox="0 0 800 380" role="img" aria-label="Full court with 12 numbered spots per half, mirrored across midcourt. Coach at the midcourt sideline.">
+          <rect x="4" y="4" width="792" height="350" fill="#fdf6ee" stroke="#161616" stroke-width="4" rx="4"/>
+          <rect x="4" y="110" width="140" height="138" fill="none" stroke="#161616" stroke-width="3"/>
+          <rect x="656" y="110" width="140" height="138" fill="none" stroke="#161616" stroke-width="3"/>
+          <circle cx="400" cy="179" r="54" fill="none" stroke="#161616" stroke-width="3"/>
+          <line x1="400" y1="4" x2="400" y2="354" stroke="#e85d04" stroke-width="3" stroke-dasharray="8 7"/>
+          <g font-family="Barlow, sans-serif" font-weight="700" font-size="17" text-anchor="middle">
+            <g fill="#1d4f91">
+              <circle cx="66" cy="48" r="17"/><circle cx="182" cy="48" r="17"/><circle cx="298" cy="48" r="17"/>
+              <circle cx="66" cy="179" r="17"/><circle cx="182" cy="179" r="17"/><circle cx="298" cy="179" r="17"/>
+              <circle cx="66" cy="310" r="17"/><circle cx="182" cy="310" r="17"/><circle cx="298" cy="310" r="17"/>
+              <circle cx="734" cy="48" r="17"/><circle cx="618" cy="48" r="17"/><circle cx="502" cy="48" r="17"/>
+              <circle cx="734" cy="179" r="17"/><circle cx="618" cy="179" r="17"/><circle cx="502" cy="179" r="17"/>
+              <circle cx="734" cy="310" r="17"/><circle cx="618" cy="310" r="17"/><circle cx="502" cy="310" r="17"/>
+            </g>
+            <g fill="#7aa5d8">
+              <circle cx="362" cy="48" r="17"/><circle cx="362" cy="179" r="17"/><circle cx="362" cy="310" r="17"/>
+              <circle cx="438" cy="48" r="17"/><circle cx="438" cy="179" r="17"/><circle cx="438" cy="310" r="17"/>
+            </g>
+            <g fill="#fff">
+              <text x="66" y="54">1</text><text x="182" y="54">2</text><text x="298" y="54">3</text>
+              <text x="66" y="185">4</text><text x="182" y="185">5</text><text x="298" y="185">6</text>
+              <text x="66" y="316">7</text><text x="182" y="316">8</text><text x="298" y="316">9</text>
+              <text x="734" y="54">1</text><text x="618" y="54">2</text><text x="502" y="54">3</text>
+              <text x="734" y="185">4</text><text x="618" y="185">5</text><text x="502" y="185">6</text>
+              <text x="734" y="316">7</text><text x="618" y="316">8</text><text x="502" y="316">9</text>
+              <text x="362" y="54">10</text><text x="362" y="185">11</text><text x="362" y="316">12</text>
+              <text x="438" y="54">10</text><text x="438" y="185">11</text><text x="438" y="316">12</text>
+            </g>
+            <text x="400" y="374" fill="#c24e02" font-weight="800" font-size="16" letter-spacing="1">COACH · MIDCOURT SIDELINE</text>
+          </g>
+        </svg>
+        <p class="sub">Full court, 12 numbered spots per half, mirrored across midcourt. The coach stands at the midcourt sideline. Use the grid to teach locations in Free Play and to relocate players on 2 whistles.</p>
+
+        <h3>2. 900 Line: "RIP 2-FOOT FINISHING"</h3>
+        <svg class="court" viewBox="0 0 800 200" role="img" aria-label="Full court with a 900 Line near each end. Pass and sweep entries run from the 900 Line at each end.">
+          <rect x="4" y="4" width="792" height="160" fill="#f1f6fc" stroke="#161616" stroke-width="4" rx="4"/>
+          <line x1="80" y1="4" x2="80" y2="164" stroke="#e85d04" stroke-width="5"/>
+          <line x1="720" y1="4" x2="720" y2="164" stroke="#e85d04" stroke-width="5"/>
+          <g font-family="Barlow, sans-serif" text-anchor="middle">
+            <text x="400" y="90" font-size="19" fill="#161616">Pass / Sweep entries run from the 900 Line at each end</text>
+            <text x="80" y="190" font-size="16" font-weight="800" fill="#161616">900 LINE</text>
+            <text x="720" y="190" font-size="16" font-weight="800" fill="#161616">900 LINE</text>
+          </g>
+        </svg>
+        <p class="sub">Entries, sweeps and 2-foot finishes run from the 900 Line at each end.</p>
+
+        <h3>3. Live Defense starts: Defend the Trend, 11:15</h3>
+        <table class="ros">
+          <tr><th>Start</th><th>Game</th><th>What it means</th></tr>
+          <tr><td>Behind</td><td>1v1, 11:15-11:18</td><td>Split Start: defender behind the ball</td></tr>
+          <tr><td>Aside</td><td>1v1, 11:18-11:21</td><td>Switch Starts: defender beside the ball</td></tr>
+          <tr><td>Stack</td><td>1v1, 11:21-11:24</td><td>Square Start: defender stacked / square</td></tr>
+        </table>
+        <p class="sub" style="margin-top:8px">Then: Closeout / Gap / Hand Position (11:25-11:30), High Shot Advantage 2v2 and 3v3, 3v3 with a good outlet, and 3v3 or 4v4 Continuous (FIBA) to close the live block.</p>
+      </section>
+
+      <section id="whistle">
+        <h2>Whistle system</h2>
+        <div class="two">
+          <div><b>1 whistle = Eyes</b>Everyone stops, eyes on the coach. No talking, no ball movement.</div>
+          <div><b>2 whistles = Relocate</b>The coach names the spot out loud, for example "relocate to the far baseline" or "relocate to Station 3." Players move on the second whistle to the spot named.</div>
+        </div>
+        <h3>Coach rules: every block, every coach</h3>
+        <ul class="list">
+          <li><b>Name everything.</b> Every drill gets a name.</li>
+          <li><b>Drill names in ALL CAPS with quotations</b>, for example "DEFENSE FOOTWORK". <b>Sequence steps are numbered with italic names</b>, for example 1 <i>Hip Switch</i>, 2 <i>Drop &amp; Hop</i>, 3 <i>Drop, Hop &amp; Recover</i>.</li>
+          <li><b>Before we break, Coach Michael names the drill and everybody repeats it.</b> Call and response, then break to start.</li>
+          <li><b>Neat lines.</b> Players line up in neat lines.</li>
+          <li><b>Open for questions before we break.</b> The coach opens the floor before players break.</li>
+        </ul>
+        <p class="sub" style="margin-top:8px">To confirm with Coach Michael on the day: court orientation, and the player grid, player lines and rotations.</p>
+      </section>
+
+      <button class="print" type="button" onclick="window.print()">Print this packet</button>
+      <footer>A Sportdork production</footer>
+    </main>
+  </body>
+</html>

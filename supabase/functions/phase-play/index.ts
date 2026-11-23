@@ -35,6 +35,8 @@ const SESSIONS = [
   { key: "d2-u10", day: "Day 2, Tue Nov 24", title: "10 & Under game", time: "1:15 - 2:15 PM", who: "", start: "2026-11-24T13:15:00-08:00", end: "2026-11-24T14:15:00-08:00" },
   { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:25 - 3:25 PM", who: "", start: "2026-11-24T14:25:00-08:00", end: "2026-11-24T15:25:00-08:00" },
 ];
+// Check-in at the door is Day 1 only (Day 2 games have no check-in). SESSIONS still drives Day 2 teams.
+const CHECKIN_SESSIONS = SESSIONS.filter((s) => s.key.startsWith("d1-"));
 type CheckReg = { id: string; player: string; cohort: string; signup_type?: string | null; day1_group: string | null; extra_sessions: string[] | null };
 function inSession(r: CheckReg, key: string): boolean {
   if ((r.extra_sessions ?? []).includes(key)) return true;
@@ -338,12 +340,12 @@ Deno.serve(async (req) => {
     // ---- Camp check-in (public: names only, never who has checked in) ----
     if (action === "checkin_roster") {
       const [regs, signed] = await Promise.all([checkRegs(), waiverIds()]);
-      return json({ waiver_version: WAIVER_VERSION, sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+      return json({ waiver_version: WAIVER_VERSION, sessions: CHECKIN_SESSIONS.map((s) => ({ ...sessionMeta(s),
         players: rosterGroups(regs.filter((r) => inSession(r, s.key)), s.key, signed) })) });
     }
     if (action === "check_in") {
       const id = clean(body.id, 60), key = clean(body.session, 20);
-      const s = SESSIONS.find((x) => x.key === key);
+      const s = CHECKIN_SESSIONS.find((x) => x.key === key);
       if (!s || !/^[0-9a-f-]{36}$/.test(id)) return json({ error: "invalid" }, 400);
       const { data: r } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions, signup_type, status, is_test").eq("id", id).maybeSingle();
       if (!r || r.status !== "active" || r.is_test || !inSession(r as CheckReg, key)) return json({ error: "not_on_list" }, 404);
@@ -475,7 +477,7 @@ Deno.serve(async (req) => {
       const rows = (rows0 ?? []).map((x) => ({ ...x, photo_url: x.photo_path ? urls[x.photo_path] ?? null : null }));
       const { data: waivers, error: wErr } = await db.from("waivers").select("registration_id, signer_name, signed_at, version").eq("version", WAIVER_VERSION);
       if (wErr) throw wErr;
-      return json({ waivers: waivers ?? [], sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+      return json({ waivers: waivers ?? [], sessions: CHECKIN_SESSIONS.map((s) => ({ ...sessionMeta(s),
         players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort, day1_group: r.day1_group, extra: (r.extra_sessions ?? []).includes(s.key) }))
           .sort(byName) })), check_ins: rows ?? [] });
     }

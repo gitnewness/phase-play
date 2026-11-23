@@ -970,6 +970,9 @@
           if (isNaN(enrolled)) enrolled = 0;
           if (isNaN(capacity) || capacity <= 0) capacity = 12;
           enrolled = Math.max(0, Math.min(enrolled, capacity));
+          // Registration closed (8:30 PM Pacific, Nov 21): every cohort shows all pills filled and "Full".
+          var closed = Date.now() >= Date.parse('2026-11-22T04:30:00Z');
+          if (closed) enrolled = capacity;
           var left = capacity - enrolled;
           counter.classList.remove('is-open', 'is-filling', 'is-low', 'is-critical', 'is-full');
           var state = 'is-open';
@@ -980,7 +983,7 @@
           counter.classList.add(state);
           var countEl = counter.querySelector('.enroll-count');
           var leftEl = counter.querySelector('.enroll-left');
-          if (countEl) countEl.textContent = enrolled + ' of ' + capacity + ' enrolled';
+          if (countEl) countEl.textContent = closed ? 'Registration closed' : enrolled + ' of ' + capacity + ' enrolled';
           if (leftEl) {
             if (left <= 0) leftEl.textContent = 'Full';
             else if (left <= 4) leftEl.textContent = 'Only ' + left + (left === 1 ? ' spot left' : ' spots left');
@@ -1004,7 +1007,7 @@
               vp.classList.toggle('is-filled', idx < enrolled);
             });
           }
-          counter.setAttribute('aria-label', enrolled + ' of ' + capacity + ' enrolled, ' + (left <= 0 ? 'full' : left + (left === 1 ? ' spot' : ' spots') + ' left'));
+          counter.setAttribute('aria-label', closed ? 'Registration closed, full' : enrolled + ' of ' + capacity + ' enrolled, ' + (left <= 0 ? 'full' : left + (left === 1 ? ' spot' : ' spots') + ' left'));
         }
         document.querySelectorAll('.enroll-counter').forEach(renderEnrollCounter);
         // Pills fill in one by one when a cohort's counter scrolls into view.

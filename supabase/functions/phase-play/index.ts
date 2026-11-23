@@ -3,6 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Phase Play backend (Supabase project "phase-play").
 // Public:        register, counts, activity (totals + anonymous feed for the main page),
+//                join_list (the "join the list for next camp" form),
 //                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
@@ -283,6 +284,19 @@ Deno.serve(async (req) => {
       return json(signup_type === "waitlist" ? { ok: true, id: row.id } : { ok: true });
     }
 
+    // "Join the list for next camp": a family asks to hear about the next camp.
+    if (action === "join_list") {
+      if (clean(body.bot, 10)) return json({ ok: true });
+      const parent = clean(body.parent, 120), email = clean(body.email, 200).toLowerCase();
+      if (!parent || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "invalid" }, 400);
+      const { error } = await db.from("next_camp_list").insert({
+        parent, email, phone: clean(body.phone, 40) || null, player: clean(body.player, 120) || null,
+        grade: clean(body.grade, 40) || null, notes: clean(body.notes, 500) || null,
+      });
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
     // ---- Camp check-in (public: names only, never who has checked in) ----
     if (action === "checkin_roster") {
       const [regs, signed] = await Promise.all([checkRegs(), waiverIds()]);
@@ -404,7 +418,9 @@ Deno.serve(async (req) => {
       if (error) throw error;
       const { data: teams, error: tErr } = await db.from("day2_teams").select("registration_id, team");
       if (tErr) throw tErr;
-      return json({ registrations: regs ?? [], teams: teams ?? [] });
+      const { data: nextList, error: nErr } = await db.from("next_camp_list").select("created_at, parent, email, phone, player, grade, notes").order("created_at", { ascending: false });
+      if (nErr) throw nErr;
+      return json({ registrations: regs ?? [], teams: teams ?? [], next_camp: nextList ?? [] });
     }
 
     if (action === "checkin_admin") {

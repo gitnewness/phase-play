@@ -39,6 +39,9 @@
       .name { min-height: 54px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: 600 17px "Barlow", sans-serif; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
       .name.on { border-color: var(--orange); background: var(--orange-soft); box-shadow: inset 0 0 0 1px var(--orange); }
       .none { color: var(--ink-faint); margin: 8px 0; }
+      .grp { grid-column: 1 / -1; margin: 14px 0 2px; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 19px; color: var(--ink); border-bottom: 2px solid var(--orange); padding-bottom: 4px; }
+      .grp:first-child { margin-top: 4px; }
+      .grp small { color: var(--ink-faint); font-family: "Barlow", sans-serif; font-weight: 600; letter-spacing: 0; text-transform: none; font-size: 14px; margin-left: 6px; }
 
       .other { display: flex; flex-direction: column; gap: 8px; }
       .sess { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center; width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: left; font: inherit; color: inherit; cursor: pointer; }
@@ -63,6 +66,19 @@
       .row2 { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
       .ghost { min-height: 46px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); font: 600 16px "Barlow", sans-serif; cursor: pointer; }
       .err { color: #b42318; font-weight: 600; margin: 10px 0; }
+      .wv { padding-top: 14px; }
+      .wv h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 30px; line-height: 1; margin: 0 0 4px; }
+      .wv > p { margin: 0 0 12px; color: var(--ink-soft); font-size: 15.5px; }
+      .rel { max-height: 44vh; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 4px 14px 10px; background: var(--panel); font-size: 14.5px; line-height: 1.45; -webkit-overflow-scrolling: touch; }
+      .rel h1 { display: none; } .rel .meta { color: var(--ink-faint); font-size: 13px; margin: 10px 0 0; }
+      .rel h2 { font-family: "Barlow", sans-serif; font-weight: 700; text-transform: none; font-size: 16px; margin: 14px 0 4px; }
+      .rel ol { padding-left: 20px; margin: 0; } .rel li { margin: 5px 0; }
+      .agree { display: flex; gap: 12px; align-items: flex-start; padding: 12px 2px; border-bottom: 1px solid var(--line); font-size: 16px; cursor: pointer; }
+      .agree input { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--orange); }
+      .sig { display: block; margin-top: 14px; font-weight: 600; font-size: 15px; }
+      .sig input { display: block; width: 100%; margin-top: 6px; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 8px; font: 500 18px "Barlow", sans-serif; color: var(--ink); }
+      .sig input:focus { outline: none; border-color: var(--ink); }
+      .onfile { display: inline-block; margin-top: 6px; color: #15803d; font-weight: 600; font-size: 14.5px; }
       .help { margin-top: 30px; font-size: 15px; color: var(--ink-faint); }
       .help a { color: var(--ink); }
       footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-faint); }
@@ -73,7 +89,7 @@
       <header>
         <p class="kicker">Michael Nunes presents Phase Play</p>
         <h1>Check-in</h1>
-        <p class="lede" id="lede">Tap your player's name, take a quick photo of them, then check in. One check-in per player.</p>
+        <p class="lede" id="lede">Tap your player's name, sign the releases (first check-in only), take a quick photo of them, then check in. One check-in per player.</p>
       </header>
       <div id="app"><p class="none">Loading the sessions...</p></div>
       <p class="help">Wrong name or a problem? Find a coach at the door, or text Coach Michael at <a href="sms:+15415310150" style="white-space:nowrap">541-531-0150</a>.</p>
@@ -87,6 +103,8 @@
         var app = document.getElementById('app'), bar = document.getElementById('bar'), go = document.getElementById('go'), lede = document.getElementById('lede');
         var cam = document.getElementById('cam');
         var sessions = [], current = null, picked = null, filter = '', photo = null;
+        // Releases (liability + media): signed once per player, before their first check-in.
+        var signed = null, releasesHtml = null, waiverVersion = '';
 
         function el(tag, attrs, kids) {
           var n = document.createElement(tag);
@@ -118,11 +136,13 @@
         function render() {
           var s = find(current);
           app.innerHTML = '';
+          if (picked && !picked.waiver && !signed) { renderWaiver(); return; }
           if (picked && photo) { renderShot(); return; }
           bar.hidden = !picked;
           if (picked) go.textContent = 'Take a photo of ' + picked.name;
           lede.hidden = false;
           if (!s) { app.appendChild(el('p', { class: 'none', text: 'No sessions found.' })); return; }
+          if (picked && (picked.waiver || signed)) app.appendChild(el('p', { class: 'onfile', text: '✓ Releases ' + (picked.waiver ? 'on file' : 'signed') + ' for ' + picked.name }));
           app.appendChild(el('section', { class: 'now' }, [
             isLive(s) ? el('span', { class: 'live' }, [el('i'), 'Happening now']) : el('span', { class: 'live', text: s.day }),
             el('h2', { text: s.title }),
@@ -141,9 +161,17 @@
             var q = filter.trim().toLowerCase();
             var shown = list.filter(function (p) { return !q || p.name.toLowerCase().indexOf(q) !== -1; });
             if (!shown.length) grid.appendChild(el('p', { class: 'none', text: q ? 'No name matches. Try the first name.' : 'No players on this list yet.' }));
+            // A heading per group (7th/8th Girls, 7th/8th Boys) when the session has more than one.
+            var groups = {};
+            list.forEach(function (p) { if (p.group) groups[p.group] = (groups[p.group] || 0) + 1; });
+            var multi = Object.keys(groups).length > 1, lastGroup = null;
             shown.forEach(function (p) {
+              if (multi && p.group !== lastGroup) {
+                lastGroup = p.group;
+                grid.appendChild(el('h3', { class: 'grp', text: p.group }, [el('small', { text: groups[p.group] + ' players' })]));
+              }
               grid.appendChild(el('button', { class: 'name' + (picked && picked.id === p.id ? ' on' : ''), type: 'button', role: 'listitem', 'aria-pressed': picked && picked.id === p.id ? 'true' : 'false', text: p.name, on: { click: function () {
-                picked = picked && picked.id === p.id ? null : p; photo = null; render();
+                picked = picked && picked.id === p.id ? null : p; photo = null; signed = null; render(); if (picked && !picked.waiver) window.scrollTo(0, 0);
               } } }));
             });
           }
@@ -159,6 +187,54 @@
           }
         }
 
+        function loadReleases() {
+          if (releasesHtml) return Promise.resolve(releasesHtml);
+          return fetch('/check-in/releases.html', { cache: 'no-cache' }).then(function (r) { return r.text(); }).then(function (t) {
+            var a = new DOMParser().parseFromString(t, 'text/html').getElementById('releases');
+            if (!a) throw new Error('releases');
+            releasesHtml = a.innerHTML; return releasesHtml;
+          });
+        }
+        function renderWaiver() {
+          lede.hidden = true; bar.hidden = false;
+          go.textContent = 'Agree and take photo';
+          app.innerHTML = '';
+          var box = el('div', { class: 'rel', tabindex: '0', 'aria-label': 'Release text' }, [el('p', { class: 'none', text: 'Loading the releases...' })]);
+          loadReleases().then(function (h) { box.innerHTML = h; }).catch(function () {
+            box.innerHTML = '';
+            box.appendChild(el('p', { class: 'err', text: 'Could not load the releases. ' }, [el('a', { href: '/check-in/releases.html', target: '_blank', rel: 'noopener', text: 'Open them here' })]));
+          });
+          function tick(id, label) {
+            return el('label', { class: 'agree' }, [el('input', { type: 'checkbox', id: id }), el('span', { text: label })]);
+          }
+          var name = el('input', { id: 'wv-name', type: 'text', autocomplete: 'name', autocapitalize: 'words', placeholder: 'First and last name' });
+          app.appendChild(el('section', { class: 'wv' }, [
+            el('h2', { text: 'Releases for ' + picked.name }),
+            el('p', { text: 'Required once per player before their first check-in. Please read both, then agree below.' }),
+            box,
+            tick('wv-liab', 'I agree to the Release of liability, assumption of risk and medical consent.'),
+            tick('wv-media', 'I agree to the Photo, video and media release.'),
+            tick('wv-guard', 'I am ' + picked.name + "'s parent or legal guardian."),
+            el('label', { class: 'sig', for: 'wv-name' }, ['Parent or guardian full name (your signature)', name]),
+            el('div', { class: 'row2' }, [
+              el('button', { class: 'ghost', type: 'button', text: 'Different name', on: { click: function () { picked = null; photo = null; signed = null; render(); } } }),
+              el('a', { class: 'ghost', style: 'display:inline-flex; align-items:center; text-decoration:none', href: '/check-in/releases.html', target: '_blank', rel: 'noopener', text: 'Full text' })
+            ])
+          ]));
+          window.scrollTo(0, 0);
+        }
+        // The bar button on the releases screen: check the boxes and the name, then open the camera.
+        function signWaiver() {
+          var get = function (id) { return document.getElementById(id); };
+          var nm = (get('wv-name').value || '').trim().replace(/\s+/g, ' ');
+          if (!get('wv-liab').checked || !get('wv-media').checked) return showErr('Please check both releases to continue.');
+          if (!get('wv-guard').checked) return showErr('Please confirm you are the parent or legal guardian.');
+          if (nm.length < 3 || nm.indexOf(' ') < 0) { get('wv-name').focus(); return showErr('Please type your first and last name to sign.'); }
+          signed = { version: waiverVersion, signer: nm, guardian: true, liability: true, media: true };
+          cam.value = ''; cam.click();
+          render();
+        }
+
         function confirmDone(res) {
           bar.hidden = true; lede.hidden = true;
           app.innerHTML = '';
@@ -169,7 +245,7 @@
             el('h2', { text: res.name + (res.already ? ' is already checked in' : ' is checked in') }),
             el('p', { text: res.session + ', ' + res.time }),
             el('p', { text: res.day }),
-            el('button', { class: 'again', type: 'button', text: 'Check in another player', on: { click: function () { picked = null; photo = null; filter = ''; render(); window.scrollTo(0, 0); } } })
+            el('button', { class: 'again', type: 'button', text: 'Check in another player', on: { click: function () { picked = null; photo = null; signed = null; filter = ''; render(); window.scrollTo(0, 0); } } })
           ]));
           window.scrollTo(0, 0);
         }
@@ -187,7 +263,7 @@
             img,
             el('div', { class: 'row2' }, [
               el('button', { class: 'ghost', type: 'button', text: 'Retake photo', on: { click: function () { cam.value = ''; cam.click(); } } }),
-              el('button', { class: 'ghost', type: 'button', text: 'Different name', on: { click: function () { picked = null; photo = null; render(); } } })
+              el('button', { class: 'ghost', type: 'button', text: 'Different name', on: { click: function () { picked = null; photo = null; signed = null; render(); } } })
             ])
           ]));
           window.scrollTo(0, 0);
@@ -220,11 +296,22 @@
 
         go.addEventListener('click', function () {
           if (!picked) return;
+          if (!picked.waiver && !signed) { signWaiver(); return; }
           if (!photo) { cam.value = ''; cam.click(); return; }
           go.disabled = true; go.textContent = 'Checking in...';
-          post({ action: 'check_in', id: picked.id, session: current, photo: photo }).then(function (r) {
+          post({ action: 'check_in', id: picked.id, session: current, photo: photo, waiver: picked.waiver ? null : signed }).then(function (r) {
             go.disabled = false;
-            if (r.status === 200 && r.body.ok) { picked = null; photo = null; confirmDone(r.body); return; }
+            if (r.status === 200 && r.body.ok) {
+              // Releases are on file now for every session this player is in.
+              var id = picked.id;
+              sessions.forEach(function (x) { x.players.forEach(function (p) { if (p.id === id) p.waiver = true; }); });
+              picked = null; photo = null; signed = null; confirmDone(r.body); return;
+            }
+            if (r.body && r.body.error === 'waiver_required') {
+              if (r.body.version) waiverVersion = r.body.version;
+              picked.waiver = false; signed = null; photo = null; render();
+              showErr('Please sign the releases first.'); return;
+            }
             go.textContent = 'Try again';
             showErr(r.body && r.body.error === 'not_on_list' ? 'That name is not on this session list. Please find a coach.'
               : r.body && r.body.error === 'photo_required' ? 'The photo did not come through. Tap Retake photo and try again.'
@@ -239,6 +326,7 @@
           post({ action: 'checkin_roster' }).then(function (r) {
             if (r.status !== 200 || !r.body.sessions) throw new Error('load');
             sessions = r.body.sessions;
+            waiverVersion = r.body.waiver_version || '';
             current = liveKey();
             render();
           }).catch(function () {

@@ -6,7 +6,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 //                wl_interphase (a just-waitlisted family adds the $35 Interphase workouts)
 // Player link:   ip_load, ip_save            (token from the player's private Interphase link)
 // Coach code:    admin, save_teams, add_player, update_player, ip_admin
-// Check-in:      checkin_roster, check_in (public, QR code at the door);
+// Check-in:      checkin_roster, check_in (public, QR code at the door; first check-in signs the releases);
 //                checkin_admin, checkin_undo (coach code)
 const COHORTS = ["10 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
 // 10 & Under was first called "9 & Under"; pages cached under the old name still work.
@@ -33,9 +33,11 @@ const SESSIONS = [
   { key: "d2-u10", day: "Day 2, Tue Nov 24", title: "10 & Under game", time: "1:15 - 2:15 PM", who: "", start: "2026-11-24T13:15:00-08:00", end: "2026-11-24T14:15:00-08:00" },
   { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:20 - 3:20 PM", who: "", start: "2026-11-24T14:20:00-08:00", end: "2026-11-24T15:20:00-08:00" },
 ];
-type CheckReg = { id: string; player: string; cohort: string; day1_group: string | null; extra_sessions: string[] | null };
+type CheckReg = { id: string; player: string; cohort: string; signup_type?: string | null; day1_group: string | null; extra_sessions: string[] | null };
 function inSession(r: CheckReg, key: string): boolean {
   if ((r.extra_sessions ?? []).includes(key)) return true;
+  // Waitlist / Interphase-only players are only on the sessions listed in their extra_sessions.
+  if (r.signup_type && r.signup_type !== "reserve") return false;
   const c = r.cohort, g = r.day1_group;
   switch (key) {
     case "d1-am": return c === "7th/8th Girls" || (c === "7th/8th Boys" && g !== "pm");
@@ -47,11 +49,12 @@ function inSession(r: CheckReg, key: string): boolean {
   }
   return false;
 }
+// Registered players, plus waitlist / Interphase-only players the coach added to a session (extra_sessions).
 async function checkRegs(): Promise<CheckReg[]> {
-  const { data, error } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions")
-    .eq("signup_type", "reserve").eq("status", "active").eq("is_test", false);
+  const { data, error } = await db.from("registrations").select("id, player, cohort, signup_type, day1_group, extra_sessions")
+    .eq("status", "active").eq("is_test", false);
   if (error) throw error;
-  return (data ?? []) as CheckReg[];
+  return ((data ?? []) as CheckReg[]).filter((r) => r.signup_type === "reserve" || (r.extra_sessions ?? []).length > 0);
 }
 // Public lists show first name + last initial only.
 function shortName(full: string): string {
@@ -64,6 +67,14 @@ function sessionMeta(s: typeof SESSIONS[number]) {
   return { key: s.key, day: s.day, title: s.title, time: s.time, who: s.who, start: s.start, end: s.end };
 }
 const PHOTO_BUCKET = "check-in-photos";
+// Liability + media releases (text: check-in/releases.html). A parent signs once per player per version,
+// the first time they check that player in. Change the version whenever the wording changes.
+const WAIVER_VERSION = "2026-11-v1";
+async function waiverIds(): Promise<Set<string>> {
+  const { data, error } = await db.from("waivers").select("registration_id").eq("version", WAIVER_VERSION);
+  if (error) throw error;
+  return new Set((data ?? []).map((w) => w.registration_id as string));
+}
 // Base64 JPEG (with or without a data: prefix), at most 1.5 MB.
 function photoBytes(v: unknown): Uint8Array | null {
   if (typeof v !== "string" || v.length > 2_100_000) return null;
@@ -76,6 +87,14 @@ function photoBytes(v: unknown): Uint8Array | null {
   return out[0] === 0xff && out[1] === 0xd8 ? out : null;
 }
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+// Public check-in list: short names, grouped by cohort (e.g. 7th/8th Girls, 7th/8th Boys) in COHORTS order.
+// A player added to another group's session (extra_sessions) is listed under that session's group.
+function rosterGroups(regs: CheckReg[], key: string, signed: Set<string>) {
+  const own = new Set(regs.filter((r) => !(r.extra_sessions ?? []).includes(key)).map((r) => r.cohort));
+  const first = COHORTS.find((c) => own.has(c)) ?? "";
+  return regs.map((r) => ({ id: r.id, name: shortName(r.player), group: own.has(r.cohort) ? r.cohort : first, waiver: signed.has(r.id) }))
+    .sort((a, b) => (COHORTS.indexOf(a.group) - COHORTS.indexOf(b.group)) || byName(a, b));
+}
 
 const IP_BLOCKS = ["stationary", "motion", "form", "pickup", "pullup", "finishing", "passing"];
 // THE 100 shooting test: 10 stations x 10 shots; each shot 0 (miss) or 1-3 points.
@@ -266,19 +285,35 @@ Deno.serve(async (req) => {
 
     // ---- Camp check-in (public: names only, never who has checked in) ----
     if (action === "checkin_roster") {
-      const regs = await checkRegs();
-      return json({ sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
-        players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: shortName(r.player) })).sort(byName) })) });
+      const [regs, signed] = await Promise.all([checkRegs(), waiverIds()]);
+      return json({ waiver_version: WAIVER_VERSION, sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+        players: rosterGroups(regs.filter((r) => inSession(r, s.key)), s.key, signed) })) });
     }
     if (action === "check_in") {
       const id = clean(body.id, 60), key = clean(body.session, 20);
       const s = SESSIONS.find((x) => x.key === key);
       if (!s || !/^[0-9a-f-]{36}$/.test(id)) return json({ error: "invalid" }, 400);
       const { data: r } = await db.from("registrations").select("id, player, cohort, day1_group, extra_sessions, signup_type, status, is_test").eq("id", id).maybeSingle();
-      if (!r || r.signup_type !== "reserve" || r.status !== "active" || r.is_test || !inSession(r as CheckReg, key)) return json({ error: "not_on_list" }, 404);
+      if (!r || r.status !== "active" || r.is_test || !inSession(r as CheckReg, key)) return json({ error: "not_on_list" }, 404);
       const done = { ok: true, name: shortName(r.player), session: s.title, time: s.time, day: s.day };
       const { data: prev } = await db.from("check_ins").select("id, photo_path").eq("registration_id", id).eq("session", key).maybeSingle();
       if (prev?.photo_path) return json({ ...done, already: true });
+      // Releases: required before the first check-in. Saved before the photo, so a retry doesn't ask twice.
+      const { data: onFile } = await db.from("waivers").select("id").eq("registration_id", id).eq("version", WAIVER_VERSION).maybeSingle();
+      if (!onFile) {
+        const w = (body.waiver ?? {}) as Record<string, unknown>;
+        const signer = clean(w.signer, 120);
+        if (w.version !== WAIVER_VERSION || w.guardian !== true || w.liability !== true || w.media !== true || signer.length < 3) {
+          return json({ error: "waiver_required", version: WAIVER_VERSION }, 400);
+        }
+        const { error: wErr } = await db.from("waivers").upsert({
+          registration_id: id, version: WAIVER_VERSION, signer_name: signer, is_guardian: true,
+          liability_accepted: true, media_accepted: true,
+          ip: clean((req.headers.get("x-forwarded-for") ?? "").split(",")[0], 60) || null,
+          user_agent: clean(req.headers.get("user-agent"), 300) || null,
+        }, { onConflict: "registration_id,version", ignoreDuplicates: true });
+        if (wErr) throw wErr;
+      }
       // The parent's photo: a JPEG the page has already shrunk (no location data). Required to check in.
       const photo = photoBytes(body.photo);
       if (!photo) return json({ error: "photo_required" }, 400);
@@ -384,7 +419,9 @@ Deno.serve(async (req) => {
         for (const x of signed ?? []) if (x.path && x.signedUrl) urls[x.path] = x.signedUrl;
       }
       const rows = (rows0 ?? []).map((x) => ({ ...x, photo_url: x.photo_path ? urls[x.photo_path] ?? null : null }));
-      return json({ sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
+      const { data: waivers, error: wErr } = await db.from("waivers").select("registration_id, signer_name, signed_at, version").eq("version", WAIVER_VERSION);
+      if (wErr) throw wErr;
+      return json({ waivers: waivers ?? [], sessions: SESSIONS.map((s) => ({ ...sessionMeta(s),
         players: regs.filter((r) => inSession(r, s.key)).map((r) => ({ id: r.id, name: r.player, cohort: r.cohort, day1_group: r.day1_group, extra: (r.extra_sessions ?? []).includes(s.key) }))
           .sort(byName) })), check_ins: rows ?? [] });
     }

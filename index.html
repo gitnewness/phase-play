@@ -1799,6 +1799,8 @@
 
         // ---- Check-in board: who has checked in at the door (live, refreshes every 10 seconds) ----
         function ciTime(iso) { var d = new Date(iso); var h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' AM' : ' PM'); }
+        // Signed releases by registration id (liability + media, signed by the parent at first check-in).
+        function ciWaivers() { var m = {}; (ciData && ciData.waivers || []).forEach(function (w) { m[w.registration_id] = w; }); return m; }
         function ciLoad() {
           return call({ action: 'checkin_admin' }).then(function (r) {
             if (r.status === 200) { ciData = r.body; if ((tab === 'checkin' || tab === 'attendance') && !root.hidden) render(); }
@@ -1821,7 +1823,7 @@
             return wrap;
           }
           ciPoll();
-          var done = {};
+          var done = {}, wv = ciWaivers();
           ciData.check_ins.forEach(function (c) { done[c.session + '|' + c.registration_id] = c; });
           var now = Date.now();
           ciData.sessions.forEach(function (s) {
@@ -1842,7 +1844,7 @@
               a.appendChild(el('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px solid #e6efe6' }, [
                 el('span', { style: 'display:flex; align-items:center; gap:8px' }, [
                   c.photo_url ? el('a', { href: c.photo_url, target: '_blank', rel: 'noopener', title: 'Open photo' }, [el('img', { src: c.photo_url, alt: 'Check-in photo of ' + p.name, loading: 'lazy', style: 'width:44px; height:44px; object-fit:cover; border-radius:6px; display:block; background:#e6efe6' })]) : el('span', { class: 'muted', text: 'No photo' }),
-                  el('span', {}, [el('b', { text: p.name }), ' ', el('span', { class: 'muted', text: ciTime(c.checked_in_at) })])
+                  el('span', {}, [el('b', { text: p.name }), ' ', el('span', { class: 'muted', text: ciTime(c.checked_in_at) }), wv[p.id] ? el('span', { class: 'muted', style: 'display:block', title: 'Signed ' + ciTime(wv[p.id].signed_at), text: 'Releases signed by ' + wv[p.id].signer_name }) : null])
                 ]),
                 el('button', { class: 'pp-paid', type: 'button', text: 'Undo', on: { click: function () {
                   if (!confirm('Undo check-in for ' + p.name + ' (' + s.title + ')?')) return;
@@ -1855,7 +1857,7 @@
             if (!inList.length) a.appendChild(el('p', { class: 'pp-summary', text: 'Nobody yet.' }));
             var b = el('div', { class: 'pp-team', style: 'background:#fafafa' }, [el('h4', { text: 'Still missing (' + out.length + ')' })]);
             out.forEach(function (p) {
-              var row = el('div', { style: 'display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding:4px 0; border-bottom:1px solid #eee' }, [el('span', {}, [p.name, p.extra ? el('span', { class: 'muted', text: ' · also ' + p.cohort.replace('/', ' / ') }) : null])]);
+              var row = el('div', { style: 'display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding:4px 0; border-bottom:1px solid #eee' }, [el('span', {}, [p.name, p.extra ? el('span', { class: 'muted', text: ' · also ' + p.cohort.replace('/', ' / ') }) : null, el('span', { class: 'muted', text: wv[p.id] ? ' · releases ✓' : ' · releases not signed' })])]);
               // 7th/8th Boys on Day 1: set their morning / afternoon group.
               if (p.cohort === '7th/8th Boys' && (s.key === 'd1-am' || s.key === 'd1-pm')) {
                 var setG = function (g) { return function () {
@@ -1898,13 +1900,15 @@
         function COHORT_ORDER(c) { var i = ['10 & Under', '5th/6th Girls', '5th/6th Boys', '7th/8th Girls', '7th/8th Boys'].indexOf(c); return i < 0 ? 9 : i; }
         function attendanceCsv(rows) {
           var q = function (v) { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-          var head = ['Player', 'Cohort', 'Day 1 group'];
+          var wv = ciWaivers();
+          var head = ['Player', 'Cohort', 'Day 1 group', 'Releases signed by', 'Releases signed at'];
           ciData.sessions.forEach(function (s) { head.push(s.title + ' (' + s.day + ')'); });
           head.push('Checked in', 'Sessions');
           var lines = [head.map(q).join(',')];
           rows.forEach(function (p) {
             var n = 0, of = 0;
-            var line = [p.name, p.cohort, p.group ? p.group.toUpperCase() : ''];
+            var w = wv[p.id];
+            var line = [p.name, p.cohort, p.group ? p.group.toUpperCase() : '', w ? w.signer_name : 'Not signed', w ? ciDay(w.signed_at) + ' ' + ciTime(w.signed_at) : ''];
             ciData.sessions.forEach(function (s) {
               var c = p.cells[s.key];
               if (!c) { line.push(''); return; }
@@ -1949,15 +1953,17 @@
             ]));
           });
           wrap.appendChild(tot);
-          var head = el('tr', {}, [el('th', { text: 'Player' })]);
+          var wvs = ciWaivers();
+          var head = el('tr', {}, [el('th', { text: 'Player' }), el('th', { style: 'text-align:center', text: 'Releases' })]);
           ciData.sessions.forEach(function (s) { head.appendChild(el('th', { style: 'text-align:center; white-space:nowrap', title: s.title + ', ' + s.day + ', ' + s.time, text: CI_SHORT[s.key] || s.title })); });
           head.appendChild(el('th', { style: 'text-align:center', text: 'Total' }));
           var body = el('tbody');
           var lastCohort = '';
           rows.forEach(function (p) {
-            if (p.cohort !== lastCohort) { lastCohort = p.cohort; body.appendChild(el('tr', {}, [el('td', { colspan: String(ciData.sessions.length + 2), style: 'background:#fafafa; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em', text: p.cohort })])); }
+            if (p.cohort !== lastCohort) { lastCohort = p.cohort; body.appendChild(el('tr', {}, [el('td', { colspan: String(ciData.sessions.length + 3), style: 'background:#fafafa; font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.05em', text: p.cohort })])); }
             var n = 0, of = 0;
-            var tr = el('tr', {}, [el('td', {}, [el('b', { text: p.name }), p.cohort === '7th/8th Boys' ? el('span', { class: 'muted', text: p.group ? ' · ' + p.group.toUpperCase() : ' · no group' }) : null])]);
+            var tr = el('tr', {}, [el('td', {}, [el('b', { text: p.name }), p.cohort === '7th/8th Boys' ? el('span', { class: 'muted', text: p.group ? ' · ' + p.group.toUpperCase() : ' · no group' }) : null]),
+              wvs[p.id] ? el('td', { style: 'text-align:center; background:#f3faf3', title: 'Signed by ' + wvs[p.id].signer_name }, [el('b', { style: 'color:#15803d', text: '✓' })]) : el('td', { style: 'text-align:center; color:var(--ink-faint)', text: '—' })]);
             ciData.sessions.forEach(function (s) {
               var c = p.cells[s.key];
               if (!c) { tr.appendChild(el('td', { style: 'background:#f6f6f6' })); return; }
@@ -1974,7 +1980,7 @@
             body.appendChild(tr);
           });
           wrap.appendChild(el('div', { class: 'pp-scroll' }, [el('table', { class: 'pp-table' }, [el('thead', {}, [head]), body])]));
-          wrap.appendChild(el('p', { class: 'pp-summary', text: '✓ checked in (time) · — not yet · Missed: the session ended without a check-in · gray: not in that session.' }));
+          wrap.appendChild(el('p', { class: 'pp-summary', text: '✓ checked in (time) · — not yet · Missed: the session ended without a check-in · gray: not in that session. Releases: the parent signed the liability and media releases (at first check-in); the CSV has who signed and when.' }));
           return wrap;
         }
 

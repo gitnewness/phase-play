@@ -8,40 +8,25 @@
     <title>Check-in Sign - Phase Play</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800&family=Barlow:wght@700&display=swap" rel="stylesheet" />
     <style>
-      @page { size: letter portrait; margin: 0.5in; }
+      /* One 8.5 x 11 in page: "Check in" and the QR code, nothing else. */
+      @page { size: 8.5in 11in; margin: 0; }
       * { box-sizing: border-box; }
-      html, body { margin: 0; background: #fff; color: #161616; font-family: "Barlow", system-ui, sans-serif; }
-      .sign { max-width: 7.5in; margin: 0 auto; padding: 24px; text-align: center; }
-      .kicker { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; letter-spacing: .16em; font-size: 22px; color: #c24e02; margin: 0; }
-      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 104px; line-height: .9; margin: 10px 0 6px; }
-      .sub { font-size: 24px; font-weight: 600; margin: 0 0 26px; }
-      .qr { display: block; width: 4.6in; max-width: 100%; height: auto; margin: 0 auto; padding: 0.22in; border: 6px solid #e85d04; border-radius: 18px; }
-      .url { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 34px; letter-spacing: .02em; margin: 20px 0 22px; }
-      ol { list-style: none; padding: 0; margin: 0 auto; max-width: 5.6in; text-align: left; font-size: 22px; font-weight: 600; }
-      ol li { display: flex; gap: 14px; align-items: baseline; padding: 7px 0; border-top: 1px solid #e3e3e3; }
-      ol li b { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #e85d04; color: #fff; display: inline-grid; place-items: center; font-family: "Barlow Condensed", sans-serif; font-size: 22px; transform: translateY(-2px); }
-      .foot { margin-top: 26px; font-size: 16px; color: #6f6f6f; }
-      .print { margin: 18px auto 0; padding: 12px 22px; border: 0; border-radius: 8px; background: #161616; color: #fff; font: 700 17px "Barlow", sans-serif; cursor: pointer; }
-      @media print { .print { display: none; } .sign { padding: 0; } }
+      html, body { margin: 0; background: #fff; color: #161616; }
+      .sign { width: 8.5in; height: 11in; margin: 0 auto; padding: 0.75in; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5in; overflow: hidden; }
+      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 1.9in; line-height: .9; letter-spacing: .01em; margin: 0; white-space: nowrap; }
+      .qr { display: block; width: 6.4in; height: 6.4in; padding: 0.25in; border: 0.08in solid #e85d04; border-radius: 0.25in; }
+      .print { position: fixed; top: 16px; right: 16px; padding: 12px 22px; border: 0; border-radius: 8px; background: #161616; color: #fff; font: 700 17px "Barlow", sans-serif; cursor: pointer; }
+      @media screen { body { background: #e9e9e9; padding: 24px 0; } .sign { background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.15); } }
+      @media print { .print { display: none; } html, body { width: 8.5in; height: 11in; } }
     </style>
   </head>
   <body>
     <div class="sign">
-      <p class="kicker">Michael Nunes presents Phase Play</p>
-      <h1>Check in here</h1>
-      <p class="sub">Point your phone camera at the code</p>
-      <img class="qr" src="/images/check-in-qr.svg" alt="QR code for phaseplayhoops.com/check-in" width="460" height="460" />
-      <p class="url">phaseplayhoops.com/check-in</p>
-      <ol>
-        <li><b>1</b>Scan the code with your phone camera</li>
-        <li><b>2</b>Tap your player's name</li>
-        <li><b>3</b>Take a quick photo of your player</li>
-        <li><b>4</b>Tap check in. One check-in per player.</li>
-      </ol>
-      <p class="foot">A Sportdork production</p>
-      <button class="print" type="button" onclick="window.print()">Print this sign</button>
+      <h1>Check in</h1>
+      <img class="qr" src="/images/check-in-qr.svg" alt="QR code for phaseplayhoops.com/check-in" />
     </div>
+    <button class="print" type="button" onclick="window.print()">Print</button>
   </body>
 </html>

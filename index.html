@@ -511,7 +511,7 @@
       }
 
       /* ===== Hidden coach backend (long-press the header) ===== */
-      .hero-banner img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+      .hero-banner img { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
       .pp-admin[hidden] { display: none; }
       .pp-admin { position: fixed; inset: 0; z-index: 1000; background: rgba(17,17,17,.6); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 12px; }
       .pp-admin-box { background: #fff; color: var(--ink); width: 100%; max-width: 1000px; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.3); padding: 20px 20px 28px; }
@@ -601,7 +601,7 @@
     <!-- ================= HERO ================= -->
     <header class="hero">
       <div class="wrap hero-inner">
-        <h1 class="hero-banner"><img src="images/phase-play-header-v2.jpg" alt="Michael Nunes presents Phase Play — Two-Day Camp, Mon Nov 23 – Tue Nov 24, Athletic Club of Bend" width="1200" height="630" fetchpriority="high" /></h1>
+        <h1 class="hero-banner"><img src="images/phase-play-header-v2.jpg" alt="Michael Nunes presents Phase Play — Two-Day Camp, Mon Nov 23 – Tue Nov 24, Athletic Club of Bend" width="1200" height="630" fetchpriority="high" draggable="false" /></h1>
         <!-- ================= ABOUT THE PROGRAM ================= -->
         <section id="about" aria-labelledby="about-h">
           <h2 id="about-h">About the program</h2>
@@ -1653,18 +1653,21 @@
         banner.addEventListener('touchstart', start, { passive: true });
         banner.addEventListener('touchmove', move, { passive: true });
         banner.addEventListener('touchend', stop);
-        banner.addEventListener('touchcancel', stop);
+        // No stop on touchcancel: Safari on iPhone cancels the touch when it starts its own
+        // long-press on an image (lift to drag/share), which killed the timer before it fired.
         banner.addEventListener('mousedown', start);
         banner.addEventListener('mousemove', move);
         banner.addEventListener('mouseup', stop);
         banner.addEventListener('mouseleave', stop);
         banner.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        banner.addEventListener('dragstart', function (e) { e.preventDefault(); });
         // Bookmarkable: phaseplayhoops.com/#workouts opens straight to the Workouts dashboard.
         var wantWorkouts = false, wantCheckin = false;
         // phaseplayhoops.com/#checkin opens straight to the Check-in board, #attendance to Attendance.
         function checkHash() {
           if (location.hash === '#workouts' && root.hidden) { wantWorkouts = true; openCode(); }
           if (location.hash === '#checkin' && root.hidden) { wantCheckin = true; openCode(); }
+          if (location.hash === '#coach' && root.hidden) openCode();
           if (location.hash === '#attendance' && root.hidden) { wantCheckin = 'attendance'; openCode(); }
         }
         window.addEventListener('hashchange', checkHash);

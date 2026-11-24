@@ -39,6 +39,8 @@ const SESSIONS = [
 const CHECKIN_SESSIONS = SESSIONS.filter((s) => s.key.startsWith("d1-"));
 type CheckReg = { id: string; player: string; cohort: string; signup_type?: string | null; day1_group: string | null; extra_sessions: string[] | null };
 function inSession(r: CheckReg, key: string): boolean {
+  // "-<key>" takes a player out of one session (e.g. sick for a Day 2 game) without cancelling them.
+  if ((r.extra_sessions ?? []).includes("-" + key)) return false;
   if ((r.extra_sessions ?? []).includes(key)) return true;
   // Waitlist / Interphase-only players are only on the sessions listed in their extra_sessions.
   if (r.signup_type && r.signup_type !== "reserve") return false;
@@ -598,7 +600,7 @@ Deno.serve(async (req) => {
       if (typeof body.notes === "string") patch.notes = clean(body.notes, 500);
       if (body.skill_level !== undefined) patch.skill_level = skillLevel(body.skill_level);
       if (body.day1_group === "am" || body.day1_group === "pm" || body.day1_group === null) patch.day1_group = body.day1_group;
-      if (Array.isArray(body.extra_sessions)) patch.extra_sessions = body.extra_sessions.map((x) => clean(x, 20)).filter((k) => SESSIONS.some((s) => s.key === k));
+      if (Array.isArray(body.extra_sessions)) patch.extra_sessions = body.extra_sessions.map((x) => clean(x, 20)).filter((k) => SESSIONS.some((s) => s.key === k.replace(/^-/, "")));
       if (typeof body.player === "string" && clean(body.player, 120)) patch.player = clean(body.player, 120);
       if (typeof body.school === "string") patch.school = clean(body.school, 120) || null;
       if (typeof body.parent === "string") patch.parent = clean(body.parent, 120);

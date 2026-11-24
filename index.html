@@ -610,7 +610,7 @@
         <div class="details-block" aria-label="Camp details">
           <p><strong>When</strong> - November 23 &amp; 24, 2026</p>
           <p><strong>Monday Clinic</strong> - 10:00-12:00 &amp; 1:00-3:00 PM</p>
-          <p><strong>Tuesday Games</strong> - 10:00 AM-3:25 PM</p>
+          <p><strong>Tuesday Games</strong> - 9:45 AM-3:20 PM</p>
           <p><strong>Where</strong> - Athletic Club of Bend</p>
         </div>
         <div class="camp" id="phases" aria-labelledby="camp-h">
@@ -661,14 +661,16 @@
           <div class="camp-day" aria-labelledby="day2-sub-h">
             <h3 class="day-head" id="day2-sub-h">Game Day <span class="day-k">(Day 2)</span> <span class="day-note">Tue, Nov 24 · Phase 4 gameplay — actual refs, filmed</span></h3>
             <div class="day-times day-games day-sched">
-              <div><strong>10:00-10:10</strong><span>7th/8th Grade Boys Warm-up</span></div>
-              <div><strong>10:10-10:45</strong><span>7th/8th Boys Game 1<span class="g-sub">Team 1 vs Team 2</span></span></div>
-              <div><strong>10:50-11:25</strong><span>7th/8th Boys Game 2<span class="g-sub">Team 1 vs Team 3</span></span></div>
-              <div><strong>11:30-12:05</strong><span>7th/8th Boys Game 3<span class="g-sub">Team 2 vs Team 3</span></span></div>
-              <div><strong>12:10-1:10</strong><span>7th/8th Grade Girls Game</span></div>
+              <div><strong>9:45-10:00</strong><span>7th/8th Grade Boys Warm-up<span class="g-sub">Gym opens 9:45</span></span></div>
+              <div><strong>10:00-10:35</strong><span>7th/8th Boys Game 1<span class="g-sub">Team 1 vs Team 2</span></span></div>
+              <div><strong>10:40-11:15</strong><span>7th/8th Boys Game 2<span class="g-sub">Team 1 vs Team 3</span></span></div>
+              <div><strong>11:20-11:55</strong><span>7th/8th Boys Game 3<span class="g-sub">Team 2 vs Team 3</span></span></div>
+              <div><strong>11:55-12:10</strong><span>Break</span></div>
+              <div><strong>12:10-1:10</strong><span>7th/8th Grade Girls Game<span class="g-sub">4v4</span></span></div>
               <div><strong>1:15-2:15</strong><span>10 &amp; Under Game<span class="g-sub">Game day only</span></span></div>
-              <div><strong>2:25-3:25</strong><span>5th/6th Grade Boys Game</span></div>
-              <div class="g-note">7th/8th Boys play a three-team round robin with 15-minute halves. All other games are 60 minutes.</div>
+              <div><strong>2:15-2:20</strong><span>Break</span></div>
+              <div><strong>2:20-3:20</strong><span>5th/6th Grade Boys Game</span></div>
+              <div class="g-note">7th/8th Boys play a three-team round robin: two 15-minute running-clock halves and a 5-minute halftime. The Girls, 10 &amp; Under and 5th/6th Boys games are 60 minutes with 8-minute quarters. The day ends at 3:20.</div>
             </div>
             <div class="hp hp-wide">
               <div class="hp-k">Phase 4</div>
@@ -1604,10 +1606,10 @@
         var SKILL = { 1: 'Some experience', 2: 'Plays recreational', 3: 'Plays competitively' };
         function skillTag(r) { return r.skill_level ? el('span', { class: 'pp-tag', title: SKILL[r.skill_level], text: 'Level ' + r.skill_level }) : null; }
         var GAMES = [
-          { time: '10:10-12:05 round robin', cohort: '7th/8th Boys' },
+          { time: '10:00-11:55 round robin', cohort: '7th/8th Boys' },
           { time: '12:10-1:10', cohort: '7th/8th Girls' },
           { time: '1:15-2:15', cohort: '10 & Under' },
-          { time: '2:25-3:25', cohort: '5th/6th Boys' }
+          { time: '2:20-3:20', cohort: '5th/6th Boys' }
         ];
         var root = document.getElementById('pp-admin');
         var banner = document.querySelector('.hero-banner img');

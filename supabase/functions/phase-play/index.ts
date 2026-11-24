@@ -30,10 +30,10 @@ function skillLevel(v: unknown): number | null {
 const SESSIONS = [
   { key: "d1-am", day: "Day 1, Mon Nov 23", title: "Morning session", time: "10 AM - 12 PM", who: "7th/8th Girls and the 7th/8th Boys morning group", start: "2026-11-23T10:00:00-08:00", end: "2026-11-23T12:00:00-08:00" },
   { key: "d1-pm", day: "Day 1, Mon Nov 23", title: "Afternoon session", time: "1 - 3 PM", who: "5th/6th Boys and the 7th/8th Boys afternoon group", start: "2026-11-23T13:00:00-08:00", end: "2026-11-23T15:00:00-08:00" },
-  { key: "d2-boys", day: "Day 2, Tue Nov 24", title: "7th/8th Boys round robin", time: "10:10 AM - 12:05 PM", who: "Warm-up at 10:00", start: "2026-11-24T10:00:00-08:00", end: "2026-11-24T12:05:00-08:00" },
+  { key: "d2-boys", day: "Day 2, Tue Nov 24", title: "7th/8th Boys round robin", time: "10:00 - 11:55 AM", who: "Warm-up at 9:45", start: "2026-11-24T09:45:00-08:00", end: "2026-11-24T11:55:00-08:00" },
   { key: "d2-girls", day: "Day 2, Tue Nov 24", title: "7th/8th Girls game", time: "12:10 - 1:10 PM", who: "", start: "2026-11-24T12:10:00-08:00", end: "2026-11-24T13:10:00-08:00" },
   { key: "d2-u10", day: "Day 2, Tue Nov 24", title: "10 & Under game", time: "1:15 - 2:15 PM", who: "", start: "2026-11-24T13:15:00-08:00", end: "2026-11-24T14:15:00-08:00" },
-  { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:25 - 3:25 PM", who: "", start: "2026-11-24T14:25:00-08:00", end: "2026-11-24T15:25:00-08:00" },
+  { key: "d2-56", day: "Day 2, Tue Nov 24", title: "5th/6th Boys game", time: "2:20 - 3:20 PM", who: "", start: "2026-11-24T14:20:00-08:00", end: "2026-11-24T15:20:00-08:00" },
 ];
 // Check-in at the door is Day 1 only (Day 2 games have no check-in). SESSIONS still drives Day 2 teams.
 const CHECKIN_SESSIONS = SESSIONS.filter((s) => s.key.startsWith("d1-"));
@@ -76,9 +76,9 @@ function sessionMeta(s: typeof SESSIONS[number]) {
 // kid's team and game times (my_team, via the player's private link) only once that game is published.
 const TEAM_GAMES: Record<string, { teams: number; slots?: { label: string; time: string; a: number; b: number }[] }> = {
   "d2-boys": { teams: 3, slots: [
-    { label: "Game 1", time: "10:10 - 10:45 AM", a: 1, b: 2 },
-    { label: "Game 2", time: "10:50 - 11:25 AM", a: 1, b: 3 },
-    { label: "Game 3", time: "11:30 AM - 12:05 PM", a: 2, b: 3 },
+    { label: "Game 1", time: "10:00 - 10:35 AM", a: 1, b: 2 },
+    { label: "Game 2", time: "10:40 - 11:15 AM", a: 1, b: 3 },
+    { label: "Game 3", time: "11:20 - 11:55 AM", a: 2, b: 3 },
   ] },
   "d2-girls": { teams: 2 },
   "d2-u10": { teams: 2 },

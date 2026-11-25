@@ -10,6 +10,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Check-in:      checkin_roster, check_in (public, QR code at the door; first check-in signs the releases);
 //                checkin_admin, checkin_undo (coach code)
 // Day 2 teams:   teams_admin, teams_save, teams_publish (coach code); my_team (player's private link, published only)
+// Feedback:      fb_load, fb_save (player's private link, or no link + player name); fb_admin (coach code)
 const COHORTS = ["10 & Under", "5th/6th Girls", "5th/6th Boys", "7th/8th Girls", "7th/8th Boys"];
 // 10 & Under was first called "9 & Under"; pages cached under the old name still work.
 const U10 = "10 & Under";
@@ -270,6 +271,19 @@ async function activity() {
   return { sessions: sess?.length ?? 0, players: players.size, tests: tests?.length ?? 0, feed: feed.slice(0, 6) };
 }
 
+// Post-camp feedback. The next camp offered on the form: Christmas break, Dec 21 & 22.
+const FB_NEXT_CAMP = "Christmas break camp, Dec 21 & 22";
+const FB_WORKOUTS = ["yes", "some", "no"];
+const FB_NEXT = ["yes", "maybe", "no"];
+// Families who answer Yes or Maybe for the next camp also go on next_camp_list (once per email).
+async function fbJoinList(parent: string, email: string, player: string, grade: string, choice: string) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  const note = "Feedback form: " + (choice === "yes" ? "Yes" : "Maybe") + ", " + FB_NEXT_CAMP;
+  const { data: have } = await db.from("next_camp_list").select("id").eq("email", email).like("notes", "Feedback form:%").limit(1);
+  if (have?.length) { await db.from("next_camp_list").update({ notes: note }).eq("id", have[0].id); return; }
+  await db.from("next_camp_list").insert({ parent: parent || email, email, player: player || null, grade: grade || null, notes: note, source: "feedback" });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -448,6 +462,44 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    // ---- Post-camp feedback (public page /feedback/<name>#k=<code>, or /feedback/ with no code) ----
+    if (action === "fb_load") {
+      if (!clean(body.token, 64)) return json({ player: null, answers: null, next_camp: FB_NEXT_CAMP });
+      const who = await playerForToken(body.token);
+      if (!who) { await sleep(400); return json({ error: "bad_link" }, 404); }
+      const { data } = await db.from("camp_feedback").select("rating, liked, change, workouts, next_camp, quote_ok").eq("registration_id", who.id).maybeSingle();
+      return json({ player: who.player.split(/\s+/)[0], answers: data ?? null, next_camp: FB_NEXT_CAMP });
+    }
+    if (action === "fb_save") {
+      if (clean(body.bot, 10)) return json({ ok: true });
+      const rating = Number(body.rating);
+      if (!Number.isInteger(rating) || rating < 1 || rating > 10) return json({ error: "invalid" }, 400);
+      const workouts = FB_WORKOUTS.includes(clean(body.workouts, 10)) ? clean(body.workouts, 10) : null;
+      const next = FB_NEXT.includes(clean(body.next_camp, 10)) ? clean(body.next_camp, 10) : null;
+      const row = { rating, liked: clean(body.liked, 2000) || null, change: clean(body.change, 2000) || null, workouts, next_camp: next,
+        quote_ok: body.quote_ok === true, updated_at: new Date().toISOString() };
+      if (clean(body.token, 64)) {
+        const who = await playerForToken(body.token);
+        if (!who) { await sleep(400); return json({ error: "bad_link" }, 404); }
+        const { data: r } = await db.from("registrations").select("parent, email").eq("id", who.id).maybeSingle();
+        const { error } = await db.from("camp_feedback").upsert({ ...row, registration_id: who.id, player_name: who.player, parent_name: r?.parent ?? null }, { onConflict: "registration_id" });
+        if (error) throw error;
+        if (next === "yes" || next === "maybe") await fbJoinList(r?.parent ?? "", (r?.email ?? "").toLowerCase(), who.player, who.cohort, next);
+        return json({ ok: true });
+      }
+      // No link: the parent types the player's name (and an email, if they want next-camp details).
+      const player = clean(body.player, 120);
+      if (!player) return json({ error: "invalid" }, 400);
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count } = await db.from("camp_feedback").select("id", { count: "exact", head: true }).is("registration_id", null).gte("created_at", since);
+      if ((count ?? 0) >= 40) return json({ error: "busy" }, 429);
+      const parent = clean(body.parent, 120);
+      const { error } = await db.from("camp_feedback").insert({ ...row, player_name: player, parent_name: parent || null });
+      if (error) throw error;
+      if (next === "yes" || next === "maybe") await fbJoinList(parent, clean(body.email, 200).toLowerCase(), player, "", next);
+      return json({ ok: true });
+    }
+
     // ---- Coach backend (code required) ----
     const denied = await checkCode(body.code);
     if (denied) return denied;
@@ -463,6 +515,27 @@ Deno.serve(async (req) => {
       const { data: nextList, error: nErr } = await db.from("next_camp_list").select("created_at, parent, email, phone, player, grade, notes").order("created_at", { ascending: false });
       if (nErr) throw nErr;
       return json({ registrations: regs ?? [], teams: teams ?? [], next_camp: nextList ?? [] });
+    }
+
+    if (action === "fb_admin") {
+      await ensureTokens();
+      const regs = (await checkRegs()).filter((r) => r.player);
+      const [{ data: fb, error: e1 }, { data: acc, error: e2 }, { data: info, error: e3 }] = await Promise.all([
+        db.from("camp_feedback").select("registration_id, player_name, parent_name, rating, liked, change, workouts, next_camp, quote_ok, created_at, updated_at").order("updated_at", { ascending: false }),
+        db.from("interphase_access").select("registration_id, code, active"),
+        db.from("registrations").select("id, parent, email").in("id", regs.map((r) => r.id)),
+      ]);
+      if (e1 || e2 || e3) throw e1 || e2 || e3;
+      const code: Record<string, string> = {};
+      for (const x of acc ?? []) if (x.active && x.code) code[x.registration_id] = x.code;
+      const pe: Record<string, { parent: string; email: string }> = {};
+      for (const x of info ?? []) pe[x.id] = { parent: x.parent, email: x.email };
+      const answered = new Set((fb ?? []).map((x) => x.registration_id).filter(Boolean));
+      const slug = (n: string) => n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const campers = regs.map((r) => ({ id: r.id, player: r.player, cohort: r.cohort, parent: pe[r.id]?.parent ?? "", email: pe[r.id]?.email ?? "",
+        link: code[r.id] ? "https://phaseplayhoops.com/feedback/" + slug(r.player) + "#k=" + code[r.id] : null, answered: answered.has(r.id) }))
+        .sort((a, b) => a.player.localeCompare(b.player));
+      return json({ feedback: fb ?? [], campers });
     }
 
     if (action === "checkin_admin") {

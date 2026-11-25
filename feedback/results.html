@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Feedback Results - Phase Play</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root { --ink: #161616; --ink-soft: #404040; --ink-faint: #6f6f6f; --line: #e3e3e3; --orange: #e85d04; --orange-deep: #c24e02; --orange-soft: #fbe3cf; }
+      * { box-sizing: border-box; }
+      body { margin: 0; color: var(--ink); font-family: "Barlow", system-ui, sans-serif; font-size: 16px; line-height: 1.45; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px 48px; }
+      h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 44px; line-height: .95; margin: 24px 0 12px; }
+      h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 24px; margin: 28px 0 8px; }
+      .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+      .stat { border: 1px solid var(--line); border-top: 4px solid var(--orange); border-radius: 0 0 8px 8px; padding: 10px 12px; }
+      .stat b { display: block; font-family: "Barlow Condensed", sans-serif; font-size: 34px; line-height: 1; }
+      .stat span { color: var(--ink-faint); font-size: 14px; }
+      .card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 10px; }
+      .card .top { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; }
+      .card .r { background: var(--orange); color: #fff; border-radius: 999px; padding: 0 10px; font-family: "Barlow Condensed", sans-serif; font-size: 20px; }
+      .card p { margin: 6px 0 0; color: var(--ink-soft); white-space: pre-wrap; }
+      .tag { display: inline-block; font-size: 13px; background: var(--orange-soft); border-radius: 4px; padding: 1px 6px; margin: 6px 6px 0 0; }
+      table { width: 100%; border-collapse: collapse; font-size: 15px; }
+      td, th { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+      button, input { font: inherit; }
+      input { border: 1.5px solid var(--line); border-radius: 8px; padding: 10px; width: 220px; }
+      button { border: 0; border-radius: 999px; background: var(--orange); color: #fff; padding: 8px 14px; font-weight: 700; cursor: pointer; }
+      button.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--line); padding: 4px 10px; font-size: 14px; }
+      .err { color: #b42318; font-weight: 600; }
+      .muted { color: var(--ink-faint); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <h1>Camp Feedback</h1>
+      <form id="login"><input type="password" id="code" placeholder="Coach code" autocomplete="current-password" /> <button>Open</button> <span class="err" id="err"></span></form>
+      <div id="app" hidden></div>
+    </main>
+    <script>
+      (function () {
+        var API = 'https://yubopkxclvupxbeouhiu.supabase.co/functions/v1/phase-play';
+        var app = document.getElementById('app'), err = document.getElementById('err');
+        function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+        var NEXT = { yes: 'Christmas camp: Yes', maybe: 'Christmas camp: Maybe', no: 'Christmas camp: No' };
+        var WORK = { yes: 'Workouts: Yes', some: 'Workouts: Some', no: 'Workouts: Not yet' };
+        function load(code) {
+          err.textContent = '';
+          fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fb_admin', code: code }) })
+            .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+            .then(function (r) {
+              if (!r.ok) { err.textContent = r.body.message || (r.body.error === 'wrong_code' ? 'Wrong code.' : 'Could not load.'); return; }
+              try { sessionStorage.setItem('pp-coach', code); } catch (e) {}
+              document.getElementById('login').hidden = true;
+              render(r.body);
+            })
+            .catch(function () { err.textContent = 'No connection.'; });
+        }
+        function render(d) {
+          var fb = d.feedback, n = fb.length;
+          var avg = n ? (fb.reduce(function (s, x) { return s + x.rating; }, 0) / n).toFixed(1) : '–';
+          var prom = fb.filter(function (x) { return x.rating >= 9; }).length, det = fb.filter(function (x) { return x.rating <= 6; }).length;
+          var nps = n ? Math.round((prom - det) / n * 100) : '–';
+          var yes = fb.filter(function (x) { return x.next_camp === 'yes'; }).length, maybe = fb.filter(function (x) { return x.next_camp === 'maybe'; }).length;
+          var waiting = d.campers.filter(function (c) { return !c.answered; });
+          var h = '<div class="stats">' +
+            '<div class="stat"><b>' + n + '</b><span>responses of ' + d.campers.length + ' campers</span></div>' +
+            '<div class="stat"><b>' + avg + '</b><span>average rating</span></div>' +
+            '<div class="stat"><b>' + nps + '</b><span>NPS (9–10 minus 1–6)</span></div>' +
+            '<div class="stat"><b>' + yes + ' / ' + maybe + '</b><span>Christmas camp yes / maybe</span></div></div>';
+          h += '<h2>Answers</h2>' + (n ? '' : '<p class="muted">No answers yet.</p>');
+          fb.forEach(function (x) {
+            h += '<div class="card"><div class="top"><span>' + esc(x.player_name) + (x.parent_name ? ' <span class="muted">· ' + esc(x.parent_name) + '</span>' : '') + (x.registration_id ? '' : ' <span class="muted">(no link)</span>') + '</span><span class="r">' + x.rating + '</span></div>' +
+              (x.liked ? '<p><b>Liked:</b> ' + esc(x.liked) + '</p>' : '') + (x.change ? '<p><b>Change:</b> ' + esc(x.change) + '</p>' : '') +
+              (x.workouts ? '<span class="tag">' + WORK[x.workouts] + '</span>' : '') + (x.next_camp ? '<span class="tag">' + NEXT[x.next_camp] + '</span>' : '') +
+              '<span class="tag">' + (x.quote_ok ? 'OK to share' : 'Do not share') + '</span></div>';
+          });
+          h += '<h2>Not answered yet (' + waiting.length + ')</h2><table><tr><th>Player</th><th>Parent</th><th>Link</th></tr>';
+          waiting.forEach(function (c) {
+            h += '<tr><td>' + esc(c.player) + '<br><span class="muted">' + esc(c.cohort) + '</span></td><td>' + esc(c.parent) + '<br><span class="muted">' + esc(c.email) + '</span></td><td>' +
+              (c.link ? '<button class="ghost" data-link="' + esc(c.link) + '">Copy link</button>' : '<span class="muted">no link</span>') + '</td></tr>';
+          });
+          h += '</table>';
+          app.innerHTML = h; app.hidden = false;
+        }
+        app.addEventListener('click', function (e) {
+          var b = e.target.closest('[data-link]'); if (!b) return;
+          navigator.clipboard.writeText(b.getAttribute('data-link')).then(function () { b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy link'; }, 1500); });
+        });
+        document.getElementById('login').addEventListener('submit', function (e) { e.preventDefault(); load(document.getElementById('code').value.trim()); });
+        try { var saved = sessionStorage.getItem('pp-coach'); if (saved) load(saved); } catch (e) {}
+      })();
+    </script>
+  </body>
+</html>

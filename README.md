@@ -44,3 +44,11 @@ Form submissions will appear in Netlify under Site settings > Forms.
 - Rank players 1–N: drag the ≡ handle (desktop), type a number, or use ▲▼ (phone). **Snake draft** deals teams in rank order 1-2-3, 3-2-1, … (3 teams for the 7th/8th Boys round robin, 2 for the other games). Move players by dragging between teams or with the T1/T2/T3 picker. **Save**, then **Publish to parents**.
 - Data: `game_ranks`, `game_teams`, `game_publish` (RLS on, no policies; edge function actions `teams_admin`, `teams_save`, `teams_publish`).
 - Parents: each family's private link `phaseplayhoops.com/team/<name>#k=<code>` (same code as the player's Interphase link; copy it from "Parent team links" on each card). `my_team` shows only that player's own team and game times, and only for published games. The round robin shows the two games that team plays and the opponent.
+
+## Post-camp feedback
+
+- Family page: `phaseplayhoops.com/feedback/<name>#k=<code>` (same code as the player's Interphase link), so answers are tied to the player. `/feedback/` with no code asks for the player's name instead.
+- Six questions: 1–10 recommend rating, what they liked, what to change, Interphase workouts at home (yes / some / no), next camp (Christmas break camp, Dec 21 & 22: yes / maybe / no), OK to share comments.
+- Yes or Maybe for the next camp also adds the family to `next_camp_list` (source `feedback`, once per email).
+- Coach view: `phaseplayhoops.com/feedback/results.html` (coach code). Shows average rating, NPS, every answer, and who hasn't answered yet with a Copy link button.
+- Data: `camp_feedback` (RLS on, no policies; edge function actions `fb_load`, `fb_save`, `fb_admin`). The next-camp wording is `FB_NEXT_CAMP` in the edge function.

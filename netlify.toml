@@ -19,3 +19,10 @@
   from = "/team/*"
   to = "/team/index.html"
   status = 200
+
+# Post-camp feedback: /feedback/billy-nunes#k=CODE ties answers to that player (same code as the Interphase link).
+# /feedback/ with no code asks for the player's name. /feedback/results.html is the coach view (real file, not redirected).
+[[redirects]]
+  from = "/feedback/*"
+  to = "/feedback/index.html"
+  status = 200

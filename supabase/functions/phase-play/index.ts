@@ -284,6 +284,48 @@ async function fbJoinList(parent: string, email: string, player: string, grade: 
   await db.from("next_camp_list").insert({ parent: parent || email, email, player: player || null, grade: grade || null, notes: note, source: "feedback" });
 }
 
+// Email to Coach Michael for every saved feedback (Resend). Needs the secrets RESEND_API_KEY and FB_NOTIFY_TO
+// (the inbox to send to). RESEND_FROM is optional (defaults to Resend's sandbox sender until
+// phaseplayhoops.com is verified in Resend). Never throws: a failed email must not fail the parent's submit.
+async function fbNotify(f: { player: string; parent: string; email: string; rating: number; liked: string | null; change: string | null;
+  workouts: string | null; next_camp: string | null; quote_ok: boolean }) {
+  try {
+    const key = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
+    const to = (Deno.env.get("FB_NOTIFY_TO") ?? "").trim();
+    if (!key || !to) { console.error("fbNotify: RESEND_API_KEY or FB_NOTIFY_TO not set"); return; }
+    const from = (Deno.env.get("RESEND_FROM") ?? "").trim() || "Phase Play Feedback <onboarding@resend.dev>";
+    const work = { yes: "Yes", some: "Some", no: "Not yet" } as Record<string, string>;
+    const next = { yes: "Yes", maybe: "Maybe", no: "Not this time" } as Record<string, string>;
+    const lines = [
+      ...(f.next_camp === "yes" ? ["WANTS A SPOT — December camp Dec 21-22", ""] : []),
+      "Player: " + f.player,
+      "Parent: " + (f.parent || "(not given)"),
+      "Parent email: " + (f.email || "(not on file)"),
+      "",
+      "Recommend rating: " + f.rating + "/10",
+      "",
+      "What they liked most:",
+      f.liked || "(blank)",
+      "",
+      "What to change / do better:",
+      f.change || "(blank)",
+      "",
+      "Interphase workouts at home: " + (f.workouts ? work[f.workouts] : "(no answer)"),
+      "Next camp, Dec 21-22: " + (f.next_camp ? next[f.next_camp] : "(no answer)"),
+      "OK to share comments publicly: " + (f.quote_ok ? "Yes" : "No"),
+    ];
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject: "Phase Play feedback: " + f.player + " — " + f.rating + "/10", text: lines.join("\n") }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) console.error("fbNotify: Resend " + res.status + " " + (await res.text()).slice(0, 300));
+  } catch (e) {
+    console.error("fbNotify failed", e);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
@@ -485,6 +527,7 @@ Deno.serve(async (req) => {
         const { error } = await db.from("camp_feedback").upsert({ ...row, registration_id: who.id, player_name: who.player, parent_name: r?.parent ?? null }, { onConflict: "registration_id" });
         if (error) throw error;
         if (next === "yes" || next === "maybe") await fbJoinList(r?.parent ?? "", (r?.email ?? "").toLowerCase(), who.player, who.cohort, next);
+        await fbNotify({ ...row, player: who.player, parent: r?.parent ?? "", email: r?.email ?? "" });
         return json({ ok: true });
       }
       // No link: the parent types the player's name (and an email, if they want next-camp details).
@@ -497,6 +540,7 @@ Deno.serve(async (req) => {
       const { error } = await db.from("camp_feedback").insert({ ...row, player_name: player, parent_name: parent || null });
       if (error) throw error;
       if (next === "yes" || next === "maybe") await fbJoinList(parent, clean(body.email, 200).toLowerCase(), player, "", next);
+      await fbNotify({ ...row, player, parent, email: clean(body.email, 200).toLowerCase() });
       return json({ ok: true });
     }
 

@@ -52,3 +52,4 @@ Form submissions will appear in Netlify under Site settings > Forms.
 - Yes or Maybe for the next camp also adds the family to `next_camp_list` (source `feedback`, once per email).
 - Coach view: `phaseplayhoops.com/feedback/results.html` (coach code). Shows average rating, NPS, every answer, and who hasn't answered yet with a Copy link button.
 - Data: `camp_feedback` (RLS on, no policies; edge function actions `fb_load`, `fb_save`, `fb_admin`). The next-camp wording is `FB_NEXT_CAMP` in the edge function.
+- Email alert: every saved feedback emails Coach Michael through Resend (`fbNotify` in the edge function). Needs the Supabase secrets `RESEND_API_KEY` and `FB_NOTIFY_TO` (the inbox); optional `RESEND_FROM` (defaults to Resend's sandbox sender `onboarding@resend.dev` until phaseplayhoops.com is verified in Resend). A failed email is logged and never fails the parent's submit. A "Yes" for the next camp puts a WANTS A SPOT line at the top.

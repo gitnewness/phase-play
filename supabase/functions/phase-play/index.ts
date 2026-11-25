@@ -291,7 +291,9 @@ async function fbNotify(f: { player: string; parent: string; email: string; rati
   workouts: string | null; next_camp: string | null; quote_ok: boolean }) {
   try {
     const key = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
-    const to = (Deno.env.get("FB_NOTIFY_TO") ?? "").trim();
+    // Tolerates quotes, spaces, "mailto:" and "Name <addr>" in the secret.
+    const raw = (Deno.env.get("FB_NOTIFY_TO") ?? "").trim();
+    const to = ((raw.match(/[^\s<>"'`:,;]+@[^\s<>"'`:,;]+/) ?? [""])[0]).toLowerCase();
     if (!key || !to) { console.error("fbNotify: RESEND_API_KEY or FB_NOTIFY_TO not set"); return; }
     const from = (Deno.env.get("RESEND_FROM") ?? "").trim() || "Phase Play Feedback <onboarding@resend.dev>";
     const work = { yes: "Yes", some: "Some", no: "Not yet" } as Record<string, string>;
@@ -320,7 +322,10 @@ async function fbNotify(f: { player: string; parent: string; email: string; rati
       body: JSON.stringify({ from, to: [to], subject: "Phase Play feedback: " + f.player + " — " + f.rating + "/10", text: lines.join("\n") }),
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) console.error("fbNotify: Resend " + res.status + " " + (await res.text()).slice(0, 300));
+    // Masked recipient in the log (first letter, length, domain) so a wrong secret can be spotted.
+    const masked = to.charAt(0) + "*(" + to.split("@")[0].length + ")@" + (to.split("@")[1] ?? "") + " raw_len=" + raw.length;
+    if (!res.ok) console.error("fbNotify: Resend " + res.status + " to=" + masked + " " + (await res.text()).slice(0, 300));
+    else console.log("fbNotify: sent to=" + masked);
   } catch (e) {
     console.error("fbNotify failed", e);
   }

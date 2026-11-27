@@ -30,6 +30,23 @@
       .slots b { font-weight: 700; }
       .wait { margin-top: 10px; color: var(--ink-faint); }
       .err { color: #b42318; font-weight: 600; margin-top: 18px; }
+      .res-h { font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 30px; line-height: 1; margin: 34px 0 0; }
+      .res-sub { color: var(--ink-faint); margin: 4px 0 0; font-size: 15px; }
+      .vp { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px 14px; background: var(--orange-soft); border-radius: 10px; }
+      .vp-n { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 44px; line-height: 1; color: var(--orange-deep); }
+      .vp-l { font-weight: 700; font-size: 15px; line-height: 1.2; }
+      .vp-l small { display: block; font-weight: 500; color: var(--ink-soft); }
+      .grade { margin-left: auto; text-align: center; background: var(--orange); color: #fff; border-radius: 10px; padding: 6px 12px; }
+      .grade b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 26px; line-height: 1; }
+      .grade span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+      .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+      .badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; background: #161616; color: #fff; font-weight: 700; font-size: 14px; }
+      .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+      .stat { background: #fff; padding: 9px 10px; box-shadow: 0 0 0 .5px var(--line); }
+      .stat b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 24px; line-height: 1.05; }
+      .stat span { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); }
+      .stat small { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+      .film { display: block; margin-top: 14px; padding: 13px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 17px; }
       footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-faint); }
       footer a { color: var(--ink); }
     </style>
@@ -55,6 +72,57 @@
           Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); });
           (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
           return n;
+        }
+        // Day 2 results: one card per game, in game order (stats, Value Points + grade, badges, film).
+        var BADGE = { 'Bucket Getter': '\uD83E\uDEA3', 'Board Hog': '\uD83D\uDC17', 'Dime Dealer': '\uD83E\uDE99', 'Ball Thief': '\uD83E\uDD77',
+          'No Fly Zone': '\uD83D\uDEAB', 'Brick Wall': '\uD83E\uDDF1', 'Disruptor': '\uD83D\uDCA5', 'Hustle Hero': '\uD83D\uDD25',
+          'Sniper': '\uD83C\uDFAF', 'Downtown': '\uD83C\uDF07', 'Automatic': '\uD83E\uDD16' };
+        function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+        function pct(m, a) { return a > 0 ? Math.round((m / a) * 100) + '%' : ''; }
+        function stat(label, value, extra) {
+          return el('div', { class: 'stat' }, [el('b', { text: String(value) }), el('span', { text: label }), extra ? el('small', { text: ' ' + extra }) : null]);
+        }
+        function showResults(list) {
+          if (!list.length) return;
+          app.appendChild(el('h2', { class: 'res-h', text: 'Results' }));
+          app.appendChild(el('p', { class: 'res-sub', text: 'Game stats, Value Points, badges and game film.' }));
+          list.forEach(function (g) {
+            var r = g.result, s = r.stats || {};
+            var vp = num(r.value_points), grade = Math.round(num(r.grade));
+            var card = el('section', { class: 'card' }, [
+              el('div', { class: 'day', text: g.day }),
+              el('h2', { text: g.title }),
+              el('p', { text: g.time }),
+              el('div', { class: 'vp' }, [
+                el('div', { class: 'vp-n', text: String(vp) }),
+                el('div', { class: 'vp-l' }, ['Value Points', el('small', { text: grade === 100 ? 'Top in the game' : "of the game's top" })]),
+                el('div', { class: 'grade' }, [el('b', { text: grade + '%' }), el('span', { text: 'Grade' })])
+              ])
+            ]);
+            var badges = (r.badges || []).filter(function (x) { return typeof x === 'string' && x; });
+            if (badges.length) card.appendChild(el('div', { class: 'badges' }, badges.map(function (x) {
+              return el('span', { class: 'badge' }, [BADGE[x] ? el('span', { 'aria-hidden': 'true', text: BADGE[x] }) : null, x]);
+            })));
+            var fgm = num(s.fgm), fga = num(s.fga), tpm = num(s.tpm), tpa = num(s.tpa), ftm = num(s.ftm), fta = num(s.fta);
+            card.appendChild(el('div', { class: 'stats' }, [
+              stat('Points', num(s.pts)),
+              stat('FG', fgm + '/' + fga, pct(fgm, fga)),
+              stat('3PT', tpm + '/' + tpa, pct(tpm, tpa)),
+              stat('FT', ftm + '/' + fta, pct(ftm, fta)),
+              stat('Rebounds', num(s.reb)),
+              stat('Assists', num(s.ast)),
+              stat('Steals', num(s.stl)),
+              stat('Blocks', num(s.blk)),
+              stat('Deflections', num(s.defl)),
+              stat('Hustle', num(s.hustle)),
+              num(s.chg) ? stat('Charges', num(s.chg)) : null,
+              stat('Turnovers', num(s.to))
+            ]));
+            if (typeof r.film_url === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(r.film_url)) {
+              card.appendChild(el('a', { class: 'film', href: r.film_url, target: '_blank', rel: 'noopener noreferrer', text: '\u25B6 Watch game film' }));
+            }
+            app.appendChild(card);
+          });
         }
         var m = /[#&]k=([A-Za-z0-9]+)/.exec(location.hash || '');
         if (!m) { lede.textContent = ''; app.appendChild(el('p', { class: 'err', text: 'This link is missing its code. Please use the full link Coach Michael sent you.' })); return; }
@@ -84,6 +152,7 @@
               }
               app.appendChild(card);
             });
+            showResults(b.games.filter(function (g) { return g.result; }));
           })
           .catch(function () { lede.textContent = ''; app.appendChild(el('p', { class: 'err', text: 'No connection. Please try again.' })); });
       })();

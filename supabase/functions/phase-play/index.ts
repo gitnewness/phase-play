@@ -382,10 +382,14 @@ Deno.serve(async (req) => {
       const { data: r } = await db.from("registrations").select("id, player, cohort, signup_type, day1_group, extra_sessions, status").eq("id", who.id).maybeSingle();
       if (!r || r.status !== "active") return json({ error: "bad_link" }, 404);
       const keys = Object.keys(TEAM_GAMES).filter((k) => inSession(r as CheckReg, k));
-      const [{ data: pub }, { data: tm }] = await Promise.all([
+      const [{ data: pub }, { data: tm }, { data: res }] = await Promise.all([
         db.from("game_publish").select("game, published").in("game", keys.length ? keys : ["-"]),
         db.from("game_teams").select("game, team").eq("registration_id", r.id),
+        db.from("game_results").select("game, stats, value_points, grade, badges, film_url").eq("registration_id", r.id),
       ]);
+      // Day 2 results (stats, Value Points, grade, badges, film): this player's own rows only.
+      const resultOf: Record<string, unknown> = {};
+      for (const x of res ?? []) resultOf[x.game] = { stats: x.stats ?? {}, value_points: Number(x.value_points), grade: Number(x.grade), badges: x.badges ?? [], film_url: x.film_url ?? null };
       const isPub = new Set((pub ?? []).filter((x) => x.published).map((x) => x.game));
       const teamOf: Record<string, number> = {};
       for (const t of tm ?? []) teamOf[t.game] = t.team;
@@ -395,7 +399,7 @@ Deno.serve(async (req) => {
         const slots = team && TEAM_GAMES[k].slots
           ? TEAM_GAMES[k].slots!.filter((g) => g.a === team || g.b === team).map((g) => ({ label: g.label, time: g.time, opponent: "Team " + (g.a === team ? g.b : g.a) }))
           : [];
-        return { key: k, title: s.title, day: s.day, time: s.time, who: s.who, published: isPub.has(k) && !!team, team: team ? "Team " + team : null, slots };
+        return { key: k, title: s.title, day: s.day, time: s.time, who: s.who, published: isPub.has(k) && !!team, team: team ? "Team " + team : null, slots, result: resultOf[k] ?? null };
       });
       return json({ player: r.player.split(/\s+/)[0], games });
     }

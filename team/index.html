@@ -145,7 +145,7 @@
             // VP rank on the team and overall in the game; each box shows only for a top-5 place.
             // Coach's note: one line from Coach Michael, saved as stats.coach_note. Shown only when set.
             if (typeof s.coach_note === 'string' && s.coach_note.trim()) {
-              card.appendChild(el('div', { class: 'note' }, [el('span', { text: "Coach's note" }), el('p', { text: s.coach_note.trim() })]));
+              card.appendChild(el('div', { class: 'note' }, [el('span', { text: 'A note from Coach Michael' }), el('p', { text: s.coach_note.trim() })]));
             }
             var rboxes = [['Team VP rank', s.team_rank, s.team_of], ['Overall VP rank', s.rank, s.of]].filter(function (x) {
               return num(x[1]) >= 1 && num(x[1]) <= 5;

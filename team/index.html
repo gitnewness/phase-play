@@ -40,6 +40,10 @@
       .grade b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 21px; line-height: 1.05; }
       .grade span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
       .focus { margin: 10px 0 0; padding: 10px 12px; border-left: 4px solid var(--orange); background: #fafafa; font-weight: 600; font-size: 15px; color: var(--ink); }
+      .rank-h { margin: 14px 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-faint); }
+      .ranks { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+      .ranks li { display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 11px; border-radius: 999px; border: 1.5px solid var(--orange); font-weight: 700; font-size: 14px; }
+      .ranks b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 17px; color: var(--orange-deep); }
       .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
       .badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; background: #161616; color: #fff; font-weight: 700; font-size: 14px; }
       .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -95,6 +99,16 @@
           var what = best.n === 1 ? 'one more ' + best.h[2] : best.n + ' more ' + best.h[3];
           return 'Next focus: ' + best.h[4] + ' \u2014 ' + what + " and you're " + next[1] + '.';
         }
+        // Where you rank: saved per game as stats.ranks {pts: 1, reb: 'T3', ...} (T = tied). Only top-5 places show.
+        var RANK_CATS = [['pts', 'Points'], ['reb', 'Rebounds'], ['ast', 'Assists'], ['stl', 'Steals'], ['blk', 'Blocks'], ['chg', 'Charges'],
+          ['defl', 'Deflections'], ['hustle', 'Hustle plays'], ['tpm', '3-point makes'], ['fg', 'FG%'], ['ft', 'FT%']];
+        function rankList(ranks) {
+          if (!ranks || typeof ranks !== 'object') return [];
+          return RANK_CATS.map(function (c, i) {
+            var m = /^(T?)(\d+)$/.exec(String(ranks[c[0]] == null ? '' : ranks[c[0]]));
+            return m && +m[2] >= 1 && +m[2] <= 5 ? { n: +m[2], tie: !!m[1], label: c[1], i: i } : null;
+          }).filter(Boolean).sort(function (a, b) { return a.n - b.n || a.i - b.i; });
+        }
         function showResults(list) {
           if (!list.length) return;
           app.appendChild(el('h2', { class: 'res-h', text: 'Results' }));
@@ -115,6 +129,13 @@
             ]);
             if (isTop) card.appendChild(el('p', { class: 'focus', text: 'Top Value Points in this game' }));
             else if (li > 0 && top > 0) card.appendChild(el('p', { class: 'focus', text: focusLine(vp, top, li) }));
+            var ranked = rankList(s.ranks);
+            if (ranked.length) {
+              card.appendChild(el('p', { class: 'rank-h', text: 'Where you rank' }));
+              card.appendChild(el('ul', { class: 'ranks' }, ranked.map(function (x) {
+                return el('li', {}, [el('b', { text: (x.tie ? 'T-' : '#') + x.n }), x.label]);
+              })));
+            }
             var badges = (r.badges || []).filter(function (x) { return typeof x === 'string' && x; });
             if (badges.length) card.appendChild(el('div', { class: 'badges' }, badges.map(function (x) {
               return el('span', { class: 'badge' }, [BADGE[x] ? el('span', { 'aria-hidden': 'true', text: BADGE[x] }) : null, x]);

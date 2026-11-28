@@ -46,8 +46,11 @@
       .ladder li.now { background: var(--orange); color: #fff; }
       .ladder li.next { background: #fff; color: var(--orange-deep); box-shadow: inset 0 0 0 1.5px var(--orange); }
       .ladder small { display: block; margin-top: 2px; font-size: 9px; letter-spacing: .08em; opacity: .85; }
-      .rank { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; padding: 10px 12px; border: 1.5px solid var(--orange); border-radius: 10px; font-weight: 700; font-size: 15px; }
-      .rank b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 26px; line-height: 1; color: var(--orange-deep); }
+      .ranks2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+      .rank { padding: 9px 12px; border: 1.5px solid var(--orange); border-radius: 10px; }
+      .rank span { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; color: var(--ink-faint); }
+      .rank b { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 28px; line-height: 1.05; color: var(--orange-deep); }
+      .rank small { margin-left: 5px; font-weight: 700; font-size: 14px; color: var(--ink-soft); }
       .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
       .badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; background: #161616; color: #fff; font-weight: 700; font-size: 14px; }
       .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -109,7 +112,6 @@
           var what = (WORDS[best.n] || best.n) + ' more ' + (best.n === 1 ? best.h[2] : best.h[3]);
           return 'Next focus: ' + best.h[4] + ' \u2014 ' + what + " and you're " + next[1] + '.';
         }
-        // Where you rank: Value Points place in that game, saved as stats.rank / stats.of. Shown only for top 5.
         function showResults(list) {
           if (!list.length) return;
           app.appendChild(el('h2', { class: 'res-h', text: 'Results' }));
@@ -135,10 +137,13 @@
             })));
             if (isTop) card.appendChild(el('p', { class: 'focus', text: 'Top Value Points in this game' }));
             else if (li > 0 && top > 0) card.appendChild(el('p', { class: 'focus', text: focusLine(vp, top, li) }));
-            var rk = num(s.rank), of = num(s.of);
-            if (rk >= 1 && rk <= 5) {
-              card.appendChild(el('div', { class: 'rank' }, [el('b', { text: '#' + rk }), el('span', { text: (of ? 'of ' + of + ' ' : '') + 'in Value Points this game' })]));
-            }
+            // VP rank on the team and overall in the game; each box shows only for a top-5 place.
+            var rboxes = [['Team VP rank', s.team_rank, s.team_of], ['Overall VP rank', s.rank, s.of]].filter(function (x) {
+              return num(x[1]) >= 1 && num(x[1]) <= 5;
+            }).map(function (x) {
+              return el('div', { class: 'rank' }, [el('span', { text: x[0] }), el('b', { text: '#' + num(x[1]) }), num(x[2]) ? el('small', { text: 'of ' + num(x[2]) }) : null]);
+            });
+            if (rboxes.length) card.appendChild(el('div', { class: 'ranks2' }, rboxes));
             var badges = (r.badges || []).filter(function (x) { return typeof x === 'string' && x; });
             if (badges.length) card.appendChild(el('div', { class: 'badges' }, badges.map(function (x) {
               return el('span', { class: 'badge' }, [BADGE[x] ? el('span', { 'aria-hidden': 'true', text: BADGE[x] }) : null, x]);

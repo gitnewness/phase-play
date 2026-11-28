@@ -60,6 +60,9 @@
       .stat small { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
       .stat { position: relative; }
       .stat i { position: absolute; top: 7px; right: 7px; font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .02em; padding: 2px 6px; border-radius: 999px; background: var(--orange); color: #fff; }
+      .key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-soft); }
+      .key i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: var(--orange); color: #fff; margin-right: 4px; }
+      .key em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); margin-right: 4px; }
       .stat em { display: block; margin-top: 3px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); }
       .stat em.minus { color: var(--ink-faint); }
       .film { display: block; margin-top: 14px; padding: 13px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 17px; }
@@ -171,6 +174,10 @@
               num(s.chg) ? stat('Charges', num(s.chg), '', v('chg'), cr.chg) : null,
               stat('Turnovers', num(s.to), '', toVp)
             ]));
+            // Key so families can read the tags: top-3 place, and the Value Points each stat earned.
+            var key = [el('span', {}, [el('em', { text: '+5 VP' }), 'Value Points that stat earned'])];
+            if (Object.keys(cr).length) key.unshift(el('span', {}, [el('i', { text: '#1' }), 'Top 3 in the game for that stat (T = tie)']));
+            card.appendChild(el('div', { class: 'key' }, key));
             if (typeof r.film_url === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(r.film_url)) {
               card.appendChild(el('a', { class: 'film', href: r.film_url, target: '_blank', rel: 'noopener noreferrer', text: '\u25B6 Watch game film' }));
             }

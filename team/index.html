@@ -63,6 +63,7 @@
       .key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-soft); }
       .key i { font-style: normal; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 999px; background: var(--orange); color: #fff; margin-right: 4px; }
       .key em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); margin-right: 4px; }
+      .stat i.ovr, .key i.ovr { background: #1f8a3b; }
       .stat em { display: block; margin-top: 3px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); }
       .stat em.minus { color: var(--ink-faint); }
       .film { display: block; margin-top: 14px; padding: 13px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 17px; }
@@ -99,10 +100,13 @@
         function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
         function pct(m, a) { return a > 0 ? Math.round((m / a) * 100) + '%' : ''; }
         // vp: this stat's share of Value Points, shown as a small "+10 VP" line (left off when 0).
-        // rank: this stat's place in the game (from stats.cat_ranks, top 3 only), e.g. 1 or 'T2'.
-        function stat(label, value, extra, vp, rank) {
-          var v = Math.round(num(vp) * 10) / 10, m = /^(T?)([123])$/.exec(rank == null ? '' : String(rank));
-          return el('div', { class: 'stat' }, [m ? el('i', { title: 'Place in this game', text: (m[1] ? 'T-' : '#') + m[2] }) : null, el('b', { text: String(value) }), el('span', { text: label }), extra ? el('small', { text: ' ' + extra }) : null,
+        // Place bubble: green = top 3 in the whole game (stats.cat_ranks), else orange = top 3 on the team (cat_ranks_team).
+        var cr = {}, crt = {};
+        function place(r) { var m = /^(T?)([123])$/.exec(r == null ? '' : String(r)); return m ? (m[1] ? 'T-' : '#') + m[2] : ''; }
+        function stat(label, value, extra, vp, k) {
+          var v = Math.round(num(vp) * 10) / 10, o = k ? place(cr[k]) : '', t = k && !o ? place(crt[k]) : '';
+          var tag = o ? el('i', { class: 'ovr', title: 'Top 3 in the game', text: o }) : t ? el('i', { title: 'Top 3 on the team', text: t }) : null;
+          return el('div', { class: 'stat' }, [tag, el('b', { text: String(value) }), el('span', { text: label }), extra ? el('small', { text: ' ' + extra }) : null,
             v ? el('em', v < 0 ? { class: 'minus', text: '\u2212' + (-v) + ' VP' } : { text: '+' + v + ' VP' }) : null]);
         }
         // Level = player's VP / top VP in that game (exact ratio, never shown as a percentage).
@@ -155,28 +159,30 @@
               return el('span', { class: 'badge' }, [BADGE[x] ? el('span', { 'aria-hidden': 'true', text: BADGE[x] }) : null, x]);
             })));
             var fgm = num(s.fgm), fga = num(s.fga), tpm = num(s.tpm), tpa = num(s.tpa), ftm = num(s.ftm), fta = num(s.fta);
-            var cr = (s.cat_ranks && typeof s.cat_ranks === 'object') ? s.cat_ranks : {};
+            cr = (s.cat_ranks && typeof s.cat_ranks === 'object') ? s.cat_ranks : {};
+            crt = (s.cat_ranks_team && typeof s.cat_ranks_team === 'object') ? s.cat_ranks_team : {};
             var W = { pts: 1, reb: 2, ast: 2.5, stl: 3, chg: 5, blk: 2.5, defl: 1, hustle: 1 }, plus = 0;
             Object.keys(W).forEach(function (k) { plus += num(s[k]) * W[k]; });
             var toVp = num(s.to) ? Math.min(0, vp - plus) : 0; // turnover cost = whatever the game's tier took off
             function v(k) { return num(s[k]) * W[k]; }
             card.appendChild(el('div', { class: 'stats' }, [
-              stat('Points', num(s.pts), '', v('pts'), cr.pts),
-              stat('FG', fgm + '/' + fga, pct(fgm, fga), 0, cr.fg),
-              stat('3PT', tpm + '/' + tpa, pct(tpm, tpa), 0, cr.tpm),
-              stat('FT', ftm + '/' + fta, pct(ftm, fta), 0, cr.ft),
-              stat('Rebounds', num(s.reb), '', v('reb'), cr.reb),
-              stat('Assists', num(s.ast), '', v('ast'), cr.ast),
-              stat('Steals', num(s.stl), '', v('stl'), cr.stl),
-              stat('Blocks', num(s.blk), '', v('blk'), cr.blk),
-              stat('Deflections', num(s.defl), '', v('defl'), cr.defl),
-              stat('Hustle', num(s.hustle), '', v('hustle'), cr.hustle),
-              num(s.chg) ? stat('Charges', num(s.chg), '', v('chg'), cr.chg) : null,
+              stat('Points', num(s.pts), '', v('pts'), 'pts'),
+              stat('FG', fgm + '/' + fga, pct(fgm, fga), 0, 'fg'),
+              stat('3PT', tpm + '/' + tpa, pct(tpm, tpa), 0, 'tpm'),
+              stat('FT', ftm + '/' + fta, pct(ftm, fta), 0, 'ft'),
+              stat('Rebounds', num(s.reb), '', v('reb'), 'reb'),
+              stat('Assists', num(s.ast), '', v('ast'), 'ast'),
+              stat('Steals', num(s.stl), '', v('stl'), 'stl'),
+              stat('Blocks', num(s.blk), '', v('blk'), 'blk'),
+              stat('Deflections', num(s.defl), '', v('defl'), 'defl'),
+              stat('Hustle', num(s.hustle), '', v('hustle'), 'hustle'),
+              num(s.chg) ? stat('Charges', num(s.chg), '', v('chg'), 'chg') : null,
               stat('Turnovers', num(s.to), '', toVp)
             ]));
             // Key so families can read the tags: top-3 place, and the Value Points each stat earned.
             var key = [el('span', {}, [el('em', { text: '+5 VP' }), 'Value Points that stat earned'])];
-            if (Object.keys(cr).length) key.unshift(el('span', {}, [el('i', { text: '#1' }), 'Top 3 in the game for that stat (T = tie)']));
+            if (Object.keys(crt).length && Object.keys(crt).some(function (k) { return !cr[k]; })) key.unshift(el('span', {}, [el('i', { text: '#1' }), 'Top 3 on your team']));
+            if (Object.keys(cr).length) key.unshift(el('span', {}, [el('i', { class: 'ovr', text: '#1' }), 'Top 3 in the whole game (T = tie)']));
             card.appendChild(el('div', { class: 'key' }, key));
             if (typeof r.film_url === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(r.film_url)) {
               card.appendChild(el('a', { class: 'film', href: r.film_url, target: '_blank', rel: 'noopener noreferrer', text: '\u25B6 Watch game film' }));

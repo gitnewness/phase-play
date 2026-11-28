@@ -60,10 +60,6 @@
       .stat small { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
       .key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-soft); }
       .key em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); margin-right: 4px; }
-      .card .tt-h { margin: 18px 0 0; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 20px; line-height: 1; color: var(--ink); }
-      .card .tt-score { margin: 2px 0 0; font-weight: 700; font-size: 15px; }
-      .stats.tstats .stat { background: #fafafa; }
-      .stats.tstats .stat b { font-size: 20px; }
       .stat em { display: block; margin-top: 3px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); }
       .stat em.minus { color: var(--ink-faint); }
       .film { display: block; margin-top: 14px; padding: 13px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 17px; }
@@ -174,27 +170,6 @@
               stat('Turnovers', num(s.to), '', toVp)
             ]));
             card.appendChild(el('div', { class: 'key' }, [el('span', {}, [el('em', { text: '+5 VP' }), 'Value Points that stat earned'])]));
-            // Team totals for this game (no teammate names), with the final score.
-            var tt = s.team_totals;
-            if (tt && typeof tt === 'object') {
-              var us = num(tt.pts), them = num(tt.opp_pts);
-              card.appendChild(el('p', { class: 'tt-h', text: 'Team ' + num(tt.team) + ' totals' }));
-              card.appendChild(el('p', { class: 'tt-score', text: (us > them ? 'Won ' : us < them ? 'Lost ' : 'Tied ') + us + '\u2013' + them }));
-              card.appendChild(el('div', { class: 'stats tstats' }, [
-                stat('Points', us),
-                stat('FG', num(tt.fgm) + '/' + num(tt.fga), pct(num(tt.fgm), num(tt.fga))),
-                stat('3PT', num(tt.tpm) + '/' + num(tt.tpa), pct(num(tt.tpm), num(tt.tpa))),
-                stat('FT', num(tt.ftm) + '/' + num(tt.fta), pct(num(tt.ftm), num(tt.fta))),
-                stat('Rebounds', num(tt.reb)),
-                stat('Assists', num(tt.ast)),
-                stat('Steals', num(tt.stl)),
-                stat('Blocks', num(tt.blk)),
-                stat('Deflections', num(tt.defl)),
-                stat('Hustle', num(tt.hustle)),
-                num(tt.chg) ? stat('Charges', num(tt.chg)) : null,
-                stat('Turnovers', num(tt.to))
-              ]));
-            }
             if (typeof r.film_url === 'string' && /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(r.film_url)) {
               card.appendChild(el('a', { class: 'film', href: r.film_url, target: '_blank', rel: 'noopener noreferrer', text: '\u25B6 Watch game film' }));
             }

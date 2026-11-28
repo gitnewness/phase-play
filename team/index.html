@@ -60,6 +60,9 @@
       .stat small { font-size: 13px; color: var(--ink-soft); font-weight: 600; }
       .key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-soft); }
       .key em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); margin-right: 4px; }
+      .note { margin: 12px 0 0; padding: 12px 14px; border-radius: 10px; background: #161616; color: #fff; }
+      .card .note p { margin: 0; color: #fff; font-size: 16px; font-weight: 500; line-height: 1.4; }
+      .note span { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: #ffb27a; }
       .stat em { display: block; margin-top: 3px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--orange-deep); }
       .stat em.minus { color: var(--ink-faint); }
       .film { display: block; margin-top: 14px; padding: 13px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-align: center; text-decoration: none; font-weight: 700; font-size: 17px; }
@@ -140,6 +143,10 @@
             if (isTop) card.appendChild(el('p', { class: 'focus', text: 'Top Value Points in this game' }));
             else if (li > 0 && top > 0) card.appendChild(el('p', { class: 'focus', text: focusLine(vp, top, li) }));
             // VP rank on the team and overall in the game; each box shows only for a top-5 place.
+            // Coach's note: one line from Coach Michael, saved as stats.coach_note. Shown only when set.
+            if (typeof s.coach_note === 'string' && s.coach_note.trim()) {
+              card.appendChild(el('div', { class: 'note' }, [el('span', { text: "Coach's note" }), el('p', { text: s.coach_note.trim() })]));
+            }
             var rboxes = [['Team VP rank', s.team_rank, s.team_of], ['Overall VP rank', s.rank, s.of]].filter(function (x) {
               return num(x[1]) >= 1 && num(x[1]) <= 5;
             }).map(function (x) {

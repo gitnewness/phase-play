@@ -36,9 +36,10 @@
       .vp-n { font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 44px; line-height: 1; color: var(--orange-deep); }
       .vp-l { font-weight: 700; font-size: 15px; line-height: 1.2; }
       .vp-l small { display: block; font-weight: 500; color: var(--ink-soft); }
-      .grade { margin-left: auto; text-align: center; background: var(--orange); color: #fff; border-radius: 10px; padding: 6px 12px; }
-      .grade b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; font-size: 26px; line-height: 1; }
+      .grade { margin-left: auto; max-width: 48%; text-align: center; background: var(--orange); color: #fff; border-radius: 10px; padding: 7px 12px; }
+      .grade b { display: block; font-family: "Barlow Condensed", sans-serif; font-weight: 800; text-transform: uppercase; font-size: 21px; line-height: 1.05; }
       .grade span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+      .focus { margin: 10px 0 0; padding: 10px 12px; border-left: 4px solid var(--orange); background: #fafafa; font-weight: 600; font-size: 15px; color: var(--ink); }
       .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
       .badge { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 999px; background: #161616; color: #fff; font-weight: 700; font-size: 14px; }
       .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
@@ -73,7 +74,7 @@
           (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
           return n;
         }
-        // Day 2 results: one card per game, in game order (stats, Value Points + grade, badges, film).
+        // Day 2 results: one card per game, in game order (stats, Value Points + level, Next focus, badges, film).
         var BADGE = { 'Bucket Getter': '\uD83E\uDEA3', 'Board Hog': '\uD83D\uDC17', 'Dime Dealer': '\uD83E\uDE99', 'Ball Thief': '\uD83E\uDD77',
           'No Fly Zone': '\uD83D\uDEAB', 'Brick Wall': '\uD83E\uDDF1', 'Disruptor': '\uD83D\uDCA5', 'Hustle Hero': '\uD83D\uDD25',
           'Sniper': '\uD83C\uDFAF', 'Downtown': '\uD83C\uDF07', 'Automatic': '\uD83E\uDD16' };
@@ -82,23 +83,38 @@
         function stat(label, value, extra) {
           return el('div', { class: 'stat' }, [el('b', { text: String(value) }), el('span', { text: label }), extra ? el('small', { text: ' ' + extra }) : null]);
         }
+        // Level = player's VP / top VP in that game (exact ratio, never shown as a percentage).
+        var LEVELS = [[0.8, 'Locked In'], [0.6, 'Heating Up'], [0.4, 'Finding Your Game'], [0.2, 'Warming Up'], [0, 'Getting Started']];
+        function levelIdx(ratio) { for (var i = 0; i < LEVELS.length - 1; i++) if (ratio >= LEVELS[i][0]) return i; return LEVELS.length - 1; }
+        function focusLine(vp, top, i) {
+          var next = LEVELS[i - 1], gap = next[0] * top - vp, best = null;
+          [['reb', 2, 'board', 'rebounds', 'rebounds'], ['defl', 1, 'deflection', 'deflections', 'deflections'], ['hustle', 1, 'hustle play', 'hustle plays', 'hustle']].forEach(function (h) {
+            var n = Math.max(1, Math.ceil(gap / h[1] - 1e-9));
+            if (!best || n < best.n) best = { n: n, h: h };
+          });
+          var what = best.n === 1 ? 'one more ' + best.h[2] : best.n + ' more ' + best.h[3];
+          return 'Next focus: ' + best.h[4] + ' \u2014 ' + what + " and you're " + next[1] + '.';
+        }
         function showResults(list) {
           if (!list.length) return;
           app.appendChild(el('h2', { class: 'res-h', text: 'Results' }));
           app.appendChild(el('p', { class: 'res-sub', text: 'Game stats, Value Points, badges and game film.' }));
           list.forEach(function (g) {
             var r = g.result, s = r.stats || {};
-            var vp = num(r.value_points), grade = Math.round(num(r.grade));
+            var vp = num(r.value_points), top = num(s.top_vp);
+            var ratio = top > 0 ? vp / top : num(r.grade) / 100, li = levelIdx(ratio), isTop = top > 0 ? vp >= top : ratio >= 1;
             var card = el('section', { class: 'card' }, [
               el('div', { class: 'day', text: g.day }),
               el('h2', { text: g.title }),
               el('p', { text: g.time }),
               el('div', { class: 'vp' }, [
                 el('div', { class: 'vp-n', text: String(vp) }),
-                el('div', { class: 'vp-l' }, ['Value Points', el('small', { text: grade === 100 ? 'Top in the game' : "of the game's top" })]),
-                el('div', { class: 'grade' }, [el('b', { text: grade + '%' }), el('span', { text: 'Grade' })])
+                el('div', { class: 'vp-l', text: 'Value Points' }),
+                el('div', { class: 'grade' }, [el('b', { text: LEVELS[li][1] }), el('span', { text: 'Level' })])
               ])
             ]);
+            if (isTop) card.appendChild(el('p', { class: 'focus', text: 'Top Value Points in this game' }));
+            else if (li > 0 && top > 0) card.appendChild(el('p', { class: 'focus', text: focusLine(vp, top, li) }));
             var badges = (r.badges || []).filter(function (x) { return typeof x === 'string' && x; });
             if (badges.length) card.appendChild(el('div', { class: 'badges' }, badges.map(function (x) {
               return el('span', { class: 'badge' }, [BADGE[x] ? el('span', { 'aria-hidden': 'true', text: BADGE[x] }) : null, x]);
